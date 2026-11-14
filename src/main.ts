@@ -33,8 +33,14 @@ const fixedSeed =
     : params.has('daily') && Number.isFinite(dailySeed)
       ? dailySeed
       : undefined;
-// 从标题画面开始；"继续"由玩家在菜单里选择
-const game = new Game(renderer, fixedSeed);
+// 从标题画面开始；"继续"由玩家在菜单里选择。
+// 无固定种子时用环境熵生成起始种子；有则每局完全一致（P1-11 种子语义）
+const game = new Game(
+  renderer,
+  fixedSeed ?? ((Date.now() % 2147483647) || 1),
+  undefined,
+  { fixedSeed: fixedSeed !== undefined },
+);
 
 game.onChange = () => {
   const statusTags = game.player.statuses

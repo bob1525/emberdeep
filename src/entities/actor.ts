@@ -79,6 +79,12 @@ export function resetEntityIds(): void {
   nextItemUid = 1;
 }
 
+/** 读档后恢复分配器水位：保证新建实体 ID 不与存档中的实体冲突（P0-5） */
+export function setEntityIdCounters(actorId: number, itemUid: number): void {
+  nextActorId = Math.max(nextActorId, actorId);
+  nextItemUid = Math.max(nextItemUid, itemUid);
+}
+
 const EMPTY_EQUIPMENT: Equipment = { weapon: null, armor: null };
 
 /** 用模板字段创建实体，缺省值统一在这里兜底 */

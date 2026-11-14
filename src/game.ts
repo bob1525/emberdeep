@@ -20,6 +20,7 @@ import {
   makeActor,
   allocateItemUid,
   resetEntityIds,
+  setEntityIdCounters,
   type Actor,
   type ItemInstance,
 } from './entities/actor';
@@ -131,11 +132,20 @@ export interface SaveData {
   ownedTalents?: string[];
   shrines?: { x: number; y: number; kind: ShrineKind }[];
   memories?: [number, { lastSeenPlayer: Pt | null; alert: number; rallyPoint: Pt | null; rallyAge: number; cooldowns: [string, number][] }][];
+  mode?: string;
+  talentChoices?: string[];
+  pendingLevelUps?: number;
+  bossSummonCount?: number;
+  bossSpecies?: string | null;
 }
 
 const FOV_RADIUS = 8;
 const MIGHT_ATTACK_BONUS = 3;
 const MAX_INVENTORY = 12;
+/** Boss 每场战斗的召唤物上限（P0-8） */
+const BOSS_SUMMON_CAP = 4;
+/** 自动探索单批步数预算（P0-7） */
+const AUTO_EXPLORE_BUDGET = 24;
 
 /** 游戏总控：回合循环、战斗编排、楼层推进、物品使用 */
 export class Game {
@@ -157,6 +167,16 @@ export class Game {
   ownedTalents: string[] = [];
   /** 升级三选一的当前候选 */
   talentChoices: string[] = [];
+  /** 待处理的升级次数（一次经验奖励可能跨多级，P0-6） */
+  private pendingLevelUps = 0;
+  /** 本场 Boss 战已召唤的小怪数（P0-8 上限控制） */
+  private bossSummonCount = 0;
+  /** Boss 召唤物 ID：不给经验/金币（P0-8） */
+  private summonedIds = new Set<number>();
+  /** 上次持久化的回合数（自动探索批量存档节流，P0-7） */
+  private lastPersistTurn = -1;
+  /** URL/每日种子时为 true：newRun 不得改写种子（P1-11） */
+  private readonly fixedSeed: boolean;
   /** 当前界面模式；游戏从标题画面开始 */
   mode: UiMode = 'title';
   /** 消息历史查看游标（log 模式；null = 定位在最新） */
@@ -191,8 +211,10 @@ export class Game {
     private renderer: Renderer | null,
     runSeed = Date.now() % 2147483647,
     save?: SaveData | null,
+    opts?: { fixedSeed?: boolean },
   ) {
     this.runSeed = (runSeed % 2147483647) || 1;
+    this.fixedSeed = opts?.fixedSeed ?? false;
     this.rng = new Rng(this.runSeed);
     resetEntityIds();
     this.player = createPlayer(0, 0);
@@ -214,8 +236,10 @@ export class Game {
     this.onChange?.();
   }
 
-  /** 每回合自动存档；失败（隐私模式等）静默降级 */
+  /** 自动存档：自动探索批量模式下按回合节流（P0-7）；失败静默降级 */
   private persist(): void {
+    if (this.turn - this.lastPersistTurn < 8 && this.turn !== 0) return;
+    this.lastPersistTurn = this.turn;
     try {
       const data = this.buildSaveData();
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
@@ -254,6 +278,11 @@ export class Game {
         skillRemaining: this.skill.remaining,
         ownedTalents: this.ownedTalents,
         shrines: this.shrines,
+        mode: this.mode === 'levelUp' ? 'levelUp' : 'play',
+        talentChoices: this.mode === 'levelUp' ? this.talentChoices : [],
+        pendingLevelUps: this.pendingLevelUps,
+        bossSummonCount: this.bossSummonCount,
+        bossSpecies: this.boss?.species ?? null,
         memories: [...this.memories.entries()].map(([id, m]) => [
           id,
           {
@@ -346,6 +375,23 @@ export class Game {
     this.gold = save.gold ?? 0;
     this.kills = save.kills ?? 0;
     this.deathCause = save.deathCause ?? '未知';
+    this.pendingLevelUps = save.mode === 'levelUp' ? Math.max(1, save.pendingLevelUps ?? 1) : 0;
+    this.bossSummonCount = save.bossSummonCount ?? 0;
+    // 分配器状态恢复：读档后新建实体的 ID 必须与已有实体不冲突（P0-5）
+    let maxActorId = this.player.id;
+    for (const m of this.monsters) maxActorId = Math.max(maxActorId, m.id);
+    let maxItemUid = 0;
+    for (const it of this.player.inventory) maxItemUid = Math.max(maxItemUid, it.uid);
+    for (const g of this.groundItems) maxItemUid = Math.max(maxItemUid, g.item.uid);
+    if (this.player.equipment.weapon) maxItemUid = Math.max(maxItemUid, this.player.equipment.weapon.uid);
+    if (this.player.equipment.armor) maxItemUid = Math.max(maxItemUid, this.player.equipment.armor.uid);
+    setEntityIdCounters(maxActorId + 1, maxItemUid + 1);
+    // 界面模式恢复：只有升级三选一是可中断存档点，其余一律回到游戏
+    this.mode =
+      save.mode === 'levelUp' && (save.talentChoices?.length ?? 0) > 0
+        ? 'levelUp'
+        : 'play';
+    this.talentChoices = this.mode === 'levelUp' ? (save.talentChoices ?? []) : [];
     this.depth = save.depth;
     this.turn = save.turn;
     this.level = save.level;
@@ -353,6 +399,14 @@ export class Game {
     this.mightUntil = save.mightUntil;
     this.runSeed = save.runSeed;
     this.rng = Rng.fromState(save.rngState);
+    // Boss 身份重建（P0-5）：必须在 depth 恢复之后，按 species 匹配，
+    // 以此恢复阶段特技与 Boss 击杀奖励
+    this.boss = null;
+    const def = bossForDepth(this.depth);
+    this.bossDef = def;
+    if (def) {
+      this.boss = this.monsters.find((m) => m.species === def.species) ?? null;
+    }
     this.log.push({ text: `欢迎回来——继续第 ${this.depth} 层的冒险。`, tone: 'info' });
     this.updateFov();
   }
@@ -439,6 +493,12 @@ export class Game {
     });
     playSfx('levelup');
     this.talentChoices = [];
+    this.pendingLevelUps = Math.max(0, this.pendingLevelUps - 1);
+    if (this.pendingLevelUps > 0) {
+      // 还有排队中的升级：展示下一组三选一（P0-6）
+      this.offerTalents();
+      return;
+    }
     this.mode = 'play';
     this.persist();
   }
@@ -504,13 +564,16 @@ export class Game {
     return used;
   }
 
-  /** 战士·冲锋：冲向最近的可见敌人（2-4 格）并造成 1.5 倍伤害 */
+  /** 战士·冲锋：冲向最近的可见敌人（2-4 格）并造成 1.5 倍伤害（P0-2：回调语义修正+步步验证） */
   private skillCharge(): boolean {
-    const isWalkable = (x: number, y: number) => !this.map.isWalkable(x, y);
     let best: Actor | null = null;
     let bestPath: Pt[] | null = null;
     for (const m of this.visibleTargets()) {
-      const path = findPathWithFn({ x: this.player.x, y: this.player.y }, { x: m.x, y: m.y }, isWalkable);
+      const path = findPathWithFn(
+        { x: this.player.x, y: this.player.y },
+        { x: m.x, y: m.y },
+        (x, y) => this.map.isWalkable(x, y) && !this.monsterAt(x, y),
+      );
       if (path && path.length >= 2 && path.length <= 5) {
         if (!bestPath || path.length < bestPath.length) {
           best = m;
@@ -522,10 +585,11 @@ export class Game {
       this.log.push({ text: '冲锋范围内没有敌人。', tone: 'info' });
       return false;
     }
-    // 沿路径冲刺到目标前一格
+    // 沿路径冲刺到目标前一格；每步重新验证地形与占用，禁止穿墙
     for (let i = 0; i < bestPath.length - 1; i++) {
       const step = bestPath[i];
       if (!step) break;
+      if (!this.map.isWalkable(step.x, step.y) || this.monsterAt(step.x, step.y)) break;
       this.effects.push({
         kind: 'step',
         fromX: this.player.x,
@@ -570,9 +634,13 @@ export class Game {
     }
     const def = RANGED[weapon.catalogId];
     if (!def) return false;
-    const targets = this.visibleTargets();
+    const targets = this.visibleTargets().filter(
+      (t) =>
+        Math.max(Math.abs(t.x - this.player.x), Math.abs(t.y - this.player.y)) <=
+        def.range,
+    );
     if (targets.length === 0) {
-      this.log.push({ text: '视野内没有目标。', tone: 'info' });
+      this.log.push({ text: '射程内没有目标。', tone: 'info' });
       return false;
     }
     const nearest = targets.reduce((a, b) =>
@@ -817,13 +885,18 @@ export class Game {
   // ---------- 自动探索 ----------
 
   /**
-   * 迭代式自动探索：每回合走向最近的未探索区域。
-   * 视野内出现敌人、玩家死亡或无路可走时中断。
+   * 自动探索（P0-7）：分批推进，每批最多 AUTO_EXPLORE_BUDGET 步。
+   * 中断条件：视野内出现敌人 / 走到商人、奇遇建筑、已知陷阱、楼梯前 /
+   * 玩家死亡 / 离开 play 模式 / 无路可走。批量存档由 persist 节流。
    */
   private autoStep(): void {
-    let guard = 0;
-    while (this.autoExploring && !this.dead && guard < 2000) {
-      guard += 1;
+    let steps = 0;
+    while (
+      this.autoExploring &&
+      !this.dead &&
+      this.mode === 'play' &&
+      steps < AUTO_EXPLORE_BUDGET
+    ) {
       if (this.visibleTargets().length > 0) {
         this.autoExploring = false;
         this.log.push({ text: '发现敌人，自动探索中断！', tone: 'info' });
@@ -842,6 +915,27 @@ export class Game {
         this.autoPath = null;
         continue;
       }
+      // 交互物与楼梯前停下：这些是不可逆/需要玩家确认的事件
+      if (this.merchant && this.merchant.x === next.x && this.merchant.y === next.y) {
+        this.autoExploring = false;
+        this.log.push({ text: '前方有一位流浪商人，自动探索停止。', tone: 'info' });
+        return;
+      }
+      if (this.shrines.some((s) => s.x === next.x && s.y === next.y)) {
+        this.autoExploring = false;
+        this.log.push({ text: '前方有一座奇异的建筑，自动探索停止。', tone: 'info' });
+        return;
+      }
+      if (this.traps.some((t) => t.x === next.x && t.y === next.y)) {
+        this.autoExploring = false;
+        this.log.push({ text: '前方地面上有陷阱的痕迹，是否冒险由你决定。', tone: 'info' });
+        return;
+      }
+      if (next.x === this.stairsDown.x && next.y === this.stairsDown.y) {
+        this.autoExploring = false;
+        this.log.push({ text: '你停在了向下的楼梯前。', tone: 'info' });
+        return;
+      }
       const dx = next.x - this.player.x;
       const dy = next.y - this.player.y;
       // 安全阀：路径步必须相邻（传送等意外位移会导致路径失效）
@@ -851,15 +945,15 @@ export class Game {
       }
       if (this.tryPlayerMove(dx, dy)) {
         this.autoPath.shift();
+        steps += 1;
         this.endPlayerTurn();
       } else {
         // 被堵住：重新寻路
         this.autoPath = null;
       }
     }
-    if (guard >= 2000) {
-      this.autoExploring = false;
-      this.log.push({ text: '自动探索告一段落。', tone: 'info' });
+    if (this.autoExploring && steps >= AUTO_EXPLORE_BUDGET) {
+      this.log.push({ text: '自动探索暂歇——再按 o 继续。', tone: 'info' });
     }
   }
 
@@ -890,8 +984,11 @@ export class Game {
       return false;
     };
 
-    while (queue.length > 0) {
-      const cur = queue.shift();
+    // P0-7：head 指针代替 queue.shift()，避免 O(V²) 的数组搬家
+    let head = 0;
+    while (head < queue.length) {
+      const cur = queue[head];
+      head += 1;
       if (cur === undefined) break;
       const cx = cur % w;
       const cy = Math.floor(cur / w);
@@ -1030,6 +1127,69 @@ export class Game {
     return this.merchant ? [...this.merchant.stock] : [];
   }
 
+  // ---------- 内部钩子（@internal 供无头模拟器与测试使用，不参与 UI） ----------
+
+  /** @internal 直接跳到指定层（蒙特卡洛模拟器用） */
+  jumpToDepth(depth: number): void {
+    this.depth = Math.max(1, Math.floor(depth));
+    this.buildFloor();
+    this.log.push({ text: `（模拟）降临第 ${this.depth} 层。`, tone: 'info' });
+  }
+
+  /** @internal 测试用：是否有存活 Boss */
+  hasBoss(): boolean {
+    return this.boss !== null;
+  }
+
+  /** @internal 测试与模拟器用：内部计数快照 */
+  internalStats(): {
+    monsterCount: number;
+    bossSummonCount: number;
+    summonedCount: number;
+    aliveSummoned: number;
+  } {
+    return {
+      monsterCount: this.monsters.length,
+      bossSummonCount: this.bossSummonCount,
+      summonedCount: this.summonedIds.size,
+      aliveSummoned: this.monsters.filter((m) => this.summonedIds.has(m.id)).length,
+    };
+  }
+
+  /** @internal 测试用：强制 Boss 释放一次阶段特技（确定性消耗 rng） */
+  debugForceBossSpecial(): void {
+    for (let i = 0; i < 60; i++) {
+      const phase = this.bossPhase();
+      if (!phase) return;
+      const special = decideBossSpecial(phase, this.rng);
+      if (special.kind !== 'none') {
+        this.applyBossSpecial(special);
+        return;
+      }
+    }
+  }
+
+  /** @internal 测试用：给最近的怪物施加燃烧（P0-4 验证） */
+  debugBurnNearest(): boolean {
+    let nearest: Actor | null = null;
+    let best = Number.POSITIVE_INFINITY;
+    for (const m of this.monsters) {
+      const d = Math.max(Math.abs(m.x - this.player.x), Math.abs(m.y - this.player.y));
+      if (d < best) {
+        best = d;
+        nearest = m;
+      }
+    }
+    if (!nearest) return false;
+    applyStatus(nearest, 'burn', 3, 5);
+    return true;
+  }
+
+  /** @internal 测试与模拟器用：导出当前存档快照（不落 localStorage） */
+  exportSaveData(): SaveData {
+    return this.buildSaveData();
+  }
+
   // ---------- 玩家回合 ----------
 
   /** 返回 true 表示消耗了一个回合 */
@@ -1165,6 +1325,9 @@ export class Game {
     playSfx('kill');
     this.effects.push({ kind: 'burst', x: target.x, y: target.y, color: '#d96a5a', dur: 420 });
     this.log.push({ text: `${target.name}倒下了！`, tone: 'good' });
+    // 生命周期清理（P1-14）：死亡怪物的 AI 记忆与召唤物标记移除
+    this.memories.delete(target.id);
+    const wasSummoned = this.summonedIds.delete(target.id);
     // Boss 被击杀：专属演出 + 三倍金币
     if (target === this.boss && this.bossDef) {
       this.log.push({ text: this.bossDef.deathText, tone: 'good' });
@@ -1175,16 +1338,22 @@ export class Game {
         amount: rollGold(this.depth, this.rng) * 3,
       });
       this.boss = null;
+      return;
     }
-    // 怪物死后 30% 概率掉金币
-    if (this.rng.next() < 0.3) {
+    // 召唤物不奖励经验与金币（P0-8）；普通怪 30% 掉金币
+    if (!wasSummoned && this.rng.next() < 0.3) {
       this.goldPiles.push({
         x: target.x,
         y: target.y,
         amount: rollGold(this.depth, this.rng),
       });
     }
-    this.gainXp(target.xpValue);
+    if (!wasSummoned) this.gainXp(target.xpValue);
+  }
+
+  /** 获得经验（公开给模拟器/测试使用）；大额经验跨多级时排队逐级三选一（P0-6） */
+  grantXp(amount: number): void {
+    this.gainXp(amount);
   }
 
   private gainXp(amount: number): void {
@@ -1194,18 +1363,30 @@ export class Game {
     while (this.xp >= need) {
       this.xp -= need;
       this.level += 1;
-      // 升级回复 30% 生命，然后进入三选一天赋
+      this.pendingLevelUps += 1;
+      // 升级回复 30% 生命
       const heal = Math.floor(this.player.maxHp * 0.3);
       this.player.hp = Math.min(this.player.maxHp, this.player.hp + heal);
       this.log.push({ text: `升到了 ${this.level} 级！选择一项成长：`, tone: 'good' });
       playSfx('levelup');
       this.effects.push({ kind: 'flashScreen', color: '#f5b04c', dur: 450 });
-      this.talentChoices = rollTalentChoices(this.ownedTalents, this.depth, this.rng);
-      if (this.talentChoices.length > 0) {
-        this.mode = 'levelUp';
-      }
       need = this.xpToNext();
     }
+    // 有待处理升级且当前没有展示中的候选 → 立即 offer 一组
+    if (this.pendingLevelUps > 0 && this.talentChoices.length === 0) {
+      this.offerTalents();
+    }
+  }
+
+  /** 展示一组三选一天赋；无可用候选时跳过该次升级 */
+  private offerTalents(): void {
+    this.talentChoices = rollTalentChoices(this.ownedTalents, this.depth, this.rng);
+    if (this.talentChoices.length === 0) {
+      this.pendingLevelUps = 0;
+      this.log.push({ text: '深渊暂时没有更多天赋给你了。', tone: 'info' });
+      return;
+    }
+    this.mode = 'levelUp';
   }
 
   /** 已拥有天赋的合计加成 */
@@ -1365,12 +1546,22 @@ export class Game {
     return this.applyFireblast(targets);
   }
 
-  /** 视线内所有存活怪物 */
+  /** 视线阻挡回调（统一给 LOS/FOV/弹道使用） */
+  private losBlocked(): (x: number, y: number) => boolean {
+    return (x, y) => !this.map.isWalkable(x, y);
+  }
+
+  /**
+   * 可见敌方的统一定义（P0-3）：必须同时满足
+   * ① 在 FOV 集合内（含视野半径限制）② 与玩家之间无地形阻挡。
+   * 技能、卷轴、火焰新星、自动探索中断一律使用本函数。
+   */
   private visibleTargets(): Actor[] {
-    const los = (x: number, y: number) => !this.map.isWalkable(x, y);
-    return this.monsters.filter((m) =>
-      hasLineOfSight(this.player.x, this.player.y, m.x, m.y, los),
-    );
+    const los = this.losBlocked();
+    return this.monsters.filter((m) => {
+      if (!this.visible.has(`${m.x},${m.y}`)) return false;
+      return hasLineOfSight(this.player.x, this.player.y, m.x, m.y, los);
+    });
   }
 
   private applyFireblast(targets: Actor[]): boolean {
@@ -1481,21 +1672,47 @@ export class Game {
 
   private monsterTurns(): void {
     for (const m of [...this.monsters]) {
-      // 能量制行动频率：加速怪一回合两次，减速怪隔回合一次
-      m.energy += actionsPerTurn(m);
-      while (m.energy >= 1 && !this.dead) {
-        m.energy -= 1;
-        // Boss：30% 概率释放阶段特技，否则按普通 AI 行动
-        if (m === this.boss && this.bossDef) {
-          const phase = this.bossPhase();
-          if (phase) {
-            const special = decideBossSpecial(phase, this.rng);
-            if (special.kind !== 'none') {
-              this.applyBossSpecial(special);
-              continue;
-            }
+      // ① 状态结算（P0-4）：伤害类先于行动，死亡立即移除；
+      //    顺序契约：状态伤害 → 死亡判定 → 能量恢复 → 特技 → AI 行动
+      const sReport = tickStatuses(m);
+      for (const ev of sReport.events) {
+        const info = STATUSES[ev.kind];
+        if (ev.damage > 0 && info) {
+          this.effects.push({
+            kind: 'float',
+            x: m.x,
+            y: m.y,
+            text: `-${ev.damage}`,
+            color: info.color,
+          });
+          this.log.push({ text: `${m.name}因${info.name}受到 ${ev.damage} 点伤害。`, tone: 'combat' });
+        }
+      }
+      if (m.hp <= 0) {
+        this.killMonster(m);
+        continue;
+      }
+      if (this.dead) return;
+
+      // ② Boss 阶段特技（在能量循环之外，防止特技连锁；haste 只 +1 能量，P0-8）
+      if (m === this.boss && this.bossDef) {
+        const phase = this.bossPhase();
+        if (phase) {
+          const special = decideBossSpecial(phase, this.rng);
+          if (special.kind !== 'none') {
+            this.applyBossSpecial(special);
+            continue;
           }
         }
+      }
+
+      // ③ 能量制行动频率：加速怪一回合两次，减速怪隔回合一次
+      m.energy += actionsPerTurn(m);
+      let actionsThisTurn = 0;
+      while (m.energy >= 1 && !this.dead && this.mode === 'play') {
+        m.energy -= 1;
+        actionsThisTurn += 1;
+        if (actionsThisTurn > 3) break; // 硬上限：Boss/加速怪每玩家回合最多 3 次行动（P0-8）
         const act = this.decideMonster(m);
         if (act.type === 'attack') {
           this.monsterAttack(m);
@@ -1541,16 +1758,22 @@ export class Game {
     this.memories.set(m.id, memory);
     const allies = this.monsters
       .filter((o) => o !== m && o.side === m.side)
-      .map((o) => ({
-        actor: o,
-        memory: this.memories.get(o.id) ?? newMemory(),
-      }));
+      .map((o) => {
+        // P1-13：盟友记忆必须写回 Map，临时对象会让呼救的集结点丢失
+        let allyMemory = this.memories.get(o.id);
+        if (!allyMemory) {
+          allyMemory = newMemory();
+          this.memories.set(o.id, allyMemory);
+        }
+        return { actor: o, memory: allyMemory };
+      });
     const result = runBrain({
       self: m,
       player: this.player,
       allies,
       isBlocked: (x, y) => !this.map.isWalkable(x, y),
-      isOnFire: () => false, // 火势系统接入后改为真实判定
+      // 真实火焰判定（P0-4）：身上有燃烧状态即视为身处火场
+      isOnFire: (x, y) => x === m.x && y === m.y && hasStatus(m, 'burn'),
       rng: this.rng,
       memory,
     });
@@ -1599,6 +1822,17 @@ export class Game {
   }
 
   // ---------- 楼层与渲染 ----------
+
+  /** 换层时清理不再被任何实体引用的词缀数据（P1-14），防止无界累积 */
+  private pruneAffixData(): void {
+    const keep = new Set<number>();
+    for (const it of this.player.inventory) keep.add(it.uid);
+    if (this.player.equipment.weapon) keep.add(this.player.equipment.weapon.uid);
+    if (this.player.equipment.armor) keep.add(this.player.equipment.armor.uid);
+    for (const uid of [...this.affixData.keys()]) {
+      if (!keep.has(uid)) this.affixData.delete(uid);
+    }
+  }
 
   private buildFloor(): void {
     const floor = generateFloor(this.depth, this.rng.int(1, 2147483647));
@@ -1656,6 +1890,7 @@ export class Game {
     this.placeShrines(floor);
     this.placeTraps(floor);
     this.placeBoss(floor);
+    this.pruneAffixData();
     this.explored = new Set();
     this.updateFov();
   }
@@ -1821,13 +2056,19 @@ export class Game {
     this.affixData.clear();
     this.ownedTalents = [];
     this.talentChoices = [];
+    this.pendingLevelUps = 0;
+    this.bossSummonCount = 0;
+    this.summonedIds.clear();
     this.shrines = [];
     this.memories.clear();
     this.mightUntil = 0;
+    this.lastPersistTurn = -1;
     this.log = [{ text: '新的冒险开始了。你在余烬深渊的第 1 层醒来……', tone: 'info' }];
     Game.clearSave();
-    // 线性同余派生新种子，保证连续两局必然不同
-    this.runSeed = (this.runSeed * 1664525 + 1013904223) % 2147483647;
+    // 种子语义（P1-11）：URL/每日种子下每局完全一致；否则 LCG 派生保证连续两局不同
+    if (!this.fixedSeed) {
+      this.runSeed = (this.runSeed * 1664525 + 1013904223) % 2147483647;
+    }
     this.rng = new Rng(this.runSeed || 1);
     resetEntityIds();
     // 按职业初始化角色
@@ -1956,11 +2197,17 @@ export class Game {
         catalogId: report.item.catalogId,
         category: report.item.category,
       };
-      if (item.category === 'weapon' || item.category === 'armor') {
-        this.affixData.set(item.uid, rollAffixData(this.depth, this.rng));
+      if (this.player.inventory.length >= MAX_INVENTORY) {
+        // 背包满（P0-9）：物品被顶到脚边变成地面物品
+        this.groundItems.push({ x: this.player.x, y: this.player.y, item });
+        this.log.push({ text: '背包满了，井里的东西被顶到了脚边。', tone: 'info' });
+      } else {
+        if (item.category === 'weapon' || item.category === 'armor') {
+          this.affixData.set(item.uid, rollAffixData(this.depth, this.rng));
+        }
+        this.player.inventory.push(item);
+        this.log.push({ text: `井底捞出了${itemInfo(item).name}！`, tone: 'good' });
       }
-      this.player.inventory.push(item);
-      this.log.push({ text: `井底捞出了${itemInfo(item).name}！`, tone: 'good' });
     }
     if (report.angered) {
       // 在玩家周围逐环搜索空位，惊醒 1-2 只怪物
@@ -1999,7 +2246,7 @@ export class Game {
     }
   }
 
-  /** Boss 阶段特技落地：召唤 / 冲击波 / 加速 / 自愈 */
+  /** Boss 阶段特技落地（P0-8：召唤上限/召唤物无 XP/haste 仅 +1 能量） */
   private applyBossSpecial(report: BossSpecialReport): void {
     this.log.push({ text: report.message, tone: 'bad' });
     playSfx('zap');
@@ -2028,7 +2275,13 @@ export class Game {
         }
       }
     } else if (report.kind === 'summon' && this.boss) {
-      for (let i = 0; i < report.count; i++) {
+      // 召唤上限：每场战斗最多 4 只（P0-8）
+      const room = BOSS_SUMMON_CAP - this.bossSummonCount;
+      if (room <= 0) {
+        this.log.push({ text: '深渊的雾气翻涌，却再也召不出东西了。', tone: 'info' });
+        return;
+      }
+      for (let i = 0; i < Math.min(report.count, room); i++) {
         let placed = false;
         for (let r = 1; r <= 3 && !placed; r++) {
           for (let dy = -r; dy <= r && !placed; dy++) {
@@ -2039,22 +2292,23 @@ export class Game {
               if (!this.map.isWalkable(x, y) || this.monsterAt(x, y)) continue;
               if (this.player.x === x && this.player.y === y) continue;
               const t = rollMonster(this.depth, this.rng);
-              this.monsters.push(
-                makeActor({
-                  species: t.species,
-                  name: t.name,
-                  glyph: t.glyph,
-                  color: t.color,
-                  x,
-                  y,
-                  hp: t.maxHp,
-                  maxHp: t.maxHp,
-                  attack: t.attack,
-                  defense: t.defense,
-                  xpValue: t.xpValue,
-                  ai: { mode: 'chase', senseRadius: t.senseRadius },
-                }),
-              );
+              const minion = makeActor({
+                species: t.species,
+                name: t.name,
+                glyph: t.glyph,
+                color: t.color,
+                x,
+                y,
+                hp: t.maxHp,
+                maxHp: t.maxHp,
+                attack: t.attack,
+                defense: t.defense,
+                xpValue: t.xpValue,
+                ai: { mode: 'chase', senseRadius: t.senseRadius },
+              });
+              this.monsters.push(minion);
+              this.summonedIds.add(minion.id);
+              this.bossSummonCount += 1;
               this.effects.push({ kind: 'burst', x, y, color: '#7d4bd1', dur: 400 });
               placed = true;
             }
@@ -2062,7 +2316,9 @@ export class Game {
         }
       }
     } else if (report.kind === 'haste' && this.boss) {
-      this.boss.energy += 2;
+      // haste = 下一回合一次额外普通行动（能量 +1），不再向循环注入无界能量（P0-8）
+      this.boss.energy += 1;
+      this.log.push({ text: `${this.boss.name}的动作变得越来越快了！`, tone: 'bad' });
     } else if (report.kind === 'heal' && this.boss) {
       const heal = Math.floor(this.boss.maxHp * 0.15);
       this.boss.hp = Math.min(this.boss.maxHp, this.boss.hp + heal);

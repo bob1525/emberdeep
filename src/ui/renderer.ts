@@ -244,6 +244,11 @@ export class Renderer {
     if (scene.dead) this.drawDeath(scene, widthPx, heightPx);
 
     this.drawVignette(widthPx, heightPx);
+
+    // P2-16：震屏结束后必须显式复位，不能残留 translate
+    if (!this.active.some((a) => a.effect.kind === 'quake') && this.canvas.style.transform) {
+      this.canvas.style.transform = '';
+    }
   }
 
   private drawGlyph(x: number, y: number, cellW: number, glyph: string, color: string): void {
@@ -267,7 +272,9 @@ export class Renderer {
     for (let y = 0; y < scene.map.height; y++) {
       for (let x = 0; x < scene.map.width; x++) {
         const key = `${x},${y}`;
-        if (!scene.explored.has(key) || scene.visible.has(key)) continue;
+        // P2-16：缓存层画全部已探索格（含当前可见的）——
+        // 缓存 key 不含 visible，跳过可见格会导致玩家移动后出现缺字
+        if (!scene.explored.has(key)) continue;
         const tile = scene.map.tileAt(x, y);
         const h = tileHash(x, y);
         const glyph =

@@ -67,7 +67,7 @@ function buildKeyCommands(): Record<string, Action> {
     '?': { type: 'openLog' },
     z: { type: 'aimBow' },
     o: { type: 'autoExplore' },
-    k: { type: 'useSkill' },
+    v: { type: 'useSkill' },
     Escape: { type: 'closeOverlay' },
     PageUp: { type: 'scrollLog', dir: -1 },
     PageDown: { type: 'scrollLog', dir: 1 },
@@ -86,28 +86,37 @@ function buildKeyCommands(): Record<string, Action> {
 
 const KEY_COMMANDS = buildKeyCommands();
 
+export interface KeyMods {
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+  altKey?: boolean;
+}
+
+/**
+ * 纯函数：按键 → 动作（无 DOM 依赖，bindInput 与测试共用）。
+ * 返回 null 表示不是游戏按键。
+ * 注意：命令键不得与 vi 方向键（hjkl/yubn）重叠——技能键因此用 v 而不是 k。
+ */
+export function keyToAction(key: string, mods: KeyMods = {}): Action | null {
+  if (mods.ctrlKey || mods.metaKey || mods.altKey) return null;
+
+  const dir = KEY_DIRS[key];
+  if (dir) return { type: 'move', dx: dir[0], dy: dir[1] };
+
+  const command = KEY_COMMANDS[key];
+  if (command) return { ...command };
+
+  if (key === '.' || key === ' ') return { type: 'wait' };
+  return null;
+}
+
 /** 绑定键盘输入，返回解绑函数 */
 export function bindInput(onAction: (action: Action) => void): () => void {
   const handler = (e: KeyboardEvent) => {
-    // 不劫持浏览器快捷键
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-
-    const dir = KEY_DIRS[e.key];
-    if (dir) {
-      e.preventDefault();
-      onAction({ type: 'move', dx: dir[0], dy: dir[1] });
-      return;
-    }
-    const command = KEY_COMMANDS[e.key];
-    if (command) {
-      e.preventDefault();
-      onAction({ ...command });
-      return;
-    }
-    if (e.key === '.' || e.key === ' ') {
-      e.preventDefault();
-      onAction({ type: 'wait' });
-    }
+    const action = keyToAction(e.key, e);
+    if (!action) return;
+    e.preventDefault();
+    onAction(action);
   };
 
   window.addEventListener('keydown', handler);
