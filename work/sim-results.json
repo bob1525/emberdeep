@@ -1,6 +1,6 @@
 {
  "summary": {
-  "generatedAt": "2026-11-14T14:17:07.154Z",
+  "generatedAt": "2026-11-14T14:36:05.610Z",
   "seedsPerClass": 8,
   "classes": {
    "warrior": {
@@ -18,7 +18,7 @@
     "avgPotions": 2,
     "avgSnapshotBytes": 39382,
     "avgAstarCallsPerRun": 41,
-    "avgDurationMs": 938,
+    "avgDurationMs": 994,
     "topDeathCauses": "巨蝠:1"
    },
    "ranger": {
@@ -36,7 +36,7 @@
     "avgPotions": 3,
     "avgSnapshotBytes": 38090,
     "avgAstarCallsPerRun": 23,
-    "avgDurationMs": 388,
+    "avgDurationMs": 423,
     "topDeathCauses": "巨蝠:3, 鼠人:1, 中毒:1, 骷髅兵:1"
    },
    "mage": {
@@ -54,7 +54,7 @@
     "avgPotions": 1,
     "avgSnapshotBytes": 37074,
     "avgAstarCallsPerRun": 20,
-    "avgDurationMs": 19,
+    "avgDurationMs": 18,
     "topDeathCauses": "巨蝠:6, 骷髅兵:1, 鼠人:1"
    }
   }
@@ -73,7 +73,7 @@
    "level": 2,
    "potions": 0,
    "snapshotBytes": 36853,
-   "durationMs": 34,
+   "durationMs": 44,
    "astarCalls": 71
   },
   {
@@ -89,7 +89,7 @@
    "level": 1,
    "potions": 2,
    "snapshotBytes": 37790,
-   "durationMs": 1118,
+   "durationMs": 1321,
    "astarCalls": 51
   },
   {
@@ -105,7 +105,7 @@
    "level": 2,
    "potions": 2,
    "snapshotBytes": 45819,
-   "durationMs": 882,
+   "durationMs": 1051,
    "astarCalls": 43
   },
   {
@@ -121,7 +121,7 @@
    "level": 2,
    "potions": 2,
    "snapshotBytes": 38767,
-   "durationMs": 697,
+   "durationMs": 817,
    "astarCalls": 14
   },
   {
@@ -137,7 +137,7 @@
    "level": 3,
    "potions": 2,
    "snapshotBytes": 39092,
-   "durationMs": 825,
+   "durationMs": 1034,
    "astarCalls": 20
   },
   {
@@ -153,7 +153,7 @@
    "level": 2,
    "potions": 2,
    "snapshotBytes": 38703,
-   "durationMs": 832,
+   "durationMs": 1027,
    "astarCalls": 67
   },
   {
@@ -169,7 +169,7 @@
    "level": 2,
    "potions": 2,
    "snapshotBytes": 35856,
-   "durationMs": 1582,
+   "durationMs": 1602,
    "astarCalls": 27
   },
   {
@@ -185,7 +185,7 @@
    "level": 2,
    "potions": 2,
    "snapshotBytes": 42172,
-   "durationMs": 1534,
+   "durationMs": 1059,
    "astarCalls": 38
   },
   {
@@ -201,7 +201,7 @@
    "level": 2,
    "potions": 4,
    "snapshotBytes": 36355,
-   "durationMs": 1336,
+   "durationMs": 1324,
    "astarCalls": 68
   },
   {
@@ -217,7 +217,7 @@
    "level": 1,
    "potions": 0,
    "snapshotBytes": 37754,
-   "durationMs": 13,
+   "durationMs": 14,
    "astarCalls": 20
   },
   {
@@ -233,7 +233,7 @@
    "level": 1,
    "potions": 4,
    "snapshotBytes": 40702,
-   "durationMs": 1031,
+   "durationMs": 1305,
    "astarCalls": 9
   },
   {
@@ -249,7 +249,7 @@
    "level": 1,
    "potions": 0,
    "snapshotBytes": 36288,
-   "durationMs": 15,
+   "durationMs": 13,
    "astarCalls": 2
   },
   {
@@ -265,7 +265,7 @@
    "level": 1,
    "potions": 4,
    "snapshotBytes": 36041,
-   "durationMs": 18,
+   "durationMs": 15,
    "astarCalls": 7
   },
   {
@@ -281,7 +281,7 @@
    "level": 2,
    "potions": 4,
    "snapshotBytes": 41686,
-   "durationMs": 66,
+   "durationMs": 62,
    "astarCalls": 45
   },
   {
@@ -297,7 +297,7 @@
    "level": 2,
    "potions": 4,
    "snapshotBytes": 42040,
-   "durationMs": 618,
+   "durationMs": 648,
    "astarCalls": 28
   },
   {
@@ -313,7 +313,7 @@
    "level": 1,
    "potions": 0,
    "snapshotBytes": 33850,
-   "durationMs": 4,
+   "durationMs": 6,
    "astarCalls": 6
   },
   {
@@ -329,7 +329,7 @@
    "level": 2,
    "potions": 0,
    "snapshotBytes": 36223,
-   "durationMs": 35,
+   "durationMs": 33,
    "astarCalls": 53
   },
   {
@@ -345,7 +345,7 @@
    "level": 1,
    "potions": 0,
    "snapshotBytes": 37615,
-   "durationMs": 11,
+   "durationMs": 15,
    "astarCalls": 20
   },
   {
@@ -361,7 +361,7 @@
    "level": 1,
    "potions": 0,
    "snapshotBytes": 33845,
-   "durationMs": 1,
+   "durationMs": 4,
    "astarCalls": 6
   },
   {
@@ -377,7 +377,7 @@
    "level": 1,
    "potions": 0,
    "snapshotBytes": 36169,
-   "durationMs": 11,
+   "durationMs": 9,
    "astarCalls": 2
   },
   {
@@ -409,7 +409,7 @@
    "level": 1,
    "potions": 2,
    "snapshotBytes": 38370,
-   "durationMs": 43,
+   "durationMs": 31,
    "astarCalls": 45
   },
   {
@@ -441,7 +441,7 @@
    "level": 1,
    "potions": 0,
    "snapshotBytes": 33684,
-   "durationMs": 2,
+   "durationMs": 5,
    "astarCalls": 6
   }
  ]

@@ -112,7 +112,8 @@ function cheb(ax: number, ay: number, bx: number, by: number): number {
 
 /** 沿 A* 路径取走向目标的下一步（目标格豁免阻挡，供攻击收尾） */
 function stepToward(self: Actor, target: Pt, isBlocked: (x: number, y: number) => boolean): AiAction | null {
-  const path = findPathWithFn({ x: self.x, y: self.y }, target, (x, y) => !isBlocked(x, y));
+  // M7：AI 寻路节点预算（ chase 每次最多展开 600 节点，24 怪场景下回合成本可控）
+  const path = findPathWithFn({ x: self.x, y: self.y }, target, (x, y) => !isBlocked(x, y), 600);
   const first = path?.[0];
   if (!first) return null;
   return { type: 'move', dx: first.x - self.x, dy: first.y - self.y };

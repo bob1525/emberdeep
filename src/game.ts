@@ -9,6 +9,7 @@ import type { Pt } from './engine/los';
 import { Rng } from './engine/rng';
 import { canonicalJson, hash64 } from './engine/canonical';
 import { parseSaveData } from './engine/saveSchema';
+import { encodeSaveData, migrateV1Defaults } from './engine/saveCodec';
 import {
   STATUSES,
   actionsPerTurn,
@@ -235,7 +236,8 @@ export class Game {
       try {
         this.hydrate(save);
         return;
-      } catch {
+      } catch (error) {
+        console.error('[emberdeep] hydrate 失败：', error);
         this.log.push({ text: '存档已损坏，开始新的冒险。', tone: 'info' });
         this.player = createPlayer(0, 0);
       }
@@ -260,58 +262,52 @@ export class Game {
     }
   }
 
-  /** 构造存档快照（persist 与状态哈希共用，字段顺序必须稳定） */
+  /** 构造存档快照（SaveCodec 边界，M4）：字段顺序由 encodeSaveData 固定 */
   private buildSaveData(): SaveData {
-    return {
-        version: 1,
-        depth: this.depth,
-        turn: this.turn,
-        level: this.level,
-        xp: this.xp,
-        mightUntil: this.mightUntil,
-        runSeed: this.runSeed,
-        player: this.player,
-        monsters: this.monsters,
-        groundItems: this.groundItems,
-        explored: [...this.explored],
-        stairsDown: this.stairsDown,
-        mapWidth: this.map.width,
-        mapHeight: this.map.height,
-        mapTiles: this.map.exportGrid(),
-        rngState: this.rng.snapshot(),
-        kills: this.kills,
-        deathCause: this.deathCause,
-        traps: this.traps,
-        gold: this.gold,
-        goldPiles: this.goldPiles,
-        merchant: this.merchant,
-        affixData: [...this.affixData.entries()],
-        classId: this.classId,
-        skillRemaining: this.skill.remaining,
-        ownedTalents: this.ownedTalents,
-        shrines: this.shrines,
-        mode: this.mode === 'levelUp' ? 'levelUp' : 'play',
-        talentChoices: this.mode === 'levelUp' ? this.talentChoices : [],
-        pendingLevelUps: this.pendingLevelUps,
-        bossSummonCount: this.bossSummonCount,
-        bossSpecies: this.boss?.species ?? null,
-        memories: [...this.memories.entries()].map(([id, m]) => [
-          id,
-          {
-            lastSeenPlayer: m.lastSeenPlayer,
-            alert: m.alert,
-            rallyPoint: m.rallyPoint,
-            rallyAge: m.rallyAge,
-            cooldowns: [...m.cooldowns],
-          },
-        ]),
-      };
+    return encodeSaveData({
+      depth: this.depth,
+      turn: this.turn,
+      level: this.level,
+      xp: this.xp,
+      gold: this.gold,
+      mightUntil: this.mightUntil,
+      runSeed: this.runSeed,
+      player: this.player,
+      monsters: this.monsters,
+      groundItems: this.groundItems,
+      explored: [...this.explored],
+      stairsDown: this.stairsDown,
+      mapWidth: this.map.width,
+      mapHeight: this.map.height,
+      mapTiles: this.map.exportGrid(),
+      rngState: this.rng.snapshot(),
+      kills: this.kills,
+      deathCause: this.deathCause,
+      traps: this.traps,
+      shrines: this.shrines,
+      goldPiles: this.goldPiles,
+      merchant: this.merchant,
+      memories: [...this.memories.entries()].map(([id, m]) => [
+        id,
+        {
+          lastSeenPlayer: m.lastSeenPlayer,
+          alert: m.alert,
+          rallyPoint: m.rallyPoint,
+          rallyAge: m.rallyAge,
+          cooldowns: [...m.cooldowns],
+        },
+      ]),
+      affixData: [...this.affixData.entries()],
+      classId: this.classId,
+      skillRemaining: this.skill.remaining,
+      ownedTalents: this.ownedTalents,
+      mode: this.mode,
+      talentChoices: this.talentChoices,
+      pendingLevelUps: this.pendingLevelUps,
+      bossSummonCount: this.bossSummonCount,
+      bossSpecies: this.boss?.species ?? null,
+    });
   }
-
-  /**
-   * 逻辑状态指纹（canonical 序列化 + 64 位双哈希，回放协议 v2）。
-   * 任何非确定性泄漏（Math.random 混入逻辑、Date.now、键序依赖）都会立刻暴露。
-   */
   stateHash(): string {
     return hash64(canonicalJson(this.buildSaveData()));
   }
@@ -366,6 +362,8 @@ export class Game {
   }
 
   private hydrate(save: SaveData): void {
+    // 旧档迁移：缺字段补默认值（M3/M4 SaveCodec 迁移防线）
+    migrateV1Defaults(save as unknown as Record<string, unknown>);
     // 先恢复最可能损坏的地图，失败时构造函数能干净回退
     this.map = new GameMap(save.mapWidth, save.mapHeight, save.mapTiles);
     this.stairsDown = { ...save.stairsDown };

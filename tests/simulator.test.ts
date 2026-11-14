@@ -4,14 +4,16 @@ import { Game } from '../src/game';
 
 /**
  * 里程碑 6/7：无头平衡模拟器。
- * 默认每职业 8 个 seed（CI 友好）；本地深度模拟用 SIM_SEEDS=40+ 运行。
+ * CI 快速档：每职业 2 seeds、回合上限 1200（约 1 分钟）——覆盖 1-2 层死亡率与早期经济。
+ * 深跑档：SIM_SEEDS=40 SIM_TURNCAP=6000 本地手动运行（不计入 CI，运行时间 30-120 分钟）。
  * 结果写入 work/sim-results.json。
  */
-const seedsPerClass = Number(process.env.SIM_SEEDS ?? '8');
+const seedsPerClass = Number(process.env.SIM_SEEDS ?? '2');
+const turnCap = Number(process.env.SIM_TURNCAP ?? '1200');
 
 describe('里程碑 6/7：无头平衡模拟器', () => {
   it('三职业各跑多个 seed 并产出结构化结果', () => {
-    const { summary, results } = simulateAll(seedsPerClass);
+    const { summary, results } = simulateAll(seedsPerClass, turnCap);
     expect(results.length).toBe(seedsPerClass * SIM_CLASSES.length);
     // 结构断言：摘要包含全部指标键
     const classes = summary.classes as Record<string, Record<string, unknown>>;
@@ -25,9 +27,9 @@ describe('里程碑 6/7：无头平衡模拟器', () => {
       expect(s).toHaveProperty('avgAstarCallsPerRun');
     }
     // 落盘
-    const report = writeSimReport(seedsPerClass);
+    const report = writeSimReport(seedsPerClass, turnCap);
     expect(Object.keys(report.classes as object).length).toBe(3);
-  }, 600000);
+  }, 300000);
 
   it('固定种子可复现：同 seed 两局状态哈希一致（模拟器确定性）', () => {
     const a = new Game(null, 987654, null, { fixedSeed: true });

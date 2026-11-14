@@ -50,7 +50,7 @@ game.onChange = () => {
   const skillRemain = game.skillRemaining();
   const skillText = skillDef
     ? ` · ${skillDef.name}${skillRemain > 0 ? `(${skillRemain})` : '(就绪)'}` +
-      (skillRemain > 0 ? '' : ' k')
+      (skillRemain > 0 ? '' : ' v')
     : '';
   statusEl.textContent =
     `第 ${game.depth} 层 · 回合 ${game.turn} · HP ${game.player.hp}/${game.player.maxHp} · ` +

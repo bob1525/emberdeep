@@ -7,7 +7,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     // Node 构建脚本允许 process/console
-    files: ['scripts/**/*.js'],
+    files: ['scripts/**/*.js', 'scripts/**/*.mjs'],
     languageOptions: {
       globals: { process: 'readonly', console: 'readonly' },
     },

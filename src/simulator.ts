@@ -27,8 +27,13 @@ export interface SimResult {
   astarCalls: number;
 }
 
-/** 单局模拟：固定种子的机器人跑一整条命（或到达 30 层） */
-export function simulateRun(seed: number, classId: ClassId, maxDepthCap = 30): SimResult {
+/** 单局模拟：固定种子的机器人跑一整条命（或到达 30 层 / 回合上限卡死标记） */
+export function simulateRun(
+  seed: number,
+  classId: ClassId,
+  maxDepthCap = 30,
+  turnCap = 3000,
+): SimResult {
   const game = new Game(null, seed, null, { fixedSeed: true });
   game.setSimMode(true);
   game.handleAction({ type: 'titleNew' });
@@ -36,9 +41,13 @@ export function simulateRun(seed: number, classId: ClassId, maxDepthCap = 30): S
   game.handleAction({ type: 'useSlot', slot });
   const t0 = Date.now();
   const astarBefore = { ...pathfindingStats };
-  let guard = 40000;
-  while (!game.dead && game.depth < maxDepthCap && guard-- > 0) {
+  let stuck = false;
+  while (!game.dead && game.depth < maxDepthCap) {
     game.simTurn();
+    if (game.turn >= turnCap) {
+      stuck = true;
+      break;
+    }
   }
   const snapshotBytes = JSON.stringify(game.exportSaveData()).length;
   return {
@@ -47,7 +56,7 @@ export function simulateRun(seed: number, classId: ClassId, maxDepthCap = 30): S
     maxDepth: game.depth,
     reached30: game.depth >= maxDepthCap,
     dead: game.dead,
-    cause: game.deathCause,
+    cause: game.dead ? game.deathCause : stuck ? '回合上限（机器人卡死）' : `到达第 ${game.depth} 层`,
     turns: game.turn,
     kills: game.kills,
     gold: game.gold,
@@ -111,14 +120,14 @@ export function summarize(list: SimResult[]): ClassSummary {
   };
 }
 
-export function simulateAll(seedsPerClass: number): {
+export function simulateAll(seedsPerClass: number, turnCap = 3000): {
   summary: Record<string, unknown>;
   results: SimResult[];
 } {
   const results: SimResult[] = [];
   for (const classId of SIM_CLASSES) {
     for (let i = 1; i <= seedsPerClass; i++) {
-      results.push(simulateRun(1000 + i * 7, classId));
+      results.push(simulateRun(1000 + i * 7, classId, 30, turnCap));
     }
   }
   const summary: Record<string, unknown> = {
@@ -131,8 +140,8 @@ export function simulateAll(seedsPerClass: number): {
   return { summary, results };
 }
 
-export function writeSimReport(seedsPerClass: number): Record<string, unknown> {
-  const { summary, results } = simulateAll(seedsPerClass);
+export function writeSimReport(seedsPerClass: number, turnCap = 3000): Record<string, unknown> {
+  const { summary, results } = simulateAll(seedsPerClass, turnCap);
   mkdirSync('work', { recursive: true });
   writeFileSync('work/sim-results.json', JSON.stringify({ summary, results }, null, 1), 'utf8');
   return summary;
