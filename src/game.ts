@@ -115,6 +115,8 @@ export class Game {
   private explored = new Set<string>();
   private effects: Effect[] = [];
   private mightUntil = 0;
+  private autoExploring = false;
+  private autoPath: Pt[] | null = null;
   private rng: Rng;
   private runSeed: number;
   private log: LogEntry[] = [];
@@ -280,6 +282,22 @@ export class Game {
       if (action.type === 'restart') this.newRun();
       return;
     }
+    // 任何主动操作都会打断自动探索（o 本身除外，用于开关）
+    if (this.autoExploring && action.type !== 'autoExplore') {
+      this.autoExploring = false;
+      this.autoPath = null;
+    }
+    if (action.type === 'autoExplore') {
+      this.autoExploring = !this.autoExploring;
+      this.autoPath = null;
+      if (this.autoExploring) {
+        this.log.push({ text: '开始自动探索……', tone: 'info' });
+        this.autoStep();
+      } else {
+        this.log.push({ text: '自动探索已停止。', tone: 'info' });
+      }
+      return;
+    }
     if (action.type === 'openInventory') {
       this.mode = 'inventory';
       return;
@@ -426,6 +444,109 @@ export class Game {
     } else {
       this.persist();
     }
+  }
+
+  // ---------- 自动探索 ----------
+
+  /**
+   * 迭代式自动探索：每回合走向最近的未探索区域。
+   * 视野内出现敌人、玩家死亡或无路可走时中断。
+   */
+  private autoStep(): void {
+    let guard = 0;
+    while (this.autoExploring && !this.dead && guard < 500) {
+      guard += 1;
+      if (this.visibleTargets().length > 0) {
+        this.autoExploring = false;
+        this.log.push({ text: '发现敌人，自动探索中断！', tone: 'info' });
+        return;
+      }
+      if (!this.autoPath || this.autoPath.length === 0) {
+        this.autoPath = this.pathToUnexplored();
+        if (!this.autoPath) {
+          this.autoExploring = false;
+          this.log.push({ text: '这一层已经探索完毕。', tone: 'good' });
+          return;
+        }
+      }
+      const next = this.autoPath[0];
+      if (!next) {
+        this.autoPath = null;
+        continue;
+      }
+      const dx = next.x - this.player.x;
+      const dy = next.y - this.player.y;
+      // 安全阀：路径步必须相邻（传送等意外位移会导致路径失效）
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+        this.autoPath = null;
+        continue;
+      }
+      if (this.tryPlayerMove(dx, dy)) {
+        this.autoPath.shift();
+        this.endPlayerTurn();
+      } else {
+        // 被堵住：重新寻路
+        this.autoPath = null;
+      }
+    }
+    if (guard >= 500) this.autoExploring = false;
+  }
+
+  /** BFS 找最近一块"边上还有未探索格"的可达区域，返回一步步的路径 */
+  private pathToUnexplored(): Pt[] | null {
+    const w = this.map.width;
+    const startIdx = this.player.y * w + this.player.x;
+    const seen = new Set<number>([startIdx]);
+    const parent = new Map<number, number>();
+    const queue: number[] = [startIdx];
+    const dirs: readonly (readonly [number, number])[] = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+      [1, 1],
+      [1, -1],
+      [-1, 1],
+      [-1, -1],
+    ];
+
+    const hasUnexploredNeighbor = (x: number, y: number): boolean => {
+      for (const [dx, dy] of dirs) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (this.map.isWalkable(nx, ny) && !this.explored.has(`${nx},${ny}`)) return true;
+      }
+      return false;
+    };
+
+    while (queue.length > 0) {
+      const cur = queue.shift();
+      if (cur === undefined) break;
+      const cx = cur % w;
+      const cy = Math.floor(cur / w);
+      if (cur !== startIdx && hasUnexploredNeighbor(cx, cy)) {
+        // 回溯出路径（不含起点）
+        const path: Pt[] = [];
+        let curIdx: number | undefined = cur;
+        while (curIdx !== undefined && curIdx !== startIdx) {
+          path.push({ x: curIdx % w, y: Math.floor(curIdx / w) });
+          curIdx = parent.get(curIdx);
+        }
+        path.reverse();
+        return path;
+      }
+      for (const [dx, dy] of dirs) {
+        const nx = cx + dx;
+        const ny = cy + dy;
+        if (!this.map.isWalkable(nx, ny)) continue;
+        const nIdx = ny * w + nx;
+        if (seen.has(nIdx)) continue;
+        seen.add(nIdx);
+        parent.set(nIdx, cur);
+        queue.push(nIdx);
+      }
+    }
+    return null;
   }
 
   /** 玩家身上的持续状态结算（中毒/燃烧/再生…），可能致死 */
@@ -1018,6 +1139,8 @@ export class Game {
     this.kills = 0;
     this.deathCause = '未知';
     this.logCursor = null;
+    this.autoExploring = false;
+    this.autoPath = null;
     this.mightUntil = 0;
     this.log = [{ text: '新的冒险开始了。你在余烬深渊的第 1 层醒来……', tone: 'info' }];
     Game.clearSave();

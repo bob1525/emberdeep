@@ -11,6 +11,7 @@ export type Action =
   | { type: 'openInventory' }
   | { type: 'openLog' }
   | { type: 'aimBow' }
+  | { type: 'autoExplore' }
   | { type: 'closeOverlay' }
   | { type: 'useSlot'; slot: number }
   | { type: 'dropSlot'; slot: number }
@@ -64,6 +65,7 @@ function buildKeyCommands(): Record<string, Action> {
     i: { type: 'openInventory' },
     '?': { type: 'openLog' },
     z: { type: 'aimBow' },
+    o: { type: 'autoExplore' },
     Escape: { type: 'closeOverlay' },
     PageUp: { type: 'scrollLog', dir: -1 },
     PageDown: { type: 'scrollLog', dir: 1 },
