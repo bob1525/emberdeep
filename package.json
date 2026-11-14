@@ -1,0 +1,27 @@
+{
+  "name": "emberdeep",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Emberdeep 余烬深渊 — 一款纯 TypeScript + Canvas 的浏览器 Roguelike",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "eslint": "^9.39.0",
+    "typescript": "~5.9.0",
+    "typescript-eslint": "^8.46.0",
+    "vite": "^7.1.0",
+    "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "minimatch": "^11.0.1"
+  }
+}
