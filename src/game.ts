@@ -1,8 +1,6 @@
 import { isMuted, playSfx, setMuted } from './engine/audio';
 import type { Action } from './engine/input';
 import { computeFov } from './engine/fov';
-import { decideMonsterAction } from './engine/ai';
-import type { AiAction } from './engine/ai';
 import { resolveAttack } from './engine/combat';
 import { hasLineOfSight } from './engine/los';
 import type { Pt } from './engine/los';
@@ -10,14 +8,7 @@ import { Rng } from './engine/rng';
 import { canonicalJson, hash64 } from './engine/canonical';
 import { parseSaveData } from './engine/saveSchema';
 import { encodeSaveData, migrateV1Defaults, type SaveData } from './engine/saveCodec';
-import {
-  STATUSES,
-  actionsPerTurn,
-  applyStatus,
-  hasStatus,
-  tickStatuses,
-  totalDefenseBonus,
-} from './engine/statuses';
+import { applyStatus, totalDefenseBonus } from './engine/statuses';
 import {
   createPlayer,
   makeActor,
@@ -28,13 +19,12 @@ import {
   type ItemInstance,
 } from './entities/actor';
 import { rollMonster } from './entities/monsters';
-import { bossForDepth, decideBossSpecial, phaseForHp } from './entities/bosses';
-import type { BossDef, BossPhase, BossSpecialReport } from './entities/bosses';
-import { CLASSES, canUseSkill, makeCooldown, startCooldown, tickCooldown } from './entities/classes';
+import { bossForDepth } from './entities/bosses';
+import type { BossDef } from './entities/bosses';
+import { CLASSES, canUseSkill, makeCooldown, startCooldown } from './entities/classes';
 import type { ClassId, SkillCooldown } from './entities/classes';
 import { TALENTS, talentBonus, rollTalentChoices } from './entities/talents';
 import type { TalentMods } from './entities/talents';
-import { runBrain, newMemory, tickMemory } from './engine/brain';
 import type { MonsterMemory } from './engine/brain';
 import { findPathWithFn } from './engine/pathfinding';
 import { weaponBonus, armorBonus } from './items/catalog';
@@ -56,6 +46,7 @@ import type { PlacedTrap } from './world/traps';
 import { SHRINES, resolveAltar, resolveWell } from './world/shrines';
 import type { ShrineKind } from './world/shrines';
 import { FloorService } from './world/floorService';
+import { TurnEngine } from './engine/turnEngine';
 import { drawMinimap, type Effect, type Renderer, type Scene } from './ui/renderer';
 import { buildScene as sbBuildScene, itemInfo as sbItemInfo } from './ui/sceneBuilder';
 
@@ -87,8 +78,6 @@ export type { SaveData };
 
 const FOV_RADIUS = 8;
 const MIGHT_ATTACK_BONUS = 3;
-/** Boss 每场战斗的召唤物上限（P0-8） */
-const BOSS_SUMMON_CAP = 4;
 /** 自动探索单批步数预算（P0-7） */
 const AUTO_EXPLORE_BUDGET = 24;
 
@@ -749,6 +738,46 @@ export class Game {
     });
   }
 
+  /** 回合引擎（M4 迁出）：每次调用组装最小上下文；箭头函数闭包规避 player/rng/map 等重赋值后的引用失效 */
+  private turnEngine(): TurnEngine {
+    return new TurnEngine({
+      // 按引用传入（服务只就地变更，绝不重赋值）
+      rng: this.rng,
+      player: this.player,
+      memories: this.memories,
+      summonedIds: this.summonedIds,
+      effects: this.effects,
+      // 门面标量/容器：经访问器读写
+      getTurn: () => this.turn,
+      setTurn: (turn) => { this.turn = turn; },
+      getSkill: () => this.skill,
+      getDead: () => this.dead,
+      setDead: (dead) => { this.dead = dead; },
+      getDeathCause: () => this.deathCause,
+      setDeathCause: (cause) => { this.deathCause = cause; },
+      getDepth: () => this.depth,
+      getMightUntil: () => this.mightUntil,
+      setMightUntil: (turn) => { this.mightUntil = turn; },
+      getBoss: () => this.boss,
+      getBossDef: () => this.bossDef,
+      getBossSummonCount: () => this.bossSummonCount,
+      setBossSummonCount: (count) => { this.bossSummonCount = count; },
+      getMonsters: () => this.monsters,
+      getMerchantPos: () => (this.merchant ? { x: this.merchant.x, y: this.merchant.y } : null),
+      isPlayMode: () => this.mode === 'play',
+      // 门面回调（击杀结算含 RNG 消耗，留在门面）
+      isWalkable: (x, y) => this.map.isWalkable(x, y),
+      talentMods: () => this.talentMods(),
+      effectiveDefense: () => this.effectiveDefense(),
+      killMonster: (target) => this.killMonster(target),
+      monsterAt: (x, y) => this.monsterAt(x, y),
+      persist: () => this.persist(),
+      clearSave: () => Game.clearSave(),
+      recordDepth: (depth) => Game.recordDepth(depth),
+      log: (text, tone) => { this.log.push({ text, tone }); },
+    });
+  }
+
   /** 背包里可用的远程武器（M4 委托 InventoryEconomyService） */
   private rangedInInventory(): ItemInstance | null {
     return this.inventoryService().rangedInInventory();
@@ -867,30 +896,9 @@ export class Game {
     this.inventoryService().sellFromInventory(slot);
   }
 
-  /** 玩家行动成功后的公共回合结算 */
+  /** 玩家行动成功后的公共回合结算（M4 委托 TurnEngine） */
   private endPlayerTurn(): void {
-    this.turn += 1;
-    tickCooldown(this.skill);
-    for (const memory of this.memories.values()) tickMemory(memory);
-    // 天赋·活力：每 5 回合回复生命
-    const regen = this.talentMods().regen;
-    if (regen > 0 && this.turn % 5 === 0 && this.player.hp < this.player.maxHp) {
-      this.player.hp = Math.min(this.player.maxHp, this.player.hp + regen);
-    }
-    this.tickPlayerStatuses();
-    if (!this.dead) {
-      // 玩家加速 → 怪物隔回合行动；玩家减速 → 怪物一回合行动两轮
-      const hasted = hasStatus(this.player, 'haste');
-      const slowed = hasStatus(this.player, 'slow');
-      if (!hasted || this.turn % 2 === 0) this.monsterTurns();
-      if (slowed && !this.dead) this.monsterTurns();
-    }
-    this.tickMight();
-    if (this.dead) {
-      Game.clearSave();
-    } else {
-      this.persist();
-    }
+    this.turnEngine().endPlayerTurn();
   }
 
   // ---------- 自动探索 ----------
@@ -1046,47 +1054,6 @@ export class Game {
     return null;
   }
 
-  /** 玩家身上的持续状态结算（中毒/燃烧/再生…），可能致死 */
-  private tickPlayerStatuses(): void {
-    const report = tickStatuses(this.player);
-    for (const event of report.events) {
-      const info = STATUSES[event.kind];
-      if (!info) continue;
-      if (event.damage > 0) {
-        this.effects.push({
-          kind: 'float',
-          x: this.player.x,
-          y: this.player.y,
-          text: `-${event.damage}`,
-          color: info.color,
-        });
-        this.log.push({ text: `${info.name}侵蚀着你（${event.damage} 伤害）。`, tone: 'bad' });
-      } else if (event.damage < 0) {
-        this.effects.push({
-          kind: 'float',
-          x: this.player.x,
-          y: this.player.y,
-          text: `+${-event.damage}`,
-          color: info.color,
-        });
-        this.log.push({ text: `${info.name}让你恢复了 ${-event.damage} 点生命。`, tone: 'good' });
-      } else if (event.expired) {
-        this.log.push({ text: `${info.name}消退了。`, tone: 'info' });
-      }
-      if (this.player.hp <= 0) {
-        this.dead = true;
-        this.deathCause = info.name;
-        playSfx('die');
-        this.effects.push(
-          { kind: 'quake', dur: 500 },
-          { kind: 'flashScreen', color: '#5c1010', dur: 600 },
-        );
-        this.log.push({ text: `你死于${info.name}……按 R 重新开始。`, tone: 'bad' });
-        break;
-      }
-    }
-  }
-
   /** 从存档继续（标题菜单用）；失败保持当前界面 */
   continueFromSave(): boolean {
     const save = Game.readSave();
@@ -1194,17 +1161,9 @@ export class Game {
     };
   }
 
-  /** @internal 测试用：强制 Boss 释放一次阶段特技（确定性消耗 rng） */
+  /** @internal 测试用：强制 Boss 释放一次阶段特技（确定性消耗 rng；M4 委托 TurnEngine） */
   debugForceBossSpecial(): void {
-    for (let i = 0; i < 60; i++) {
-      const phase = this.bossPhase();
-      if (!phase) return;
-      const special = decideBossSpecial(phase, this.rng);
-      if (special.kind !== 'none') {
-        this.applyBossSpecial(special);
-        return;
-      }
-    }
+    this.turnEngine().debugForceBossSpecial();
   }
 
   /** @internal 测试用：给最近的怪物施加燃烧（P0-4 验证） */
@@ -1660,160 +1619,6 @@ export class Game {
     return this.floorService().descend();
   }
 
-  // ---------- 怪物回合 ----------
-
-  private monsterTurns(): void {
-    for (const m of [...this.monsters]) {
-      // ① 状态结算（P0-4）：伤害类先于行动，死亡立即移除；
-      //    顺序契约：状态伤害 → 死亡判定 → 能量恢复 → 特技 → AI 行动
-      const sReport = tickStatuses(m);
-      for (const ev of sReport.events) {
-        const info = STATUSES[ev.kind];
-        if (ev.damage > 0 && info) {
-          this.effects.push({
-            kind: 'float',
-            x: m.x,
-            y: m.y,
-            text: `-${ev.damage}`,
-            color: info.color,
-          });
-          this.log.push({ text: `${m.name}因${info.name}受到 ${ev.damage} 点伤害。`, tone: 'combat' });
-        }
-      }
-      if (m.hp <= 0) {
-        this.killMonster(m);
-        continue;
-      }
-      if (this.dead) return;
-
-      // ② Boss 阶段特技（在能量循环之外，防止特技连锁；haste 只 +1 能量，P0-8）
-      if (m === this.boss && this.bossDef) {
-        const phase = this.bossPhase();
-        if (phase) {
-          const special = decideBossSpecial(phase, this.rng);
-          if (special.kind !== 'none') {
-            this.applyBossSpecial(special);
-            continue;
-          }
-        }
-      }
-
-      // ③ 能量制行动频率：加速怪一回合两次，减速怪隔回合一次
-      m.energy += actionsPerTurn(m);
-      let actionsThisTurn = 0;
-      while (m.energy >= 1 && !this.dead && this.mode === 'play') {
-        m.energy -= 1;
-        actionsThisTurn += 1;
-        if (actionsThisTurn > 3) break; // 硬上限：Boss/加速怪每玩家回合最多 3 次行动（P0-8）
-        const act = this.decideMonster(m);
-        if (act.type === 'attack') {
-          this.monsterAttack(m);
-          if (this.dead) break;
-        } else if (act.type === 'move') {
-          const nx = m.x + act.dx;
-          const ny = m.y + act.dy;
-          const occupied =
-            this.monsterAt(nx, ny) !== undefined ||
-            (this.player.x === nx && this.player.y === ny) ||
-            (this.merchant !== null && this.merchant.x === nx && this.merchant.y === ny);
-          if (!occupied && this.map.isWalkable(nx, ny)) {
-            this.effects.push({
-              kind: 'step',
-              fromX: m.x,
-              fromY: m.y,
-              toX: nx,
-              toY: ny,
-              glyph: m.glyph,
-              color: m.color,
-              dur: 140,
-            });
-            m.x = nx;
-            m.y = ny;
-          }
-        }
-      }
-    }
-  }
-
-  /** 怪物决策入口：Boss 走专属阶段逻辑，普通怪走行为树（有记忆/会呼救/会逃跑） */
-  private decideMonster(m: Actor): AiAction {
-    if (m === this.boss) {
-      // Boss 由 monsterTurns 内联处理阶段特技，这里只做常规决策
-      return decideMonsterAction({
-        self: m,
-        player: this.player,
-        isBlocked: (x, y) => !this.map.isWalkable(x, y),
-        rng: this.rng,
-      });
-    }
-    const memory = this.memories.get(m.id) ?? newMemory();
-    this.memories.set(m.id, memory);
-    const allies = this.monsters
-      .filter((o) => o !== m && o.side === m.side)
-      .map((o) => {
-        // P1-13：盟友记忆必须写回 Map，临时对象会让呼救的集结点丢失
-        let allyMemory = this.memories.get(o.id);
-        if (!allyMemory) {
-          allyMemory = newMemory();
-          this.memories.set(o.id, allyMemory);
-        }
-        return { actor: o, memory: allyMemory };
-      });
-    const result = runBrain({
-      self: m,
-      player: this.player,
-      allies,
-      isBlocked: (x, y) => !this.map.isWalkable(x, y),
-      // 真实火焰判定（P0-4）：身上有燃烧状态即视为身处火场
-      isOnFire: (x, y) => x === m.x && y === m.y && hasStatus(m, 'burn'),
-      rng: this.rng,
-      memory,
-    });
-    for (const event of result.events) {
-      this.log.push({ text: event.text, tone: 'info' });
-    }
-    return result.action;
-  }
-
-  private monsterAttack(m: Actor): void {
-    this.effects.push({
-      kind: 'lunge',
-      x: m.x,
-      y: m.y,
-      dx: Math.sign(this.player.x - m.x),
-      dy: Math.sign(this.player.y - m.y),
-      glyph: m.glyph,
-      color: m.color,
-      dur: 170,
-    });
-    // Boss 在狂暴阶段攻击力上升
-    const phase = m === this.boss ? this.bossPhase() : null;
-    const report = resolveAttack({
-      attackerName: m.name,
-      attack: m.attack + (phase?.attackBonus ?? 0),
-      defenderName: '你',
-      defense: this.effectiveDefense(),
-      defenderHp: this.player.hp,
-      rng: this.rng,
-    });
-    this.player.hp -= report.damage;
-    playSfx('hurt');
-    this.effects.push(
-      { kind: 'float', x: this.player.x, y: this.player.y, text: `-${report.damage}`, color: '#d96a5a' },
-      { kind: 'flash', x: this.player.x, y: this.player.y, color: '#d96a5a' },
-    );
-    this.log.push({ text: `${m.name}击中了你，造成 ${report.damage} 点伤害！`, tone: 'bad' });
-    this.applyOnHitStatus(m);
-    if (report.killed) {
-      this.dead = true;
-      this.deathCause = m.name;
-      Game.recordDepth(this.depth);
-      playSfx('die');
-      this.effects.push({ kind: 'quake', dur: 500 }, { kind: 'flashScreen', color: '#5c1010', dur: 600 });
-      this.log.push({ text: `你死在了第 ${this.depth} 层……按 R 重新开始。`, tone: 'bad' });
-    }
-  }
-
   // ---------- 楼层与渲染 ----------
 
   /** 换层时清理不再被任何实体引用的词缀数据（P1-14；M4 委托 InventoryEconomyService） */
@@ -1824,12 +1629,6 @@ export class Game {
   /** 楼层构建（M4 委托 FloorService）：地图生成 + 怪物/物品/商人/奇遇建筑/陷阱/Boss 布置 */
   private buildFloor(): void {
     this.floorService().buildFloor();
-  }
-
-  /** Boss 当前所处阶段（非 Boss 怪返回 null） */
-  private bossPhase(): BossPhase | null {
-    if (!this.boss || !this.bossDef || this.boss.hp <= 0) return null;
-    return phaseForHp(this.bossDef, this.boss.hp);
   }
 
   /** 玩家踏入陷阱格：一次性触发后拆除（简化设计） */
@@ -1934,13 +1733,6 @@ export class Game {
       });
     }
     this.buildFloor();
-  }
-
-  private tickMight(): void {
-    if (this.mightUntil !== 0 && this.turn > this.mightUntil) {
-      this.mightUntil = 0;
-      this.log.push({ text: '余烬之力消散了。', tone: 'info' });
-    }
   }
 
   private updateFov(): void {
@@ -2072,108 +1864,6 @@ export class Game {
         }
       }
       if (placed > 0) this.log.push({ text: '深渊的怪物被惊醒了！', tone: 'bad' });
-    }
-  }
-
-  /** Boss 阶段特技落地（P0-8：召唤上限/召唤物无 XP/haste 仅 +1 能量） */
-  private applyBossSpecial(report: BossSpecialReport): void {
-    this.log.push({ text: report.message, tone: 'bad' });
-    playSfx('zap');
-    this.effects.push({ kind: 'quake', dur: 260 });
-    if (report.kind === 'aoe' && this.boss) {
-      const dist = Math.max(
-        Math.abs(this.player.x - this.boss.x),
-        Math.abs(this.player.y - this.boss.y),
-      );
-      if (dist <= 3) {
-        const damage = Math.max(1, report.damage - this.effectiveDefense());
-        this.player.hp -= damage;
-        this.effects.push({
-          kind: 'float',
-          x: this.player.x,
-          y: this.player.y,
-          text: `-${damage}`,
-          color: '#d96a5a',
-        });
-        this.log.push({ text: `冲击波击中了你（${damage} 伤害）！`, tone: 'bad' });
-        if (this.player.hp <= 0) {
-          this.dead = true;
-          this.deathCause = this.bossDef?.name ?? '深渊';
-          playSfx('die');
-          this.log.push({ text: '你被冲击波撕碎了……按 R 重新开始。', tone: 'bad' });
-        }
-      }
-    } else if (report.kind === 'summon' && this.boss) {
-      // 召唤上限：每场战斗最多 4 只（P0-8）
-      const room = BOSS_SUMMON_CAP - this.bossSummonCount;
-      if (room <= 0) {
-        this.log.push({ text: '深渊的雾气翻涌，却再也召不出东西了。', tone: 'info' });
-        return;
-      }
-      for (let i = 0; i < Math.min(report.count, room); i++) {
-        let placed = false;
-        for (let r = 1; r <= 3 && !placed; r++) {
-          for (let dy = -r; dy <= r && !placed; dy++) {
-            for (let dx = -r; dx <= r && !placed; dx++) {
-              if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-              const x = this.boss.x + dx;
-              const y = this.boss.y + dy;
-              if (!this.map.isWalkable(x, y) || this.monsterAt(x, y)) continue;
-              if (this.player.x === x && this.player.y === y) continue;
-              const t = rollMonster(this.depth, this.rng);
-              const minion = makeActor({
-                species: t.species,
-                name: t.name,
-                glyph: t.glyph,
-                color: t.color,
-                x,
-                y,
-                hp: t.maxHp,
-                maxHp: t.maxHp,
-                attack: t.attack,
-                defense: t.defense,
-                xpValue: t.xpValue,
-                ai: { mode: 'chase', senseRadius: t.senseRadius },
-              });
-              this.monsters.push(minion);
-              this.summonedIds.add(minion.id);
-              this.bossSummonCount += 1;
-              this.effects.push({ kind: 'burst', x, y, color: '#7d4bd1', dur: 400 });
-              placed = true;
-            }
-          }
-        }
-      }
-    } else if (report.kind === 'haste' && this.boss) {
-      // haste = 下一回合一次额外普通行动（能量 +1），不再向循环注入无界能量（P0-8）
-      this.boss.energy += 1;
-      this.log.push({ text: `${this.boss.name}的动作变得越来越快了！`, tone: 'bad' });
-    } else if (report.kind === 'heal' && this.boss) {
-      const heal = Math.floor(this.boss.maxHp * 0.15);
-      this.boss.hp = Math.min(this.boss.maxHp, this.boss.hp + heal);
-      this.effects.push({
-        kind: 'float',
-        x: this.boss.x,
-        y: this.boss.y,
-        text: `+${heal}`,
-        color: '#7fbf6a',
-      });
-    }
-  }
-
-  /** 深渊生物的附加攻击：按物种概率施加状态 */
-  private applyOnHitStatus(m: Actor): void {
-    if (this.dead) return;
-    const roll = this.rng.next();
-    if (m.species === 'rat' && roll < 0.15) {
-      applyStatus(this.player, 'poison', 4, 1);
-      this.log.push({ text: '鼠人的咬伤让你中毒了！', tone: 'bad' });
-    } else if (m.species === 'ember_wraith' && roll < 0.35) {
-      applyStatus(this.player, 'burn', 3, 2);
-      this.log.push({ text: '余烬幽魂的火焰灼烧着你！', tone: 'bad' });
-    } else if (m.species === 'skeleton' && roll < 0.1) {
-      applyStatus(this.player, 'slow', 4, 0);
-      this.log.push({ text: '骷髅兵的寒气让你行动迟缓！', tone: 'bad' });
     }
   }
 
