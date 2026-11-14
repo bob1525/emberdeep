@@ -17,8 +17,21 @@ const overlayEl = document.querySelector<HTMLDivElement>('#overlay');
 if (!canvas || !statusEl || !logEl || !overlayEl) throw new Error('页面结构不完整');
 
 const renderer = new Renderer(canvas);
+// URL 支持：?seed=12345（复现同一条地牢）或 ?daily（每日挑战，按日期固定种子）
+const params = new URLSearchParams(window.location.search);
+const dailySeed = Number.parseInt(
+  new Date().toISOString().slice(0, 10).replace(/-/g, ''),
+  10,
+);
+const seedParam = Number.parseInt(params.get('seed') ?? '', 10);
+const fixedSeed =
+  Number.isFinite(seedParam) && seedParam > 0
+    ? seedParam
+    : params.has('daily') && Number.isFinite(dailySeed)
+      ? dailySeed
+      : undefined;
 // 从标题画面开始；"继续"由玩家在菜单里选择
-const game = new Game(renderer);
+const game = new Game(renderer, fixedSeed);
 
 game.onChange = () => {
   const statusTags = game.player.statuses
@@ -73,6 +86,9 @@ function renderOverlay(): void {
     tagline.className = 'tagline';
     tagline.textContent = '余烬深渊 · 浏览器 Roguelike';
     panel.append(logo, tagline);
+    if (fixedSeed !== undefined) {
+      panel.append(hint(`固定种子 ${game.seed()} — 同一种子，同一座地牢`));
+    }
     panel.append(option('[Enter] 新的冒险', '深入随机生成的地牢，死亡即失去一切'));
     if (Game.readSave() !== null) {
       panel.append(option('[C] 继续上局', '从停下的地方继续'));

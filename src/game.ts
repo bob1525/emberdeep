@@ -708,6 +708,11 @@ export class Game {
     return this.level * 10;
   }
 
+  /** 本局种子（标题画面展示，URL 可复现同一条地牢） */
+  seed(): number {
+    return this.runSeed;
+  }
+
   effectiveAttack(): number {
     const weapon = this.player.equipment.weapon;
     const weaponBonusTotal =
@@ -817,14 +822,48 @@ export class Game {
       defenderHp: target.hp,
       rng: this.rng,
     });
-    target.hp -= report.damage;
+    // 暴击：双倍伤害
+    const crit = this.rng.next() < this.critChance();
+    const damage = crit ? report.damage * 2 : report.damage;
+    target.hp -= damage;
     playSfx('hit');
     this.effects.push(
-      { kind: 'float', x: target.x, y: target.y, text: `-${report.damage}`, color: '#f5b04c' },
+      {
+        kind: 'float',
+        x: target.x,
+        y: target.y,
+        text: crit ? `暴击 -${damage}` : `-${damage}`,
+        color: crit ? '#ffdf6b' : '#f5b04c',
+      },
       { kind: 'flash', x: target.x, y: target.y, color: '#ffffff' },
     );
-    this.log.push({ text: `你击中了${target.name}，造成 ${report.damage} 点伤害。`, tone: 'combat' });
-    if (report.killed) this.killMonster(target);
+    this.log.push({
+      text: crit
+        ? `暴击！你重创了${target.name}，造成 ${damage} 点伤害。`
+        : `你击中了${target.name}，造成 ${damage} 点伤害。`,
+      tone: 'combat',
+    });
+    this.applyLifesteal(damage);
+    if (crit) playSfx('kill');
+    if (target.hp <= 0) this.killMonster(target);
+  }
+
+  /** 当前暴击率（天赋可加成） */
+  private critChance(): number {
+    return 0.1;
+  }
+
+  /** 当前吸血比例（天赋可加成） */
+  private lifestealRatio(): number {
+    return 0;
+  }
+
+  /** 近战伤害吸血回血 */
+  private applyLifesteal(damage: number): void {
+    const heal = Math.floor(damage * this.lifestealRatio());
+    if (heal > 0) {
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + heal);
+    }
   }
 
   private killMonster(target: Actor): void {
