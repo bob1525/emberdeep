@@ -73,6 +73,12 @@ export function allocateItemUid(): number {
   return nextItemUid++;
 }
 
+/** 重置 ID 计数器（新开一局时调用，保证回放/测试的确定性） */
+export function resetEntityIds(): void {
+  nextActorId = 1;
+  nextItemUid = 1;
+}
+
 const EMPTY_EQUIPMENT: Equipment = { weapon: null, armor: null };
 
 /** 用模板字段创建实体，缺省值统一在这里兜底 */

@@ -18,6 +18,7 @@ import {
   createPlayer,
   makeActor,
   allocateItemUid,
+  resetEntityIds,
   type Actor,
   type ItemInstance,
 } from './entities/actor';
@@ -174,12 +175,13 @@ export class Game {
   onChange: (() => void) | null = null;
 
   constructor(
-    private renderer: Renderer,
+    private renderer: Renderer | null,
     runSeed = Date.now() % 2147483647,
     save?: SaveData | null,
   ) {
     this.runSeed = (runSeed % 2147483647) || 1;
     this.rng = new Rng(this.runSeed);
+    resetEntityIds();
     this.player = createPlayer(0, 0);
     this.log.push({ text: '你在余烬深渊的第 1 层醒来，身后的楼梯已经塌了……', tone: 'info' });
     if (save) {
@@ -202,7 +204,16 @@ export class Game {
   /** 每回合自动存档；失败（隐私模式等）静默降级 */
   private persist(): void {
     try {
-      const data: SaveData = {
+      const data = this.buildSaveData();
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    } catch {
+      // 忽略存储异常
+    }
+  }
+
+  /** 构造存档快照（persist 与状态哈希共用，字段顺序必须稳定） */
+  private buildSaveData(): SaveData {
+    return {
         version: 1,
         depth: this.depth,
         turn: this.turn,
@@ -230,10 +241,20 @@ export class Game {
         skillRemaining: this.skill.remaining,
         ownedTalents: this.ownedTalents,
       };
-      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-    } catch {
-      // 忽略存储异常
+  }
+
+  /**
+   * 逻辑状态哈希（FNV-1a）：用于回放验证与确定性回归测试。
+   * 任何非确定性泄漏（Math.random 混入逻辑、Date.now、遍历顺序）都会立刻暴露。
+   */
+  stateHash(): string {
+    const snapshot = JSON.stringify(this.buildSaveData());
+    let h = 2166136261;
+    for (let i = 0; i < snapshot.length; i++) {
+      h ^= snapshot.charCodeAt(i);
+      h = Math.imul(h, 16777619);
     }
+    return (h >>> 0).toString(16).padStart(8, '0');
   }
 
   /** 读取并校验存档；损坏或版本不符返回 null */
@@ -1634,6 +1655,7 @@ export class Game {
     // 线性同余派生新种子，保证连续两局必然不同
     this.runSeed = (this.runSeed * 1664525 + 1013904223) % 2147483647;
     this.rng = new Rng(this.runSeed || 1);
+    resetEntityIds();
     // 按职业初始化角色
     this.classId = classId;
     const cls = CLASSES[classId];
@@ -1782,6 +1804,8 @@ export class Game {
   }
 
   private render(): void {
+    // 回放/无头模式下没有渲染器，只推进逻辑
+    if (!this.renderer) return;
     this.renderer.draw(this.buildScene());
   }
 }
