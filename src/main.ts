@@ -7,6 +7,9 @@ import { startAmbient } from './engine/audio';
 import { RANGED } from './engine/ranged';
 import { rarityColor } from './items/affixes';
 import { itemDef } from './items/catalog';
+import { CLASSES } from './entities/classes';
+import type { ClassId } from './entities/classes';
+import { TALENTS } from './entities/talents';
 import { Renderer } from './ui/renderer';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game');
@@ -37,11 +40,18 @@ game.onChange = () => {
   const statusTags = game.player.statuses
     .map((s) => STATUSES[s.kind as StatusKind]?.name ?? s.kind)
     .join('·');
+  const skillDef = CLASSES[game.classId as ClassId]?.skill;
+  const skillRemain = game.skillRemaining();
+  const skillText = skillDef
+    ? ` · ${skillDef.name}${skillRemain > 0 ? `(${skillRemain})` : '(就绪)'}` +
+      (skillRemain > 0 ? '' : ' k')
+    : '';
   statusEl.textContent =
     `第 ${game.depth} 层 · 回合 ${game.turn} · HP ${game.player.hp}/${game.player.maxHp} · ` +
     `攻 ${game.effectiveAttack()} · 防 ${game.effectiveDefense()} · ` +
     `等级 ${game.level} · 经验 ${game.xp}/${game.xpToNext()} · ` +
     `金币 ${game.gold}` +
+    skillText +
     (statusTags ? ` · 【${statusTags}】` : '');
   logEl.replaceChildren(
     ...game.recentLog().map((entry) => {
@@ -95,6 +105,22 @@ function renderOverlay(): void {
     }
     panel.append(hint('移动 方向键/WASD/hjkl · 斜向 yubn · 撞向敌人即攻击'));
     panel.append(hint('g 捡拾 · q 喝药 · i 背包 · ? 消息 · > 下楼 · m 静音'));
+  } else if (game.mode === 'classSelect') {
+    const heading = document.createElement('h3');
+    heading.textContent = '选择你的职业';
+    panel.append(heading);
+    const order: ClassId[] = ['warrior', 'ranger', 'mage'];
+    for (let i = 0; i < order.length; i++) {
+      const cls = CLASSES[order[i] as ClassId];
+      if (!cls) continue;
+      panel.append(
+        option(
+          `[${i + 1}] ${cls.name}`,
+          `HP ${cls.baseHp} · 攻 ${cls.baseAttack} · 防 ${cls.baseDefense} · 技能「${cls.skill.name}」`,
+        ),
+      );
+    }
+    panel.append(hint('Esc 返回标题'));
   } else if (game.mode === 'inventory') {
     const heading = document.createElement('h3');
     heading.textContent = '背包';
@@ -163,6 +189,23 @@ function renderOverlay(): void {
       });
     }
     panel.append(hint('数字 购买 · Shift+数字 出售背包物品 · Esc 离开'));
+  } else if (game.mode === 'levelUp') {
+    const heading = document.createElement('h3');
+    heading.textContent = `升级！选择一项天赋（等级 ${game.level}）`;
+    panel.append(heading);
+    const rarityColorTalent: Record<string, string> = {
+      common: '#c0c8d4',
+      rare: '#6fb3e0',
+      epic: '#c678dd',
+    };
+    game.talentChoices.forEach((id, i) => {
+      const def = TALENTS.find((t) => t.id === id);
+      const row = document.createElement('p');
+      row.textContent = `${i + 1}. ${def?.name ?? id} — ${def?.description ?? ''}`;
+      row.style.color = rarityColorTalent[def?.rarity ?? 'common'] ?? '#c0c8d4';
+      panel.append(row);
+    });
+    panel.append(hint('数字键选择 · 天赋立即生效'));
   }
 
   overlayEl.replaceChildren(panel);

@@ -22,6 +22,11 @@ import {
   type ItemInstance,
 } from './entities/actor';
 import { rollMonster } from './entities/monsters';
+import { CLASSES, canUseSkill, makeCooldown, startCooldown, tickCooldown } from './entities/classes';
+import type { ClassId, SkillCooldown } from './entities/classes';
+import { TALENTS, talentBonus, rollTalentChoices } from './entities/talents';
+import type { TalentMods } from './entities/talents';
+import { findPathWithFn } from './engine/pathfinding';
 import { itemDef, rollLoot, weaponBonus, armorBonus } from './items/catalog';
 import { displayName, rarityColor, rollAffixData, bonusOf } from './items/affixes';
 import type { AffixData } from './items/affixes';
@@ -57,8 +62,16 @@ export interface LogEntry {
   tone: Tone;
 }
 
-/** UI 界面模式：菜单 / 背包 / 消息历史 / 商店等界面功能的地基 */
-export type UiMode = 'title' | 'play' | 'inventory' | 'log' | 'targeting' | 'shop';
+/** UI 界面模式：菜单 / 职业选择 / 背包 / 消息历史 / 商店 / 升级三选一等界面功能的地基 */
+export type UiMode =
+  | 'title'
+  | 'classSelect'
+  | 'play'
+  | 'levelUp'
+  | 'inventory'
+  | 'log'
+  | 'targeting'
+  | 'shop';
 
 interface GoldPile {
   x: number;
@@ -105,6 +118,9 @@ export interface SaveData {
   goldPiles?: GoldPile[];
   merchant?: MerchantState | null;
   affixData?: [number, AffixData][];
+  classId?: string;
+  skillRemaining?: number;
+  ownedTalents?: string[];
 }
 
 const FOV_RADIUS = 8;
@@ -124,6 +140,13 @@ export class Game {
   deathCause = '未知';
   /** 钱袋 */
   gold = 0;
+  /** 当前职业与职业技能冷却 */
+  classId: ClassId = 'warrior';
+  skill: SkillCooldown = makeCooldown(CLASSES.warrior.skill);
+  /** 已拥有天赋（含重复层数） */
+  ownedTalents: string[] = [];
+  /** 升级三选一的当前候选 */
+  talentChoices: string[] = [];
   /** 当前界面模式；游戏从标题画面开始 */
   mode: UiMode = 'title';
   /** 消息历史查看游标（log 模式；null = 定位在最新） */
@@ -203,6 +226,9 @@ export class Game {
         goldPiles: this.goldPiles,
         merchant: this.merchant,
         affixData: [...this.affixData.entries()],
+        classId: this.classId,
+        skillRemaining: this.skill.remaining,
+        ownedTalents: this.ownedTalents,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch {
@@ -256,6 +282,11 @@ export class Game {
     this.goldPiles = save.goldPiles ?? [];
     this.merchant = save.merchant ?? null;
     this.affixData = new Map(save.affixData ?? []);
+    this.classId = (save.classId as ClassId | undefined) ?? 'warrior';
+    this.skill = makeCooldown(CLASSES[this.classId].skill);
+    this.skill.remaining = save.skillRemaining ?? 0;
+    this.ownedTalents = save.ownedTalents ?? [];
+    this.talentChoices = [];
     this.gold = save.gold ?? 0;
     this.kills = save.kills ?? 0;
     this.deathCause = save.deathCause ?? '未知';
@@ -283,6 +314,12 @@ export class Game {
       case 'title':
         this.handleTitle(action);
         break;
+      case 'classSelect':
+        this.handleClassSelect(action);
+        break;
+      case 'levelUp':
+        this.handleLevelUp(action);
+        break;
       case 'inventory':
         this.handleInventory(action);
         break;
@@ -307,11 +344,47 @@ export class Game {
 
   private handleTitle(action: Action): void {
     if (action.type === 'titleNew') {
-      this.newRun();
-      this.mode = 'play';
+      this.mode = 'classSelect';
     } else if (action.type === 'titleContinue') {
       if (this.continueFromSave()) this.mode = 'play';
     }
+  }
+
+  private handleClassSelect(action: Action): void {
+    if (action.type === 'closeOverlay') {
+      this.mode = 'title';
+      return;
+    }
+    if (action.type === 'useSlot') {
+      const order: ClassId[] = ['warrior', 'ranger', 'mage'];
+      const classId = order[action.slot];
+      if (!classId) return;
+      this.newRun(classId);
+      this.mode = 'play';
+      return;
+    }
+  }
+
+  private handleLevelUp(action: Action): void {
+    if (action.type !== 'useSlot') return;
+    const id = this.talentChoices[action.slot];
+    if (!id) return;
+    this.ownedTalents.push(id);
+    const def = TALENTS.find((t) => t.id === id);
+    // 生命上限类天赋立即生效
+    const maxHpGain = def?.mods.maxHp ?? 0;
+    if (maxHpGain !== 0) {
+      this.player.maxHp += maxHpGain;
+      this.player.hp = Math.max(1, this.player.hp + maxHpGain);
+    }
+    this.log.push({
+      text: `获得天赋「${def?.name ?? id}」— ${def?.description ?? ''}`,
+      tone: 'good',
+    });
+    playSfx('levelup');
+    this.talentChoices = [];
+    this.mode = 'play';
+    this.persist();
   }
 
   private handlePlay(action: Action): void {
@@ -347,7 +420,150 @@ export class Game {
       this.tryEnterTargeting();
       return;
     }
+    if (action.type === 'useSkill') {
+      if (this.useClassSkill()) this.endPlayerTurn();
+      return;
+    }
     if (this.doPlayerAction(action)) this.endPlayerTurn();
+  }
+
+  /** 职业技能（k 键）：按职业分派结算，消耗冷却 */
+  private useClassSkill(): boolean {
+    const def = CLASSES[this.classId].skill;
+    if (!canUseSkill(this.skill)) {
+      this.log.push({
+        text: `${def.name}还在冷却（${this.skill.remaining} 回合）。`,
+        tone: 'info',
+      });
+      return false;
+    }
+    let used = false;
+    if (this.classId === 'warrior') used = this.skillCharge();
+    else if (this.classId === 'ranger') used = this.skillPreciseShot();
+    else used = this.skillFlameNova();
+    if (used) {
+      startCooldown(this.skill, def);
+      this.log.push({ text: `${def.name}！`, tone: 'combat' });
+    }
+    return used;
+  }
+
+  /** 战士·冲锋：冲向最近的可见敌人（2-4 格）并造成 1.5 倍伤害 */
+  private skillCharge(): boolean {
+    const isWalkable = (x: number, y: number) => !this.map.isWalkable(x, y);
+    let best: Actor | null = null;
+    let bestPath: Pt[] | null = null;
+    for (const m of this.visibleTargets()) {
+      const path = findPathWithFn({ x: this.player.x, y: this.player.y }, { x: m.x, y: m.y }, isWalkable);
+      if (path && path.length >= 2 && path.length <= 5) {
+        if (!bestPath || path.length < bestPath.length) {
+          best = m;
+          bestPath = path;
+        }
+      }
+    }
+    if (!best || !bestPath) {
+      this.log.push({ text: '冲锋范围内没有敌人。', tone: 'info' });
+      return false;
+    }
+    // 沿路径冲刺到目标前一格
+    for (let i = 0; i < bestPath.length - 1; i++) {
+      const step = bestPath[i];
+      if (!step) break;
+      this.effects.push({
+        kind: 'step',
+        fromX: this.player.x,
+        fromY: this.player.y,
+        toX: step.x,
+        toY: step.y,
+        glyph: this.player.glyph,
+        color: this.player.color,
+        dur: 120,
+      });
+      this.player.x = step.x;
+      this.player.y = step.y;
+    }
+    const damage = Math.max(
+      1,
+      resolveAttack({
+        attackerName: '你',
+        attack: Math.round(this.effectiveAttack() * 1.5),
+        defenderName: best.name,
+        defense: best.defense,
+        defenderHp: best.hp,
+        rng: this.rng,
+      }).damage,
+    );
+    best.hp -= damage;
+    playSfx('hit');
+    this.effects.push(
+      { kind: 'float', x: best.x, y: best.y, text: `-${damage}`, color: '#f5b04c' },
+      { kind: 'flash', x: best.x, y: best.y, color: '#ffffff' },
+    );
+    this.log.push({ text: `你撞进了${best.name}的怀里（${damage} 伤害）。`, tone: 'combat' });
+    if (best.hp <= 0) this.killMonster(best);
+    return true;
+  }
+
+  /** 游侠·精准箭：射向最近的可见敌人，双倍远程伤害 */
+  private skillPreciseShot(): boolean {
+    const weapon = this.rangedInInventory();
+    if (!weapon) {
+      this.log.push({ text: '没有远程武器，精准箭无从谈起。', tone: 'info' });
+      return false;
+    }
+    const def = RANGED[weapon.catalogId];
+    if (!def) return false;
+    const targets = this.visibleTargets();
+    if (targets.length === 0) {
+      this.log.push({ text: '视野内没有目标。', tone: 'info' });
+      return false;
+    }
+    const nearest = targets.reduce((a, b) =>
+      Math.max(Math.abs(b.x - this.player.x), Math.abs(b.y - this.player.y)) <
+      Math.max(Math.abs(a.x - this.player.x), Math.abs(a.y - this.player.y))
+        ? b
+        : a,
+    );
+    const damage = Math.max(
+      1,
+      this.rng.int(def.damage[0] ?? 1, def.damage[1] ?? 1) * 2 - nearest.defense,
+    );
+    nearest.hp -= damage;
+    playSfx('hit');
+    this.effects.push(
+      { kind: 'float', x: nearest.x, y: nearest.y, text: `-${damage}`, color: '#8ecafc' },
+      { kind: 'flash', x: nearest.x, y: nearest.y, color: '#8ecafc' },
+    );
+    this.log.push({ text: `精准箭贯穿了${nearest.name}（${damage} 伤害）。`, tone: 'combat' });
+    if (nearest.hp <= 0) this.killMonster(nearest);
+    return true;
+  }
+
+  /** 法师·烈焰新星：灼烧视野内所有敌人 */
+  private skillFlameNova(): boolean {
+    const targets = this.visibleTargets();
+    if (targets.length === 0) {
+      this.log.push({ text: '视野内没有敌人，新星无处绽放。', tone: 'info' });
+      return false;
+    }
+    playSfx('zap');
+    this.effects.push(
+      { kind: 'quake', dur: 300 },
+      { kind: 'flashScreen', color: '#f5803a', dur: 500 },
+    );
+    for (const t of targets) {
+      const damage = this.rng.int(6, 10);
+      t.hp -= damage;
+      applyStatus(t, 'burn', 2, 2);
+      this.effects.push(
+        { kind: 'flash', x: t.x, y: t.y, color: '#f5803a' },
+        { kind: 'float', x: t.x, y: t.y, text: `-${damage}`, color: '#f5803a' },
+      );
+      this.log.push({ text: `烈焰吞噬了${t.name}（${damage} 伤害）。`, tone: 'combat' });
+      if (t.hp <= 0) this.killMonster(t);
+    }
+    return true;
   }
 
   private handleTargeting(action: Action): void {
@@ -519,6 +735,12 @@ export class Game {
   /** 玩家行动成功后的公共回合结算 */
   private endPlayerTurn(): void {
     this.turn += 1;
+    tickCooldown(this.skill);
+    // 天赋·活力：每 5 回合回复生命
+    const regen = this.talentMods().regen;
+    if (regen > 0 && this.turn % 5 === 0 && this.player.hp < this.player.maxHp) {
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + regen);
+    }
     this.tickPlayerStatuses();
     if (!this.dead) {
       // 玩家加速 → 怪物隔回合行动；玩家减速 → 怪物一回合行动两轮
@@ -713,13 +935,18 @@ export class Game {
     return this.runSeed;
   }
 
+  /** 技能剩余冷却回合 */
+  skillRemaining(): number {
+    return this.skill.remaining;
+  }
+
   effectiveAttack(): number {
     const weapon = this.player.equipment.weapon;
     const weaponBonusTotal =
       (weapon ? weaponBonus(weapon) : 0) + bonusOf(this.affixData.get(weapon?.uid ?? -1) ?? null).attack;
     const mightPart =
       this.mightUntil !== 0 && this.turn <= this.mightUntil ? MIGHT_ATTACK_BONUS : 0;
-    return this.player.attack + weaponBonusTotal + mightPart;
+    return this.player.attack + weaponBonusTotal + mightPart + this.talentMods().attack;
   }
 
   effectiveDefense(): number {
@@ -727,7 +954,7 @@ export class Game {
     const armorBonusTotal =
       (armor ? armorBonus(armor) : 0) + bonusOf(this.affixData.get(armor?.uid ?? -1) ?? null).defense;
     return (
-      this.player.defense + armorBonusTotal + totalDefenseBonus(this.player)
+      this.player.defense + armorBonusTotal + totalDefenseBonus(this.player) + this.talentMods().defense
     );
   }
 
@@ -850,12 +1077,12 @@ export class Game {
 
   /** 当前暴击率（天赋可加成） */
   private critChance(): number {
-    return 0.1;
+    return 0.1 + this.talentMods().critChance;
   }
 
   /** 当前吸血比例（天赋可加成） */
   private lifestealRatio(): number {
-    return 0;
+    return this.talentMods().lifesteal;
   }
 
   /** 近战伤害吸血回血 */
@@ -885,22 +1112,29 @@ export class Game {
   }
 
   private gainXp(amount: number): void {
-    this.xp += amount;
+    const bonus = this.talentMods();
+    this.xp += Math.floor(amount * (1 + bonus.xpBonus));
     let need = this.xpToNext();
     while (this.xp >= need) {
       this.xp -= need;
       this.level += 1;
-      this.player.maxHp += 4;
-      this.player.hp += 4;
-      this.player.attack += 1;
-      this.log.push({
-        text: `升级！现在 ${this.level} 级，生命上限 +4，攻击 +1。`,
-        tone: 'good',
-      });
+      // 升级回复 30% 生命，然后进入三选一天赋
+      const heal = Math.floor(this.player.maxHp * 0.3);
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + heal);
+      this.log.push({ text: `升到了 ${this.level} 级！选择一项成长：`, tone: 'good' });
       playSfx('levelup');
       this.effects.push({ kind: 'flashScreen', color: '#f5b04c', dur: 450 });
+      this.talentChoices = rollTalentChoices(this.ownedTalents, this.depth, this.rng);
+      if (this.talentChoices.length > 0) {
+        this.mode = 'levelUp';
+      }
       need = this.xpToNext();
     }
+  }
+
+  /** 已拥有天赋的合计加成 */
+  private talentMods(): Required<TalentMods> {
+    return talentBonus(this.ownedTalents);
   }
 
   private pickup(): boolean {
@@ -911,9 +1145,10 @@ export class Game {
     if (goldIdx !== -1) {
       const pile = this.goldPiles.splice(goldIdx, 1)[0];
       if (!pile) return false;
-      this.gold += pile.amount;
+      const gained = Math.floor(pile.amount * (1 + this.talentMods().goldBonus));
+      this.gold += gained;
       playSfx('pickup');
-      this.log.push({ text: `拾起了 ${pile.amount} 金币。`, tone: 'good' });
+      this.log.push({ text: `拾起了 ${gained} 金币。`, tone: 'good' });
       return true;
     }
     const idx = this.groundItems.findIndex(
@@ -1378,7 +1613,7 @@ export class Game {
     }
   }
 
-  private newRun(): void {
+  private newRun(classId: ClassId = this.classId): void {
     this.depth = 1;
     this.turn = 0;
     this.level = 1;
@@ -1391,13 +1626,47 @@ export class Game {
     this.autoPath = null;
     this.gold = 0;
     this.affixData.clear();
+    this.ownedTalents = [];
+    this.talentChoices = [];
     this.mightUntil = 0;
     this.log = [{ text: '新的冒险开始了。你在余烬深渊的第 1 层醒来……', tone: 'info' }];
     Game.clearSave();
     // 线性同余派生新种子，保证连续两局必然不同
     this.runSeed = (this.runSeed * 1664525 + 1013904223) % 2147483647;
     this.rng = new Rng(this.runSeed || 1);
+    // 按职业初始化角色
+    this.classId = classId;
+    const cls = CLASSES[classId];
     this.player = createPlayer(0, 0);
+    this.player.maxHp = cls.baseHp;
+    this.player.hp = cls.baseHp;
+    this.player.attack = cls.baseAttack;
+    this.player.defense = cls.baseDefense;
+    this.skill = makeCooldown(cls.skill);
+    if (cls.startWeapon) {
+      this.player.equipment.weapon = {
+        uid: allocateItemUid(),
+        catalogId: cls.startWeapon,
+        category: 'weapon',
+      };
+    }
+    if (cls.startArmor) {
+      this.player.equipment.armor = {
+        uid: allocateItemUid(),
+        catalogId: cls.startArmor,
+        category: 'armor',
+      };
+    }
+    for (const id of cls.startItems) {
+      this.player.inventory.push({ uid: allocateItemUid(), catalogId: id, category: 'potion' });
+    }
+    if (cls.startRanged) {
+      this.player.inventory.push({
+        uid: allocateItemUid(),
+        catalogId: cls.startRanged,
+        category: 'ranged',
+      });
+    }
     this.buildFloor();
   }
 
