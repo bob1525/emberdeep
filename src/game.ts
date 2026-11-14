@@ -34,16 +34,14 @@ import { CLASSES, canUseSkill, makeCooldown, startCooldown, tickCooldown } from 
 import type { ClassId, SkillCooldown } from './entities/classes';
 import { TALENTS, talentBonus, rollTalentChoices } from './entities/talents';
 import type { TalentMods } from './entities/talents';
-import { scaleHp, scaleAttack, rollElite } from './entities/scaling';
 import { runBrain, newMemory, tickMemory } from './engine/brain';
 import type { MonsterMemory } from './engine/brain';
 import { findPathWithFn } from './engine/pathfinding';
-import { rollLoot, weaponBonus, armorBonus } from './items/catalog';
+import { weaponBonus, armorBonus } from './items/catalog';
 import { displayName, rarityColor, rollAffixData, bonusOf } from './items/affixes';
 import type { AffixData } from './items/affixes';
 import { RANGED, resolveShot } from './engine/ranged';
 import { rollGold } from './economy/gold';
-import { rollStock } from './economy/merchant';
 import type { StockEntry } from './economy/merchant';
 import { InventoryEconomyService, MAX_INVENTORY } from './economy/inventoryService';
 import type { GoldPile, GroundItem, MerchantState } from './economy/inventoryService';
@@ -52,12 +50,12 @@ import type { GoldPile, GroundItem, MerchantState } from './economy/inventorySer
 function itemInfo(item: ItemInstance) {
   return sbItemInfo(item);
 }
-import { generateFloor } from './world/generators/floor';
 import { GameMap } from './world/map';
-import { TRAPS, rollTraps, triggerTrap } from './world/traps';
+import { TRAPS, triggerTrap } from './world/traps';
 import type { PlacedTrap } from './world/traps';
 import { SHRINES, resolveAltar, resolveWell } from './world/shrines';
 import type { ShrineKind } from './world/shrines';
+import { FloorService } from './world/floorService';
 import { drawMinimap, type Effect, type Renderer, type Scene } from './ui/renderer';
 import { buildScene as sbBuildScene, itemInfo as sbItemInfo } from './ui/sceneBuilder';
 
@@ -711,6 +709,42 @@ export class Game {
       talentGoldBonus: () => this.talentMods().goldBonus,
       visibleTargets: () => this.visibleTargets(),
       killMonster: (target) => this.killMonster(target),
+      log: (text, tone) => { this.log.push({ text, tone }); },
+    });
+  }
+
+  /** 楼层服务（M4 迁出）：每次调用组装最小上下文；箭头函数闭包规避 map/monsters 等重赋值后的引用失效 */
+  private floorService(): FloorService {
+    return new FloorService({
+      rng: this.rng,
+      player: this.player,
+      memories: this.memories,
+      affixData: this.affixData,
+      effects: this.effects,
+      getDepth: () => this.depth,
+      setDepth: (depth) => { this.depth = depth; },
+      getMap: () => this.map,
+      setMap: (map) => { this.map = map; },
+      getStairsDown: () => this.stairsDown,
+      setStairsDown: (stairs) => { this.stairsDown = stairs; },
+      getMonsters: () => this.monsters,
+      setMonsters: (monsters) => { this.monsters = monsters; },
+      getGoldPiles: () => this.goldPiles,
+      setGoldPiles: (piles) => { this.goldPiles = piles; },
+      getGroundItems: () => this.groundItems,
+      setGroundItems: (items) => { this.groundItems = items; },
+      getMerchant: () => this.merchant,
+      setMerchant: (merchant) => { this.merchant = merchant; },
+      getShrines: () => this.shrines,
+      setShrines: (shrines) => { this.shrines = shrines; },
+      setTraps: (traps) => { this.traps = traps; },
+      setExplored: (explored) => { this.explored = explored; },
+      setBoss: (boss) => { this.boss = boss; },
+      setBossDef: (def) => { this.bossDef = def; },
+      monsterAt: (x, y) => this.monsterAt(x, y),
+      pruneAffixData: () => this.pruneAffixData(),
+      recordDepth: (depth) => Game.recordDepth(depth),
+      updateFov: () => this.updateFov(),
       log: (text, tone) => { this.log.push({ text, tone }); },
     });
   }
@@ -1621,18 +1655,9 @@ export class Game {
     return this.inventoryService().dropInventorySlot(index);
   }
 
+  /** 下楼推进（M4 委托 FloorService）：站在楼梯上才能下一层 */
   private descend(): boolean {
-    if (this.player.x === this.stairsDown.x && this.player.y === this.stairsDown.y) {
-      this.depth += 1;
-      Game.recordDepth(this.depth);
-      this.log.push({ text: `你走下楼梯，来到第 ${this.depth} 层。`, tone: 'info' });
-      playSfx('stairs');
-      this.effects.push({ kind: 'flashScreen', color: '#2f7d4f', dur: 450 });
-      this.buildFloor();
-      return true;
-    }
-    this.log.push({ text: '脚下没有向下的楼梯。', tone: 'info' });
-    return false;
+    return this.floorService().descend();
   }
 
   // ---------- 怪物回合 ----------
@@ -1796,180 +1821,15 @@ export class Game {
     this.inventoryService().pruneAffixData();
   }
 
+  /** 楼层构建（M4 委托 FloorService）：地图生成 + 怪物/物品/商人/奇遇建筑/陷阱/Boss 布置 */
   private buildFloor(): void {
-    const floor = generateFloor(this.depth, this.rng.int(1, 2147483647));
-    this.map = floor.map;
-    this.stairsDown = { ...floor.stairsDown };
-    this.player.x = floor.playerSpawn.x;
-    this.player.y = floor.playerSpawn.y;
-    this.monsters = floor.monsterSpawns.map((p) => {
-      const t = rollMonster(this.depth, this.rng);
-      // ENDLESS 深度缩放（M5）：depth > 5 后 HP/攻击逐层增强；20 层起精英变体
-      const hp = scaleHp(t.maxHp, this.depth);
-      const attack = scaleAttack(t.attack, this.depth);
-      const elite = rollElite(this.depth, this.rng.next());
-      return makeActor({
-        species: t.species,
-        name: elite ? `${elite.name}${t.name}` : t.name,
-        glyph: t.glyph,
-        color: t.color,
-        x: p.x,
-        y: p.y,
-        hp: Math.round(hp * (elite?.hpFactor ?? 1)),
-        maxHp: Math.round(hp * (elite?.hpFactor ?? 1)),
-        attack: Math.round(attack * (elite?.attackFactor ?? 1)),
-        defense: t.defense,
-        xpValue: Math.round(t.xpValue * (elite?.xpFactor ?? 1)),
-        ai: { mode: 'sleep', senseRadius: t.senseRadius },
-      });
-    });
-    this.memories.clear();
-    this.goldPiles = [];
-    this.groundItems = [];
-    for (const p of floor.itemSpots) {
-      if (this.rng.next() < 0.3) {
-        // 金币堆
-        this.goldPiles.push({ x: p.x, y: p.y, amount: rollGold(this.depth, this.rng) });
-      } else if (this.rng.next() < 0.25) {
-        // 远程武器
-        const pool = Object.entries(RANGED).filter(([, d]) => d.minDepth <= this.depth);
-        const entry = this.rng.pick(pool);
-        if (entry) {
-          this.groundItems.push({
-            x: p.x,
-            y: p.y,
-            item: { uid: allocateItemUid(), catalogId: entry[0], category: 'ranged' },
-          });
-          continue;
-        }
-        this.groundItems.push({ x: p.x, y: p.y, item: rollLoot(this.depth, this.rng) });
-      } else {
-        const item = rollLoot(this.depth, this.rng);
-        // 装备类随机词缀
-        if (item.category === 'weapon' || item.category === 'armor') {
-          this.affixData.set(item.uid, rollAffixData(this.depth, this.rng));
-        }
-        this.groundItems.push({ x: p.x, y: p.y, item });
-      }
-    }
-    this.placeMerchant(floor);
-    this.placeShrines(floor);
-    this.placeTraps(floor);
-    this.placeBoss(floor);
-    this.pruneAffixData();
-    this.explored = new Set();
-    this.updateFov();
-  }
-
-  /** 每 5 层放置关底 Boss，并播报登场演出 */
-  private placeBoss(floor: { playerSpawn: Pt }): void {
-    this.boss = null;
-    this.bossDef = bossForDepth(this.depth);
-    if (!this.bossDef) return;
-    const candidates: Pt[] = [];
-    for (let y = 1; y < this.map.height - 1; y++) {
-      for (let x = 1; x < this.map.width - 1; x++) {
-        if (!this.map.isWalkable(x, y)) continue;
-        if (x === this.stairsDown.x && y === this.stairsDown.y) continue;
-        if (this.monsterAt(x, y)) continue;
-        if (this.merchant && this.merchant.x === x && this.merchant.y === y) continue;
-        if (this.shrines.some((s) => s.x === x && s.y === y)) continue;
-        const dist = Math.max(Math.abs(x - floor.playerSpawn.x), Math.abs(y - floor.playerSpawn.y));
-        if (dist < 14) continue;
-        candidates.push({ x, y });
-      }
-    }
-    if (candidates.length === 0) return;
-    const spot = this.rng.pick(candidates);
-    const d = this.bossDef;
-    // ENDLESS 缩放（M5）：Boss 超过其 minDepth 重复登场时按层差 +12% HP / +8% 攻
-    const hp = scaleHp(d.maxHp, this.depth);
-    const attack = scaleAttack(d.attack, this.depth);
-    this.boss = makeActor({
-      species: d.species,
-      name: d.name,
-      glyph: d.glyph,
-      color: d.color,
-      x: spot.x,
-      y: spot.y,
-      hp,
-      maxHp: hp,
-      attack,
-      defense: d.defense,
-      xpValue: Math.round(d.xpValue * (hp / d.maxHp)),
-      ai: { mode: 'sleep', senseRadius: d.senseRadius },
-    });
-    this.monsters.push(this.boss);
-    this.log.push({ text: d.introText, tone: 'bad' });
+    this.floorService().buildFloor();
   }
 
   /** Boss 当前所处阶段（非 Boss 怪返回 null） */
   private bossPhase(): BossPhase | null {
     if (!this.boss || !this.bossDef || this.boss.hp <= 0) return null;
     return phaseForHp(this.bossDef, this.boss.hp);
-  }
-
-  /** 每层放一位流浪商人：离出生点较远的随机地板 */
-  private placeMerchant(floor: { playerSpawn: Pt }): void {
-    const candidates: Pt[] = [];
-    for (let y = 1; y < this.map.height - 1; y++) {
-      for (let x = 1; x < this.map.width - 1; x++) {
-        if (!this.map.isWalkable(x, y)) continue;
-        if (x === this.stairsDown.x && y === this.stairsDown.y) continue;
-        const dist = Math.max(Math.abs(x - floor.playerSpawn.x), Math.abs(y - floor.playerSpawn.y));
-        if (dist < 12) continue;
-        candidates.push({ x, y });
-      }
-    }
-    if (candidates.length === 0) {
-      this.merchant = null;
-      return;
-    }
-    const spot = this.rng.pick(candidates);
-    this.merchant = { x: spot.x, y: spot.y, stock: rollStock(this.depth, this.rng) };
-  }
-
-  /** 每层一座奇遇建筑：奇数层祭坛 / 偶数层许愿井 */
-  private placeShrines(floor: {
-    playerSpawn: Pt;
-    stairsDown: Pt;
-    itemSpots: Pt[];
-    monsterSpawns: Pt[];
-  }): void {
-    this.shrines = [];
-    const candidates: Pt[] = [];
-    for (let y = 1; y < this.map.height - 1; y++) {
-      for (let x = 1; x < this.map.width - 1; x++) {
-        if (!this.map.isWalkable(x, y)) continue;
-        if (x === this.stairsDown.x && y === this.stairsDown.y) continue;
-        if (floor.playerSpawn.x === x && floor.playerSpawn.y === y) continue;
-        if (floor.itemSpots.some((p) => p.x === x && p.y === y)) continue;
-        if (floor.monsterSpawns.some((p) => p.x === x && p.y === y)) continue;
-        if (this.merchant && this.merchant.x === x && this.merchant.y === y) continue;
-        candidates.push({ x, y });
-      }
-    }
-    if (candidates.length === 0) return;
-    const spot = this.rng.pick(candidates);
-    const kind: ShrineKind = this.depth % 2 === 1 ? 'altar' : 'well';
-    this.shrines.push({ x: spot.x, y: spot.y, kind });
-  }
-
-  /** 按深度撒陷阱：避开出生点、楼梯、商人位、奇遇建筑与物品点 */
-  private placeTraps(floor: { playerSpawn: Pt; stairsDown: Pt; itemSpots: Pt[] }): void {
-    const candidates: Pt[] = [];
-    for (let y = 1; y < this.map.height - 1; y++) {
-      for (let x = 1; x < this.map.width - 1; x++) {
-        if (!this.map.isWalkable(x, y)) continue;
-        if (x === floor.playerSpawn.x && y === floor.playerSpawn.y) continue;
-        if (x === floor.stairsDown.x && y === floor.stairsDown.y) continue;
-        if (floor.itemSpots.some((p) => p.x === x && p.y === y)) continue;
-        if (this.merchant && this.merchant.x === x && this.merchant.y === y) continue;
-        if (this.shrines.some((s) => s.x === x && s.y === y)) continue;
-        candidates.push({ x, y });
-      }
-    }
-    this.traps = rollTraps(this.depth, Math.min(6, 1 + this.depth), candidates, this.rng);
   }
 
   /** 玩家踏入陷阱格：一次性触发后拆除（简化设计） */
