@@ -113,6 +113,9 @@ export class Renderer {
   private lastDpr = 0;
   private vignette: CanvasGradient | null = null;
   private vignetteKey = '';
+  /** 记忆层离屏缓存：只有 explored 变化/换层/尺寸变化时才重绘 */
+  private staticLayer: HTMLCanvasElement | null = null;
+  private staticKey = '';
 
   constructor(private canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext('2d');
@@ -180,32 +183,36 @@ export class Renderer {
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
 
+    // 记忆层（explored 的暗色地形）走离屏缓存，每帧一次 drawImage
+    const staticKey = `${scene.depth}:${scene.explored.size}:${cellW}`;
+    if (this.staticKey !== staticKey || !this.staticLayer) {
+      this.renderStaticLayer(scene, cellW, theme);
+      this.staticKey = staticKey;
+    }
+    if (this.staticLayer) {
+      this.ctx.drawImage(this.staticLayer, 0, 0);
+    }
+
     const player = scene.actors[0];
     const flicker =
       Math.sin(now / 95) * 0.02 + Math.sin(now / 37 + 1.3) * 0.015;
 
+    // 可见层：火把光衰减，每帧动态计算（只有 ~FOV 半径内的格子）
     for (let y = 0; y < map.height; y++) {
       for (let x = 0; x < map.width; x++) {
         const key = `${x},${y}`;
-        const lit = visible.has(key);
-        if (!lit && !explored.has(key)) continue;
+        if (!visible.has(key)) continue;
         const tile = map.tileAt(x, y);
         const h = tileHash(x, y);
         const glyph =
           tile === 'wall' ? (WALL_GLYPHS[h % 3] ?? '#') : (FLOOR_GLYPHS[h % 3] ?? '·');
         const baseColor = tile === 'wall' ? theme.wall : theme.floor;
-        let color: string;
-        if (lit) {
-          // 火把光衰减：离玩家越远越暗，叠加微微摇曳
-          const dist = player
-            ? Math.hypot(x - player.x, y - player.y)
-            : 0;
-          const falloff = Math.max(0.5, 1 - (dist / 12) * 0.42 + flicker);
-          color = shade(baseColor, theme.bg, falloff);
-        } else {
-          color = shade(baseColor, theme.bg, 0.32);
-        }
-        this.drawGlyph(x, y, cellW, glyph, color);
+        const dist = player ? Math.hypot(x - player.x, y - player.y) : 0;
+        const falloff = Math.max(0.5, 1 - (dist / 12) * 0.42 + flicker);
+        // 先用背景色覆盖记忆层的暗色字形，再画亮的
+        this.ctx.fillStyle = theme.bg;
+        this.ctx.fillRect(x * cellW, y * CELL_H, cellW, CELL_H);
+        this.drawGlyph(x, y, cellW, glyph, shade(baseColor, theme.bg, falloff));
       }
     }
 
@@ -242,6 +249,34 @@ export class Renderer {
   private drawGlyph(x: number, y: number, cellW: number, glyph: string, color: string): void {
     this.ctx.fillStyle = color;
     this.ctx.fillText(glyph, x * cellW + cellW / 2, y * CELL_H + CELL_H / 2);
+  }
+
+  /** 离屏缓存层：背景 + 记忆中的暗色地形（不含可见层与任何动态元素） */
+  private renderStaticLayer(scene: Scene, cellW: number, theme: Theme): void {
+    const layer = this.staticLayer ?? document.createElement('canvas');
+    this.staticLayer = layer;
+    layer.width = scene.map.width * cellW;
+    layer.height = scene.map.height * CELL_H;
+    const sctx = layer.getContext('2d');
+    if (!sctx) return;
+    sctx.fillStyle = theme.bg;
+    sctx.fillRect(0, 0, layer.width, layer.height);
+    sctx.font = FONT;
+    sctx.textAlign = 'center';
+    sctx.textBaseline = 'middle';
+    for (let y = 0; y < scene.map.height; y++) {
+      for (let x = 0; x < scene.map.width; x++) {
+        const key = `${x},${y}`;
+        if (!scene.explored.has(key) || scene.visible.has(key)) continue;
+        const tile = scene.map.tileAt(x, y);
+        const h = tileHash(x, y);
+        const glyph =
+          tile === 'wall' ? (WALL_GLYPHS[h % 3] ?? '#') : (FLOOR_GLYPHS[h % 3] ?? '·');
+        const baseColor = tile === 'wall' ? theme.wall : theme.floor;
+        sctx.fillStyle = shade(baseColor, theme.bg, 0.32);
+        sctx.fillText(glyph, x * cellW + cellW / 2, y * CELL_H + CELL_H / 2);
+      }
+    }
   }
 
   private drawHpBar(a: Glyph, cellW: number): void {
