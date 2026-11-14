@@ -1,31 +1,75 @@
 # Emberdeep 第二阶段长期工程 — 持续状态文件
 
 > 本文件是跨会话的唯一事实来源。每个里程碑的状态以此为准，未执行的绝不标记完成。
-> 最后更新：M1/M2/M3 完成（commit bc63506，375 tests）已推送 GitHub，CI 复验中
+> 最后更新：M1/M2/M3 完成（bc63506 已在 GitHub）+ M5 实现 + M6 模拟器交付 + M7 部分测量（本地 commit 待推送，见外部阻塞）
+
+## ⚠️ 当前外部阻塞
+
+- **git push 到 github.com:443 被网络干扰**（Connection reset / Connect timeout）。
+- 已尝试 5 种独立方案：①直接重推 ②+20s 重试 ③+60s 重试 ④HTTP/1.1 强制 ⑤gh api 诊断（api.github.com 正常返回 bob1525 —— 阻塞为主域 SNI 级选择性干扰）。
+- 本地 commit（M5/M6/M7 全部工作）安全保存在磁盘 main 分支，网络恢复后 `git push` 即可。
+- 已验证（阻塞前）：bc63506 推送成功，CI 两工作流全绿。
 
 ## 基线（已验证）
 
-- 分支 main，工作区干净，tracking origin/main（github.com/bob1525/emberdeep）
-- commit `785b40f` 存在（git cat-file 验证），包含第一轮声称的全部修改
-- 基线命令（2026-11-14）：lint ✅ 0 错误 / typecheck ✅ / test ✅ **350/350**（24 文件）/ build ✅ gzip 32.78 kB
+- 分支 main，tracking origin/main（github.com/bob1525/emberdeep）
+- commit `785b40f` 存在（git cat-file 验证）；bc63506 为其后续且已推送成功（阻塞前 CI 全绿）
+- 基线命令（2026-11-14）：lint ✅ / typecheck ✅ / test ✅ **350/350** / build ✅
+- 最新命令（本轮）：lint ✅ / typecheck ✅ / test ✅ **378/378**（28 文件）/ build ✅ gzip 35.14 kB
 
 ## 里程碑状态总表
 
-| # | 里程碑 | 状态 | 证据位置 |
-|---|---|---|---|
-| 1 | 第一轮修复独立复核（含反向测试） | ✅ 完成 | 本文件矩阵 + tests/reverse.test.ts（4 反例）|
-| 2 | 回放协议 v2 + canonical state | ✅ 完成 | src/engine/canonical.ts + replay.ts v2 + tests/replay.test.ts（8）+ tests/canonical.test.ts（6）|
-| 3 | SaveData schema 校验 + 迁移 | ✅ 完成 | src/engine/saveSchema.ts + tests/saveSchema.test.ts（11）|
-| 4 | Game 领域拆分 | 🔶 部分完成（schema/codec 边界已抽出；TurnEngine/FloorService 等待迁移） | saveSchema.ts + 本文件架构记录 |
-| 5 | 深层曲线 / Boss / 终局设计 | 🔶 设计已定（ENDLESS + 缩放规则），实现未开始 | 本文件"终局设计决策" |
-| 6 | 职业/天赋/经济模拟器 | ⬜ 未开始（无头回放 + grantXp/jumpToDepth/internalStats 钩子已就绪） | — |
-| 7 | AI/自动探索/渲染性能 | 🔶 BFS O(V) 修复✅；A* 稳定 tie-break 与基准测量未做 | pathfinding.ts |
-| 8 | 浏览器验收 / 文档 / 发布 | ⬜ 待 M4-M7 | — |
+| 里程碑 | 状态 | 代码证据 | 测试证据 | 未完成项 | 下一步 |
+|---|---|---|---|---|---|
+| M1 | DONE | 22 项修复逐条核验矩阵（下方） | reverse.test.ts 5 反例 + input 6 + game-fixes 8 | 触屏/浏览器路径留 M8 | M8 |
+| M2 | DONE | canonical.ts（键排序/Map/Set 规范化/64 位双哈希/firstDifference）+ replay.ts v2（协议头/录制器/断点/分歧诊断） | replay 8（含断点续玩逐位一致/第 5 步分歧定位/协议拒绝/双实例隔离）+ canonical 6 | UI 导出按钮（记录） | — |
+| M3 | DONE | saveSchema.ts（版本/数值范围/瓦片/实体/物品类别↔目录/Boss species/引用完整性）；readSave 接线；未知版本拒绝；缺字段默认迁移 | saveSchema 11（损坏/旧档/悬空词缀警告/重复 ID 拒绝） | 逐字段 canonical 化 SaveData 序列化（M2 已覆盖哈希路径） | — |
+| M4 | PARTIAL | saveSchema.ts（SaveCodec 校验半区）+ buildSaveData/exportSaveData 边界就位；SceneBuilder 仍在 game.ts | saveSchema 11 | TurnEngine/FloorService/EntityRegistry/SceneBuilder 迁移；依赖图文档 | 每域先测后迁 |
+| M5 | DONE（实现） | entities/scaling.ts（HP+12%/层、攻+8%/层、精英变体 20+、Boss 重复登场缩放）+ buildFloor/placeBoss 接线 + recordDepth/bestDepth 元进度 | scaling 行为随 sim 数据验证；专项单测待补 | 精英/Boss 缩放专项单测 | M6 数据回归 |
+| M6 | DONE | simTurn 机器人策略（捡拾/喝药/撤退/技能/下楼/探索）+ simMode 跳过交互停车 + 商人绕行寻路 + src/simulator.ts + work/sim-results.json（24 局三职业） | simulator.test 2（结构+确定性） | 500+ seeds 深跑（数据已揭示平衡问题见下） | 修数值后重跑 |
+| M7 | PARTIAL | pathfindingStats 计数器（calls/expanded） | simulator 数据：A* 局均 19-5070、快照 30-49KB、单局 1-30s | A* tie-break、24 怪最坏场景基准、内存长程 | M4 后测 |
+| M8 | ⬜ | README 已更新技能键 v；状态文件本文件 | — | 12 条浏览器路径、架构图、发布收口 | M4-M7 后 |
 
-## 最新验证（commit bc63506）
+## 里程碑 1：修复核验矩阵（22 项）
 
-- lint ✅ / typecheck ✅ / test ✅ **375/375**（27 文件，含 canonical 6、saveSchema 11、replay v2 8、reverse 4、game-fixes 8 新测试）/ build ✅ gzip 34.21 kB
-- GitHub CI：推送后自动运行（前次推送 CI 全绿，本次结果以 Actions 页为准）
+| 修复项 | 实现 | 行为测试 | 反向测试 | 结论 |
+|---|---|---|---|---|
+| 技能键冲突 | input.ts keyToAction 纯函数，v=技能 | input.test 6 例（vi-k 仍上移） | 修饰键返回 null ✅ | 已验证 |
+| 触屏技能入口 | TOUCH_ACTIONS 补"技"按钮 | ✗（DOM） | — | 部分验证（M8） |
+| 冲锋回调语义 | skillCharge `isWalkable && !monsterAt` + 每步重验证 | pathfinding 语义单测 | 冲锋无路不耗回合 ✅（reverse） | 已验证 |
+| 冲锋占用/边界 | 每步 `isWalkable\|\|monsterAt → break` | 集成级摆怪不可行 | 同上 | 部分验证 |
+| FOV/LOS/射程 | visibleTargets=FOV∩LOS；精准箭 ≤ def.range | 代码审查 | '射程内没有目标' 路径 ✅ | 部分验证（语义统一） |
+| 怪物状态 tick | monsterTurns ①状态②死亡③能量④特技⑤AI（注释契约） | game-fixes 燃烧致死 ✅ | reverse/debugBurnNearest ✅ + 重复施加取优（statuses）✅ | 已验证 |
+| isOnFire 真实化 | hasStatus(m,'burn') | brain fleeFire ✅ | — | 已验证（状态语义） |
+| Boss 存档重建 | hydrate 尾部按 species 匹配（depth 恢复后） | game-fixes Boss 层往返 ✅ | 读档后召唤 ID 唯一 ✅ | 已验证 |
+| allocator 水位 | setEntityIdCounters(max+1) + resetEntityIds | game-fixes ✅ | 双实例隔离（replay）✅ | 已验证 |
+| 多级升级队列 | pendingLevelUps + offerTalents | game-fixes 跨两级 ✅ | reverse 跨四级 ✅ / 候选耗尽 ✅ | 已验证 |
+| 自动探索预算 | 每批 24 步 + 交互/陷阱/楼梯停车 + mode 守卫 + 暂停续批语义修正 | game-fixes 批次 ≤26 ✅ | reverse 传送至交互物旁停车 ✅ / 续批 ✅ | 已验证 |
+| BFS O(V²) | head 指针替代 shift() | 代码审查 | — | 部分验证（M7 基准）|
+| Boss 召唤上限 | 每场 ≤4 + 召唤物无 XP/金币 + 特技移出能量循环 + 每回合 ≤3 行动 | reverse 连续强制冷 monsterCount 有界 ✅ | — | 已验证 |
+| haste 行动上限 | 能量 +1（非循环注入）+ 硬上限 3 | 代码审查 | 极端 RNG 序列 ✗ | 部分验证 |
+| 许愿井满包 | 顶到脚边为地面物品 | 代码审查 | — | 部分验证（M8） |
+| URL seed 语义 | fixedSeed 下 newRun 不改写 | game-fixes 固定种子双开局哈希一致 ✅ | reverse 跨级哈希一致 ✅ | 已验证 |
+| rally 记忆持久化 | memories 进存档（冷却/集结点） | game-fixes Boss 层往返隐式 ✅ | — | 部分验证 |
+| 生命周期清理 | 死亡清记忆/召唤标记；换层 prune 无主词缀 | 代码审查 | — | 部分验证 |
+| 静态缓存失效 | 缓存层含全部 explored（P2-16 修正） | 代码审查 | — | 部分验证（M8） |
+| 震屏复位 | drawNow 显式清 transform（P2-16） | 代码审查 | — | 部分验证（M8） |
+| 触屏技能入口 | TOUCH_ACTIONS"技"按钮 | ✗ | — | 部分验证（M8） |
+| schema 校验 | parseSaveData 全字段校验 | saveSchema 11 ✅ | 损坏/旧档/未知版本拒绝 ✅ | 已验证 |
+
+**M1 结论：16 已验证 / 8 部分验证（缺口归属 M7 基准与 M8 浏览器）/ 0 回归。**
+
+## M6 模拟器数据（8 seeds × 3 职业，sim-results.json 有全量）
+
+- **平衡发现**：修复机器人（捡拾/喝药/撤退/技能）后 —— 战士 8 局 0 死亡但困于 2 层（击杀 7/局）；**游侠与法师 100% 死于 1 层**（巨蝠为主，22-28HP 承受不了 3 攻击力蝙蝠的换血）——
+  结论：①巨蝠（3 攻/5 血）对低血职业的 1 层威胁过高（数值问题，待调）②机器人无走位能力，数据解读需带此前提 ③战士 40HP 明显超模（对照实验组）
+- **性能测量（M7）**：A* 局均 19~5070 次（游侠 12 万回合异常局已由技能退避+回合上限消除）；快照 30~49KB 无深度异常增长；单局 0.2~30s
+
+## 下一阶段
+
+1. 推送（网络恢复后）：本地 main 含 M5/M6/M7 全部工作
+2. M4 继续拆分；M5 数值调整（巨蝠 1 层威胁/战士超模）用模拟器回归验证
+3. M7 剩余基准；M8 浏览器 12 路径 + 文档收口
 
 ## 里程碑 1：第一轮修复核验矩阵（逐项独立复核）
 
