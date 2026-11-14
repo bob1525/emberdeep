@@ -70,11 +70,14 @@ L0 基础件（零依赖） engine/rng.ts  engine/los.ts  engine/fov.ts  engine/
 | `engine/saveCodec` | 5 | 存档编解码 + v1 迁移 | game |
 | `world/fire` | — | 火势蔓延（**已交付未接入**） | rng |
 
-## 已知分层债务（M4 收口对象）
+## 已知分层债务（M4 收口状态：2026-11-15 更新）
 
-1. **`engine/replay.ts` 与 `engine/saveCodec.ts` 反向依赖 `game.ts`** —— 引擎层 import 门面。
-   收口方案：把"取快照/注入状态"的钩子接口下沉，两者只依赖接口；或整体迁出 engine/。
-2. **`game.ts` ~2400 行**：TurnEngine（回合循环）、FloorService（换层）、InventoryEconomyService（背包+经济）三块边界已定，按"先测后迁"推进。
+1. ~~`engine/replay.ts` 与 `engine/saveCodec.ts` 反向依赖 `game.ts`~~ **已解决**（f06511c）：
+   SaveData 契约移入 saveCodec.ts；runReplay/replayHashes 迁至 `src/replayRunner.ts`（与 simulator 同层）；
+   ReplayRecorder 改依赖结构化 `ReplaySource`。engine/ 与 economy/ 已无任何对 game.ts 的依赖。
+2. ~~`game.ts` ~2400 行（TurnEngine/FloorService/InventoryEconomyService 待拆）~~ **已解决**：
+   InventoryEconomyService（249d548）、FloorService（34c13fb）、TurnEngine（0ae5c15）先后迁出，
+   game.ts 2626 → **1917 行**；各服务经最小上下文接口（Ctx 模式）注入，门面保留同名委托，RNG 顺序逐位一致。
 3. **`engine/dijkstraMap.ts` 与 `world/fire.ts` 已交付未接线**（README 已知限制同步）。
 
 ## 契约要点
