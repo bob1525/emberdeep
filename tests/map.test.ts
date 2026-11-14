@@ -32,4 +32,13 @@ describe('GameMap', () => {
     expect(map.isWalkable(3, 3)).toBe(true);
     expect(map.isWalkable(0, 0)).toBe(false);
   });
+
+  it('exportGrid 往返还原地形（存档依赖）', () => {
+    const map = GameMap.filled(4, 3, 'wall');
+    map.setTile(1, 1, 'floor');
+    const grid = map.exportGrid();
+    const restored = new GameMap(4, 3, grid);
+    expect(restored.tileAt(1, 1)).toBe('floor');
+    expect(restored.tileAt(0, 0)).toBe('wall');
+  });
 });

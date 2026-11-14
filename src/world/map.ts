@@ -37,4 +37,9 @@ export class GameMap {
   isWalkable(x: number, y: number): boolean {
     return this.tileAt(x, y) === 'floor';
   }
+
+  /** 导出地形数据（行优先），供存档使用 */
+  exportGrid(): Tile[] {
+    return [...this.tiles];
+  }
 }

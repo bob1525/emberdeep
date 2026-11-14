@@ -28,4 +28,16 @@ export class Rng {
     if (items.length === 0) throw new Error('Rng.pick(): 数组为空');
     return items[this.int(0, items.length - 1)] as T;
   }
+
+  /** 导出内部状态，用于存档 */
+  snapshot(): number {
+    return this.state;
+  }
+
+  /** 从存档恢复内部状态 */
+  static fromState(state: number): Rng {
+    const rng = new Rng(0);
+    rng.state = state >>> 0;
+    return rng;
+  }
 }

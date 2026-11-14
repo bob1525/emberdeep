@@ -32,4 +32,15 @@ describe('Rng', () => {
     const rng = new Rng(1);
     expect(() => rng.pick([])).toThrow();
   });
+
+  it('snapshot/fromState 往返恢复随机序列（存档依赖）', () => {
+    const rng = new Rng(1234);
+    Array.from({ length: 10 }, () => rng.next());
+    const saved = rng.snapshot();
+
+    const restored = Rng.fromState(saved);
+    const fromRestore = Array.from({ length: 10 }, () => restored.next());
+    const fromOriginal = Array.from({ length: 10 }, () => rng.next());
+    expect(fromRestore).toEqual(fromOriginal);
+  });
 });

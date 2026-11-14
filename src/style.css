@@ -42,12 +42,51 @@ h1 {
   border: 1px solid #232a36;
   border-radius: 4px;
   max-width: 100%;
+  touch-action: none; /* 手势移动交给游戏，不触发页面滚动 */
+}
+
+/* 触屏设备的动作按钮排：桌面端隐藏 */
+#touch-actions {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  #touch-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+}
+
+#touch-actions button {
+  min-width: 52px;
+  min-height: 44px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 15px;
+  color: #aab4c4;
+  background: #141a24;
+  border: 1px solid #2a3140;
+  border-radius: 6px;
+}
+
+#touch-actions button:active {
+  background: #1e2733;
+  color: #f5b04c;
 }
 
 #status {
   margin-top: 10px;
   font-size: 14px;
   color: #f5b04c;
+}
+
+#minimap {
+  margin-top: 10px;
+  border: 1px solid #232a36;
+  border-radius: 2px;
+  image-rendering: pixelated;
+  width: min(480px, 90vw);
 }
 
 #log {
@@ -61,6 +100,18 @@ h1 {
 
 #log p {
   margin: 0;
+}
+
+#log p[data-tone='good'] {
+  color: #7fbf6a;
+}
+
+#log p[data-tone='bad'] {
+  color: #d96a5a;
+}
+
+#log p[data-tone='combat'] {
+  color: #c9b26b;
 }
 
 .help {

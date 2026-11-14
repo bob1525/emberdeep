@@ -10,8 +10,18 @@
       <h1>EMBERDEEP <span class="subtitle">余烬深渊</span></h1>
       <canvas id="game"></canvas>
       <div id="status"></div>
+      <canvas id="minimap"></canvas>
       <div id="log"></div>
-      <p class="help">移动：方向键 / WASD / hjkl · 斜向 yubn · 等待 空格</p>
+      <div id="touch-actions">
+        <button data-act="pickup" type="button">捡</button>
+        <button data-act="quaff" type="button">喝</button>
+        <button data-act="teleport" type="button">传</button>
+        <button data-act="fireblast" type="button">焰</button>
+        <button data-act="descend" type="button">下</button>
+        <button data-act="toggleMute" type="button">音</button>
+        <button data-act="restart" type="button">重</button>
+      </div>
+      <p class="help">移动 方向键/WASD/hjkl · 斜向 yubn · 等待 空格 · 捡拾 g · 喝药 q · 传送 t · 烈焰 f · 下楼 &gt; · 静音 m · 重开 r</p>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>
