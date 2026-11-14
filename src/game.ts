@@ -4,6 +4,7 @@ import { computeFov } from './engine/fov';
 import { decideMonsterAction } from './engine/ai';
 import { resolveAttack } from './engine/combat';
 import { hasLineOfSight } from './engine/los';
+import type { Pt } from './engine/los';
 import { Rng } from './engine/rng';
 import {
   STATUSES,
@@ -18,6 +19,8 @@ import { rollMonster } from './entities/monsters';
 import { itemDef, rollLoot, weaponBonus, armorBonus } from './items/catalog';
 import { generateFloor } from './world/generators/floor';
 import { GameMap } from './world/map';
+import { TRAPS, rollTraps, triggerTrap } from './world/traps';
+import type { PlacedTrap } from './world/traps';
 import type { Tile } from './world/tiles';
 import { drawMinimap, type Effect, type Glyph, type Renderer, type Scene } from './ui/renderer';
 
@@ -59,6 +62,7 @@ export interface SaveData {
   rngState: number;
   kills: number;
   deathCause: string;
+  traps?: PlacedTrap[];
 }
 
 const FOV_RADIUS = 8;
@@ -85,6 +89,7 @@ export class Game {
   private stairsDown: { x: number; y: number } = { x: 0, y: 0 };
   private monsters: Actor[] = [];
   private groundItems: GroundItem[] = [];
+  private traps: PlacedTrap[] = [];
   private visible = new Set<string>();
   private explored = new Set<string>();
   private effects: Effect[] = [];
@@ -144,6 +149,7 @@ export class Game {
         rngState: this.rng.snapshot(),
         kills: this.kills,
         deathCause: this.deathCause,
+        traps: this.traps,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch {
@@ -193,6 +199,7 @@ export class Game {
       energy: m.energy ?? 0,
     }));
     this.groundItems = save.groundItems;
+    this.traps = save.traps ?? [];
     this.kills = save.kills ?? 0;
     this.deathCause = save.deathCause ?? '未知';
     this.depth = save.depth;
@@ -431,6 +438,7 @@ export class Game {
     if (!this.map.isWalkable(nx, ny)) return false;
     this.player.x = nx;
     this.player.y = ny;
+    this.checkTrap();
     return true;
   }
 
@@ -815,8 +823,62 @@ export class Game {
       y: p.y,
       item: rollLoot(this.depth, this.rng),
     }));
+    this.placeTraps(floor);
     this.explored = new Set();
     this.updateFov();
+  }
+
+  /** 按深度撒陷阱：避开出生点、楼梯与物品点 */
+  private placeTraps(floor: { playerSpawn: Pt; stairsDown: Pt; itemSpots: Pt[] }): void {
+    const candidates: Pt[] = [];
+    for (let y = 1; y < this.map.height - 1; y++) {
+      for (let x = 1; x < this.map.width - 1; x++) {
+        if (!this.map.isWalkable(x, y)) continue;
+        if (x === floor.playerSpawn.x && y === floor.playerSpawn.y) continue;
+        if (x === floor.stairsDown.x && y === floor.stairsDown.y) continue;
+        if (floor.itemSpots.some((p) => p.x === x && p.y === y)) continue;
+        candidates.push({ x, y });
+      }
+    }
+    this.traps = rollTraps(this.depth, Math.min(6, 1 + this.depth), candidates, this.rng);
+  }
+
+  /** 玩家踏入陷阱格：一次性触发后拆除（简化设计） */
+  private checkTrap(): void {
+    const idx = this.traps.findIndex((t) => t.x === this.player.x && t.y === this.player.y);
+    if (idx === -1) return;
+    const trap = this.traps.splice(idx, 1)[0];
+    if (!trap) return;
+    const report = triggerTrap(trap.kind, this.rng);
+    playSfx('hurt');
+    this.effects.push({ kind: 'flash', x: this.player.x, y: this.player.y, color: '#d96a5a' });
+    this.log.push({ text: report.message, tone: 'bad' });
+    if (report.damage > 0) {
+      this.player.hp -= report.damage;
+      this.effects.push({
+        kind: 'float',
+        x: this.player.x,
+        y: this.player.y,
+        text: `-${report.damage}`,
+        color: '#d96a5a',
+      });
+    }
+    if (report.status) {
+      applyStatus(this.player, report.status.kind, report.status.turns, report.status.power);
+    }
+    if (report.teleport) {
+      this.applyTeleport();
+    }
+    if (this.player.hp <= 0) {
+      this.dead = true;
+      this.deathCause = TRAPS[trap.kind].name;
+      playSfx('die');
+      this.effects.push(
+        { kind: 'quake', dur: 500 },
+        { kind: 'flashScreen', color: '#5c1010', dur: 600 },
+      );
+      this.log.push({ text: `你死于${TRAPS[trap.kind].name}……按 R 重新开始。`, tone: 'bad' });
+    }
   }
 
   private newRun(): void {
@@ -898,12 +960,19 @@ export class Game {
       const def = itemDef(g.item);
       return { x: g.x, y: g.y, glyph: def.glyph, color: def.color };
     });
+    const trapGlyphs: Glyph[] = this.traps.map((t) => {
+      const def = TRAPS[t.kind];
+      return { x: t.x, y: t.y, glyph: def.glyph, color: def.color };
+    });
     return {
       map: this.map,
       depth: this.depth,
       visible: this.visible,
       explored: this.explored,
-      markers: [{ x: this.stairsDown.x, y: this.stairsDown.y, glyph: '>', color: '#c9a227' }],
+      markers: [
+        { x: this.stairsDown.x, y: this.stairsDown.y, glyph: '>', color: '#c9a227' },
+        ...trapGlyphs,
+      ],
       items,
       actors,
       dead: this.dead,

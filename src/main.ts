@@ -59,7 +59,7 @@ function renderOverlay(): void {
     tagline.className = 'tagline';
     tagline.textContent = '余烬深渊 · 浏览器 Roguelike';
     panel.append(title, tagline);
-    panel.append(option('[N] 新的冒险', '深入随机生成的地牢，死亡即失去一切'));
+    panel.append(option('[Enter] 新的冒险', '深入随机生成的地牢，死亡即失去一切'));
     if (Game.readSave() !== null) {
       panel.append(option('[C] 继续上局', '从停下的地方继续'));
     }

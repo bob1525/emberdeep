@@ -65,8 +65,7 @@ function buildKeyCommands(): Record<string, Action> {
     Escape: { type: 'closeOverlay' },
     PageUp: { type: 'scrollLog', dir: -1 },
     PageDown: { type: 'scrollLog', dir: 1 },
-    n: { type: 'titleNew' },
-    N: { type: 'titleNew' },
+    Enter: { type: 'titleNew' },
     c: { type: 'titleContinue' },
     C: { type: 'titleContinue' },
   };
