@@ -38,13 +38,15 @@ import { scaleHp, scaleAttack, rollElite } from './entities/scaling';
 import { runBrain, newMemory, tickMemory } from './engine/brain';
 import type { MonsterMemory } from './engine/brain';
 import { findPathWithFn } from './engine/pathfinding';
-import { itemDef, rollLoot, weaponBonus, armorBonus } from './items/catalog';
+import { rollLoot, weaponBonus, armorBonus } from './items/catalog';
 import { displayName, rarityColor, rollAffixData, bonusOf } from './items/affixes';
 import type { AffixData } from './items/affixes';
 import { RANGED, resolveShot } from './engine/ranged';
 import { rollGold } from './economy/gold';
-import { rollStock, sellPrice } from './economy/merchant';
+import { rollStock } from './economy/merchant';
 import type { StockEntry } from './economy/merchant';
+import { InventoryEconomyService, MAX_INVENTORY } from './economy/inventoryService';
+import type { GoldPile, GroundItem, MerchantState } from './economy/inventoryService';
 
 /** 统一取物品展示信息（SceneBuilder 边界委托，M4） */
 function itemInfo(item: ItemInstance) {
@@ -78,23 +80,8 @@ export type UiMode =
   | 'targeting'
   | 'shop';
 
-interface GoldPile {
-  x: number;
-  y: number;
-  amount: number;
-}
-
-interface MerchantState {
-  x: number;
-  y: number;
-  stock: StockEntry[];
-}
-
-export interface GroundItem {
-  x: number;
-  y: number;
-  item: ItemInstance;
-}
+/** 地面物品/金币堆/商人状态类型已迁至 InventoryEconomyService（M4）；按原公开面再导出 */
+export type { GroundItem };
 
 const SAVE_KEY = 'emberdeep-save-v1';
 
@@ -137,7 +124,6 @@ export interface SaveData {
 
 const FOV_RADIUS = 8;
 const MIGHT_ATTACK_BONUS = 3;
-const MAX_INVENTORY = 12;
 /** Boss 每场战斗的召唤物上限（P0-8） */
 const BOSS_SUMMON_CAP = 4;
 /** 自动探索单批步数预算（P0-7） */
@@ -740,15 +726,33 @@ export class Game {
     this.mode = 'play';
   }
 
-  /** 背包里可用的远程武器：优先弓（可重复），其次投掷物 */
+  /** 库存/经济服务（M4 迁出）：每次调用组装最小上下文；箭头函数闭包规避 player/rng/map 重赋值后的引用失效 */
+  private inventoryService(): InventoryEconomyService {
+    return new InventoryEconomyService({
+      player: this.player,
+      rng: this.rng,
+      map: this.map,
+      groundItems: this.groundItems,
+      goldPiles: this.goldPiles,
+      merchant: this.merchant,
+      depth: this.depth,
+      turn: this.turn,
+      getGold: () => this.gold,
+      addGold: (delta) => { this.gold += delta; },
+      setMightUntil: (turn) => { this.mightUntil = turn; },
+      effects: this.effects,
+      deleteAffixData: (uid) => { this.affixData.delete(uid); },
+      affixUids: () => [...this.affixData.keys()],
+      talentGoldBonus: () => this.talentMods().goldBonus,
+      visibleTargets: () => this.visibleTargets(),
+      killMonster: (target) => this.killMonster(target),
+      log: (text, tone) => { this.log.push({ text, tone }); },
+    });
+  }
+
+  /** 背包里可用的远程武器（M4 委托 InventoryEconomyService） */
   private rangedInInventory(): ItemInstance | null {
-    return (
-      this.player.inventory.find(
-        (it) => it.category === 'ranged' && RANGED[it.catalogId]?.kind === 'bow',
-      ) ??
-      this.player.inventory.find((it) => it.category === 'ranged' && RANGED[it.catalogId]?.thrown) ??
-      null
-    );
+    return this.inventoryService().rangedInInventory();
   }
 
   private tryEnterTargeting(): void {
@@ -854,40 +858,14 @@ export class Game {
     }
   }
 
+  /** 商店里买下指定货架槽位（M4 委托 InventoryEconomyService） */
   private buyFromMerchant(slot: number): void {
-    if (!this.merchant) return;
-    const entry = this.merchant.stock[slot];
-    if (!entry) return;
-    if (this.gold < entry.price) {
-      this.log.push({ text: '金币不够，商人摇了摇头。', tone: 'info' });
-      return;
-    }
-    if (this.player.inventory.length >= MAX_INVENTORY) {
-      this.log.push({ text: '背包满了，拿不下更多货物。', tone: 'info' });
-      return;
-    }
-    const item: ItemInstance = {
-      uid: allocateItemUid(),
-      catalogId: entry.catalogId,
-      category: entry.category,
-    };
-    this.gold -= entry.price;
-    this.merchant.stock.splice(slot, 1);
-    this.player.inventory.push(item);
-    playSfx('pickup');
-    this.log.push({ text: `买下了${itemInfo(item).name}（-${entry.price} 金币）。`, tone: 'good' });
+    this.inventoryService().buyFromMerchant(slot);
   }
 
+  /** 商店里卖掉背包指定槽位的物品（M4 委托 InventoryEconomyService） */
   private sellFromInventory(slot: number): void {
-    if (!this.merchant) return;
-    const item = this.player.inventory[slot];
-    if (!item) return;
-    const price = sellPrice(item.catalogId, item.category, this.depth);
-    this.player.inventory.splice(slot, 1);
-    this.affixData.delete(item.uid);
-    this.gold += price;
-    playSfx('pickup');
-    this.log.push({ text: `卖掉了${itemInfo(item).name}，得到 ${price} 金币。`, tone: 'good' });
+    this.inventoryService().sellFromInventory(slot);
   }
 
   /** 玩家行动成功后的公共回合结算 */
@@ -1612,157 +1590,31 @@ export class Game {
     return talentBonus(this.ownedTalents);
   }
 
+  /** 捡起脚下物品/金币（M4 委托 InventoryEconomyService） */
   private pickup(): boolean {
-    // 金币堆优先
-    const goldIdx = this.goldPiles.findIndex(
-      (g) => g.x === this.player.x && g.y === this.player.y,
-    );
-    if (goldIdx !== -1) {
-      const pile = this.goldPiles.splice(goldIdx, 1)[0];
-      if (!pile) return false;
-      const gained = Math.floor(pile.amount * (1 + this.talentMods().goldBonus));
-      this.gold += gained;
-      playSfx('pickup');
-      this.log.push({ text: `拾起了 ${gained} 金币。`, tone: 'good' });
-      return true;
-    }
-    const idx = this.groundItems.findIndex(
-      (g) => g.x === this.player.x && g.y === this.player.y,
-    );
-    if (idx === -1) {
-      this.log.push({ text: '这里没有可以捡的东西。', tone: 'info' });
-      return false;
-    }
-    const ground = this.groundItems.splice(idx, 1)[0];
-    if (!ground) return false;
-    const def = itemInfo(ground.item);
-
-    if (ground.item.category === 'weapon' || ground.item.category === 'armor') {
-      const slot = ground.item.category === 'weapon' ? 'weapon' : 'armor';
-      const current = this.player.equipment[slot];
-      const currentBonus = current
-        ? slot === 'weapon'
-          ? weaponBonus(current)
-          : armorBonus(current)
-        : -1;
-      // 该分支里必是普通装备，直接查通用目录拿加成
-      const catalogDef = itemDef(ground.item);
-      const nextBonus = catalogDef.bonus ?? 0;
-      if (nextBonus > currentBonus) {
-        this.player.equipment[slot] = ground.item;
-        this.log.push({
-          text: `装备了${catalogDef.name}（${slot === 'weapon' ? '攻击' : '防御'} +${nextBonus}）。`,
-          tone: 'good',
-        });
-        if (current) this.groundItems.push({ x: this.player.x, y: this.player.y, item: current });
-        playSfx('pickup');
-        return true;
-      }
-      this.log.push({ text: `${def.name}不如身上的装备，留在了原地。`, tone: 'info' });
-      this.groundItems.push(ground);
-      return false;
-    }
-
-    if (this.player.inventory.length >= MAX_INVENTORY) {
-      this.log.push({ text: '背包满了，拿不下更多东西。', tone: 'info' });
-      this.groundItems.push(ground);
-      return false;
-    }
-    this.player.inventory.push(ground.item);
-    this.log.push({ text: `拾起了${def.name}。`, tone: 'good' });
-    playSfx('pickup');
-    return true;
+    return this.inventoryService().pickup();
   }
 
+  /** 喝药（M4 委托 InventoryEconomyService）；模拟统计：成功喝下才计数 */
   private quaff(): boolean {
-    const candidates = this.player.inventory
-      .map((item, index) => ({ item, index }))
-      .filter(({ item }) => item.category === 'potion');
-    if (candidates.length === 0) {
-      this.log.push({ text: '背包里没有药水。', tone: 'info' });
-      return false;
-    }
-    const hurt = this.player.hp < this.player.maxHp;
-    const healPotions = candidates.filter(({ item }) => itemDef(item).heal !== undefined);
-    let chosen = candidates[0];
-    if (!chosen) return false;
-    if (hurt && healPotions.length > 0) {
-      // 优先喝治疗量最高的药水
-      for (const c of healPotions) {
-        const bestMax = itemDef(chosen.item).heal?.[1] ?? -1;
-        const cMax = itemDef(c.item).heal?.[1] ?? -1;
-        if (cMax > bestMax) chosen = c;
-      }
-    } else {
-      // 满血或没有治疗药水时：喝力量药水，否则随便喝一瓶
-      const might = candidates.find(({ item }) => itemDef(item).effect === 'might');
-      chosen = might ?? healPotions[0] ?? chosen;
-    }
-    const def = itemDef(chosen.item);
-    this.player.inventory.splice(chosen.index, 1);
-    playSfx('quaff');
-    this.potionsUsed += 1;
-    if (def.effect === 'might') {
-      this.mightUntil = this.turn + (def.duration ?? 20);
-      this.log.push({ text: `${def.name}下肚，余烬之力涌遍全身！攻击 +3。`, tone: 'good' });
-      return true;
-    }
-    const [lo, hi] = def.heal ?? [0, 0];
-    const amount = this.rng.int(lo, hi);
-    const before = this.player.hp;
-    this.player.hp = Math.min(this.player.maxHp, this.player.hp + amount);
-    this.log.push({
-      text: `喝下${def.name}，恢复了 ${this.player.hp - before} 点生命。`,
-      tone: 'good',
-    });
-    return true;
+    const used = this.inventoryService().quaff();
+    if (used) this.potionsUsed += 1;
+    return used;
   }
 
+  /** 使用传送卷轴（M4 委托 InventoryEconomyService） */
   private castTeleport(): boolean {
-    const idx = this.findScroll('teleport');
-    if (idx === -1) {
-      this.log.push({ text: '没有传送卷轴。', tone: 'info' });
-      return false;
-    }
-    this.player.inventory.splice(idx, 1);
-    return this.applyTeleport();
+    return this.inventoryService().castTeleport();
   }
 
-  /** 传送到随机地板格（快捷键与背包使用共用） */
+  /** 传送到随机地板格（快捷键与背包使用共用；M4 委托 InventoryEconomyService） */
   private applyTeleport(): boolean {
-    let tx = 0;
-    let ty = 0;
-    let ok = false;
-    for (let i = 0; i < 500 && !ok; i++) {
-      tx = this.rng.int(1, this.map.width - 2);
-      ty = this.rng.int(1, this.map.height - 2);
-      ok = this.map.isWalkable(tx, ty);
-    }
-    if (!ok) {
-      this.log.push({ text: '卷轴失效了……', tone: 'info' });
-      return false;
-    }
-    this.player.x = tx;
-    this.player.y = ty;
-    this.log.push({ text: '空间在你面前折叠，你出现在另一处。', tone: 'good' });
-    playSfx('teleport');
-    this.effects.push({ kind: 'flashScreen', color: '#3a6ea5', dur: 400 });
-    return true;
+    return this.inventoryService().applyTeleport();
   }
 
+  /** 使用烈焰卷轴（M4 委托 InventoryEconomyService） */
   private castFireblast(): boolean {
-    const idx = this.findScroll('fireblast');
-    if (idx === -1) {
-      this.log.push({ text: '没有烈焰卷轴。', tone: 'info' });
-      return false;
-    }
-    const targets = this.visibleTargets();
-    if (targets.length === 0) {
-      this.log.push({ text: '视野内没有敌人，卷轴没有点燃的理由。', tone: 'info' });
-      return false;
-    }
-    this.player.inventory.splice(idx, 1);
-    return this.applyFireblast(targets);
+    return this.inventoryService().castFireblast();
   }
 
   /** 视线阻挡回调（统一给 LOS/FOV/弹道使用） */
@@ -1783,95 +1635,14 @@ export class Game {
     });
   }
 
-  private applyFireblast(targets: Actor[]): boolean {
-    this.log.push({ text: '烈焰从卷轴中喷涌而出！', tone: 'combat' });
-    playSfx('zap');
-    this.effects.push({ kind: 'quake', dur: 260 });
-    for (const t of targets) {
-      const damage = this.rng.int(8, 14);
-      t.hp -= damage;
-      applyStatus(t, 'burn', 3, 2);
-      this.effects.push(
-        { kind: 'flash', x: t.x, y: t.y, color: '#f5803a' },
-        { kind: 'float', x: t.x, y: t.y, text: `-${damage}`, color: '#f5803a' },
-      );
-      this.log.push({ text: `火焰吞噬了${t.name}（${damage} 伤害）。`, tone: 'combat' });
-      if (t.hp <= 0) this.killMonster(t);
-    }
-    return true;
-  }
-
-  /** 背包界面：使用 / 装备指定槽位 */
+  /** 背包界面：使用 / 装备指定槽位（M4 委托 InventoryEconomyService） */
   private useInventorySlot(index: number): boolean {
-    const item = this.player.inventory[index];
-    if (!item) return false;
-    if (item.category === 'ranged') {
-      this.log.push({ text: '远程武器直接按 z 射击。', tone: 'info' });
-      return false;
-    }
-    const def = itemDef(item);
-
-    if (item.category === 'potion' && def.effect === 'might') {
-      this.player.inventory.splice(index, 1);
-      this.mightUntil = this.turn + (def.duration ?? 20);
-      playSfx('quaff');
-      this.log.push({ text: `${def.name}下肚，余烬之力涌遍全身！攻击 +3。`, tone: 'good' });
-      return true;
-    }
-    if (item.category === 'potion' && def.heal) {
-      this.player.inventory.splice(index, 1);
-      const [lo, hi] = def.heal;
-      const amount = this.rng.int(lo ?? 0, hi ?? 0);
-      const before = this.player.hp;
-      this.player.hp = Math.min(this.player.maxHp, this.player.hp + amount);
-      playSfx('quaff');
-      this.log.push({
-        text: `喝下${def.name}，恢复了 ${this.player.hp - before} 点生命。`,
-        tone: 'good',
-      });
-      return true;
-    }
-    if (item.category === 'scroll' && def.effect === 'teleport') {
-      this.player.inventory.splice(index, 1);
-      return this.applyTeleport();
-    }
-    if (item.category === 'scroll' && def.effect === 'fireblast') {
-      const targets = this.visibleTargets();
-      if (targets.length === 0) {
-        this.log.push({ text: '视野内没有敌人，卷轴没有点燃的理由。', tone: 'info' });
-        return false;
-      }
-      this.player.inventory.splice(index, 1);
-      return this.applyFireblast(targets);
-    }
-    if (item.category === 'weapon' || item.category === 'armor') {
-      // 强制换装，原装备放回背包
-      const slot = item.category;
-      const current = this.player.equipment[slot];
-      this.player.equipment[slot] = item;
-      this.player.inventory.splice(index, 1);
-      if (current) this.player.inventory.push(current);
-      playSfx('pickup');
-      this.log.push({ text: `装备了${def.name}。`, tone: 'good' });
-      return true;
-    }
-    return false;
+    return this.inventoryService().useInventorySlot(index);
   }
 
-  /** 背包界面：丢弃指定槽位到脚下 */
+  /** 背包界面：丢弃指定槽位到脚下（M4 委托 InventoryEconomyService） */
   private dropInventorySlot(index: number): boolean {
-    const item = this.player.inventory[index];
-    if (!item) return false;
-    this.player.inventory.splice(index, 1);
-    this.groundItems.push({ x: this.player.x, y: this.player.y, item });
-    this.log.push({ text: `丢下了${itemDef(item).name}。`, tone: 'info' });
-    return true;
-  }
-
-  private findScroll(effect: 'teleport' | 'fireblast'): number {
-    return this.player.inventory.findIndex(
-      (it) => it.category === 'scroll' && itemDef(it).effect === effect,
-    );
+    return this.inventoryService().dropInventorySlot(index);
   }
 
   private descend(): boolean {
@@ -2044,15 +1815,9 @@ export class Game {
 
   // ---------- 楼层与渲染 ----------
 
-  /** 换层时清理不再被任何实体引用的词缀数据（P1-14），防止无界累积 */
+  /** 换层时清理不再被任何实体引用的词缀数据（P1-14；M4 委托 InventoryEconomyService） */
   private pruneAffixData(): void {
-    const keep = new Set<number>();
-    for (const it of this.player.inventory) keep.add(it.uid);
-    if (this.player.equipment.weapon) keep.add(this.player.equipment.weapon.uid);
-    if (this.player.equipment.armor) keep.add(this.player.equipment.armor.uid);
-    for (const uid of [...this.affixData.keys()]) {
-      if (!keep.has(uid)) this.affixData.delete(uid);
-    }
+    this.inventoryService().pruneAffixData();
   }
 
   private buildFloor(): void {

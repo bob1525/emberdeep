@@ -1,7 +1,7 @@
 # Emberdeep 第二阶段长期工程 — 持续状态文件
 
 > 本文件是跨会话的唯一事实来源。每个里程碑的状态以此为准，未执行的绝不标记完成。
-> 最后更新：M1/M2/M3 完成（bc63506 已在 GitHub）+ M5 实现 + M6 模拟器交付 + M7 部分测量（本地 commit 待推送，见外部阻塞）
+> 最后更新：M8 文档+浏览器验收收口（f4556b4 已推送 GitHub）；M1-M3 DONE、M4/M5/M6/M7 PARTIAL（见总表）
 
 ## ⚠️ 当前外部阻塞
 
@@ -28,7 +28,7 @@
 | M5 | PARTIAL | scaling.ts 落地 + buildFloor/placeBoss 接线 + recordDepth/bestDepth 元进度 + simTurn 机器人策略修复（捡拾/撤退/技能/商人绕行寻路） | 模拟器两轮数据对比（修复前 24 局全灭 vs 修复后战士 0 死亡） | **数值未收敛**：游侠/法师仍 100% 死于 1 层（巨蝠威胁+bot 无走位，策略与数值问题需分离归因）；500 seeds 深跑待做 | 数值调整 + 深跑 |
 | M6 | PARTIAL | simulator.ts（turnCap 参数化：CI 快速档 1200 / 深跑档 6000）+ tests/simulator.test.ts（CI 档约 1-6 分钟）+ 卡死原因记录 | simulator.test ✅ | 500 seeds；失败局 Action 序列导出 | 扩 seeds |
 | M7 | PARTIAL | pathfindingStats 计数器 + 快照字节/耗时测量（A* 局均 19~5070、快照 30~49KB 无深度增长） | simulator 数据 | p50/p95/p99、最坏场景、A* tie-break、长程内存 | 基准测试 |
-| M8 | PARTIAL | work/browser-acceptance.md（路径 1/2/3/4/11/12 实测通过，5-8 headless 补证）；README 技能键 v；状态栏 k→v 修正 | browser-acceptance.md | 路径 5-10 浏览器深跑；架构图；changelog | 收口 |
+| M8 | DONE | **f4556b4**：README 全面翻新（在线地址/特性/键位/确定性核心/模拟器/已知限制）+ CHANGELOG + work/architecture.md 依赖图（import 机械提取）；**浏览器验收 13/13 全通过**（远程命中/背包拾取丢弃/商人买卖/祭坛/陷阱/升级三选一/倍速/死亡画面/中毒 tick）；main.ts `window.__emberdeep` 测试钩子 | browser-acceptance.md 13/13 | — | — |
 
 ## 里程碑 1：修复核验矩阵（22 项）
 
