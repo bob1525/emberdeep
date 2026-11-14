@@ -2,28 +2,24 @@
 
 > 一款纯 TypeScript + Canvas 的浏览器 Roguelike，零运行时依赖。
 
-在地牢中下行，收集装备，对抗深渊中的生物。每一层都由程序生成，每一次死亡都是新的开始。
+**▶ [在线游玩（GitHub Pages）](https://bob1525.github.io/emberdeep/)**
 
-## 开发
+在地牢中一路下行，收集装备、击败 Boss、对抗无尽深渊。每一层都由程序生成，每一次死亡都是新的开始——15 层之后没有终点，深度就是你的分数。
 
-```bash
-npm install
-npm run dev        # 本地开发服务器
-npm test           # 运行测试
-npm run lint       # ESLint
-npm run build      # 产物构建（含类型检查）
-```
+## 特性总览
 
-## 路线图
-
-- [x] 项目脚手架（Vite + TypeScript + ESLint + Vitest + CI）
-- [x] 可玩骨架：字符渲染、键盘移动（方向键 / WASD / vi 键 / 斜向）
-- [x] 核心引擎：视野光照（可见/记忆/未知三层）、回合状态机、战斗结算
-- [x] 程序化地图生成：BSP 房间 + 洞穴（细胞自动机）+ 楼层递进
-- [x] 敌人 AI：睡眠 / 游荡 / 追踪三态，A* 寻路，回合制战斗
-- [x] 物品系统：药水、卷轴、装备（自动换装）、背包、经验升级
-- [x] UI/UX：HUD、战斗日志（分色）、小地图、WebAudio 合成音效、死亡画面
-- [ ] 发布：localStorage 存档、平衡性调优、GitHub Pages 上线
+- **程序化世界**：BSP 房间（1-3 层）→ 细胞自动机洞穴（4 层起），连通性有保证
+- **三层视野光照**：可见 / 已探索记忆 / 未知，光照随距离衰减，递归阴影投射 FOV
+- **6 种怪物 + 3 只多阶段 Boss**：行为树 AI（呼救传播、火源规避、集结点记忆）、派系矩阵、A* 寻路（禁穿角）
+- **深度缩放 ENDLESS 模式**：15 层后每 5 层 Boss 按 +12% HP / +8% 攻击逐层增强，20 层起精英词缀怪入场
+- **完整物品生态**：装备词缀（10 前缀 × 4 稀有度）、远程武器（弓/投掷）、药水与卷轴、6 种状态效果
+- **金币经济**：击杀掉金、流浪商人商店（买卖差价、动态进货）
+- **楼层奇遇**：献祭祭坛、许愿井、4 种陷阱
+- **三职业 + 技能**：战士冲锋 / 游侠精准箭 / 法师烈焰新星，独立冷却状态机
+- **升级三选一天赋**：13 条天赋池（暴击 / 吸血 / 贪婪 / 狂战士……）
+- **确定性核心**：可播种 PRNG、64 位状态哈希、回放协议、存档 schema 校验
+- **手感与演出**：离屏渲染缓存、打击震屏 / 浮字 / 弹道特效、WebAudio 现场合成音效与环境低音
+- **工程质量**：TypeScript strict（`noUncheckedIndexedAccess`）、370+ 测试、无头模拟器、CI + GitHub Pages 自动部署
 
 ## 操作
 
@@ -36,21 +32,98 @@ npm run build      # 产物构建（含类型检查）
 | 空格 / . | 原地等待 |
 | g | 捡拾物品（装备自动对比换装） |
 | q | 喝药水 |
-| i | 背包（数字使用/装备，Shift+数字丢弃） |
-| ? | 完整消息历史（PgUp/PgDn 翻页） |
+| i | 背包（数字 1-9 使用/装备，Shift+符号丢弃） |
+| ? | 完整消息历史（PgUp / PgDn 翻页） |
 | t / f | 使用传送 / 烈焰卷轴 |
-| > | 下楼（站在楼梯上） |
 | v | 职业技能（战士冲锋 / 游侠精准箭 / 法师烈焰新星） |
+| z | 瞄准射击（远程武器，方向键选目标） |
+| o | 自动探索（发现敌人 / 陷阱 / 交互物自动中断） |
+| [ / ] | 游戏倍速 调慢 / 调快 |
+| > | 下楼（站在楼梯上） |
 | m | 静音开关 |
 | r | 死亡后重新开始 |
+| Escape | 关闭弹层 |
 
-> 进度自动存档于 localStorage（每回合写入），死亡即清档——经典的 permadeath。关闭页面后重新打开会从上次进度继续。
+触屏：滑动 = 8 方向移动，点按 = 等待，另配有屏幕动作按钮。
 
-## 技术栈
+> 进度自动存档于 localStorage，死亡即清档——经典的 permadeath。关闭页面重新打开会从上次进度继续；读取前会经过完整 schema 校验，损坏存档会被明确拒绝而非崩溃。
 
-- TypeScript + Vite，无任何运行时依赖
-- 渲染：Canvas 字符画（glyph grid），高分屏适配，三层视野光照
-- 可播种 PRNG（mulberry32），地图生成可复现
-- 音效：WebAudio 振荡器现场合成，零音频素材
-- 测试：Vitest · CI：GitHub Actions · 部署：GitHub Pages
+## 职业与技能
 
+| 职业 | 生命 | 特点 | 技能（冷却） |
+| --- | --- | --- | --- |
+| 战士 | 40 | 高防高血，正面换血 | 冲锋（12）：直冲目标并击退路径 |
+| 游侠 | 28 | 唯一自带短弓，中距风筝 | 精准箭（8）：必中高伤单发 |
+| 法师 | 26 | 无甲脆皮、攻击最高 | 烈焰新星（14）：周身 AoE 并点燃 |
+
+## 确定性核心（回放 / 存档 / 挑战）
+
+游戏状态是一个纯函数序列：`初始种子 + classId + 动作流 → 状态`。
+
+- **可播种 PRNG（mulberry32）**：地图、掉落、AI 骰子全部来自同一条随机流，`?seed=` 可复现同一地牢，`?daily` 每日挑战全服同种子
+- **状态哈希**：canonical JSON（键排序 / Map/Set 规范化）+ 64 位双 FNV 哈希，每个动作附带 checkpoint
+- **回放协议 v2**：录制器导出动作流 → 无头重放，逐位一致；分歧时报告第一个不一致的动作步与字段路径
+- **存档 schema 校验**：版本迁移表（v1 → 当前）、数值范围 / 瓦片合法性 / 引用完整性逐项校验，未知版本拒绝
+- **实体 ID 确定性**：每局重置分配器，跨实例隔离——回放与双开互不污染
+
+## 无头模拟器
+
+`src/simulator.ts` 提供机器人策略（捡拾 → 喝药 → 撤退 → 技能 → 攻击 → 下楼 → 自动探索），用于：
+
+- **平衡工程**：批量种子 × 三职业对局，输出死亡层 / 击杀数 / 深度分布——法师血量调整（22→26）等数值决策均由模拟数据驱动
+- **性能基准**：A* 调用计数、快照字节量、回合耗时统计（见 `work/long-task-status.md` M7）
+- **回归防线**：CI 快速档（turnCap=1200）在测试套件内跑通
+
+```bash
+npx vitest run tests/simulator.test.ts   # CI 快速档
+```
+
+## 架构
+
+```
+src/
+├── engine/      # 纯逻辑：rng/fov/los/combat/pathfinding/ai/brain/statuses/
+│                #   canonical/replay/saveCodec/saveSchema/ranged/audio/input
+├── entities/    # 实体与数据表：actor/classes/monsters/bosses/talents/scaling/registry
+├── items/       # 物品目录与词缀
+├── economy/     # 金币与商人
+├── world/       # 地图/瓦片/生成器(bsp/cave/floor)/陷阱/神龛/火势
+├── ui/          # Canvas 渲染器 + sceneBuilder（纯场景转换）
+├── game.ts      # 回合循环与规则编排（游戏门面）
+├── main.ts      # 浏览器引导：渲染/输入/弹层/音效
+└── simulator.ts # 无头模拟器
+```
+
+模块依赖图与各层契约见 [work/architecture.md](work/architecture.md)，变更历史见 [CHANGELOG.md](CHANGELOG.md)。
+
+## 开发
+
+```bash
+npm install
+npm run dev        # 本地开发服务器
+npm test           # 运行测试（Vitest）
+npm run lint       # ESLint
+npm run typecheck  # tsc --noEmit
+npm run build      # 产物构建（含类型检查）
+```
+
+## 已知限制（诚实清单）
+
+- 火势蔓延模块（`world/fire.ts`，含 20 项单测）已交付但尚未接入主循环
+- Dijkstra 距离场（`engine/dijkstraMap.ts`，24 怪追击优化）已交付待替换逐怪 A*
+- 触屏路径为代码级验证，浏览器深验覆盖桌面键鼠路径（见 `work/browser-acceptance.md`）
+- Boss 召唤物集合暂不进存档（重建时按 species 重新匹配，行为等价）
+
+## 路线图
+
+- [x] 项目脚手架（Vite + TypeScript + ESLint + Vitest + CI）
+- [x] 可玩骨架：字符渲染、键盘移动（方向键 / WASD / vi 键 / 斜向）
+- [x] 核心引擎：视野光照（可见/记忆/未知三层）、回合状态机、战斗结算
+- [x] 程序化地图生成：BSP 房间 + 洞穴（细胞自动机）+ 楼层递进
+- [x] 敌人 AI：行为树 / 记忆 / 呼救传播 / 派系矩阵，A* 寻路
+- [x] 物品系统：药水、卷轴、词缀装备、远程武器、背包、经验升级、天赋三选一
+- [x] 经济：金币、流浪商人商店；奇遇：祭坛 / 许愿井 / 陷阱
+- [x] Boss 战（三 Boss 多阶段）+ ENDLESS 深度缩放
+- [x] 确定性核心：回放协议 / 存档 schema / 每日挑战
+- [x] GitHub Pages 上线（CI 自动部署）
+- [ ] 火势蔓延接入主循环、Dijkstra 寻路替换、平衡收敛（500 seeds 数据驱动）

@@ -261,3 +261,6 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('#touch-action
   const act = TOUCH_ACTIONS[button.dataset.act ?? ''];
   if (act) button.addEventListener('click', () => game.handleAction({ ...act }));
 }
+
+// 测试钩子：把游戏实例暴露给浏览器验收/调试工具（M8 深验用，不参与玩法）
+(window as unknown as { __emberdeep: Game }).__emberdeep = game;
