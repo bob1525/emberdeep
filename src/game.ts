@@ -1444,6 +1444,7 @@ export class Game {
     const low = this.player.hp < this.player.maxHp * 0.5;
 
     // 低血：有药喝药；无药且有敌 → 撤退一格（远离最近敌人）
+    let retreatBlocked = false;
     if (low) {
       const hasPotion = this.player.inventory.some((it) => it.category === 'potion');
       if (hasPotion) {
@@ -1455,8 +1456,12 @@ export class Game {
           dx: -Math.sign(nearest.x - this.player.x),
           dy: -Math.sign(nearest.y - this.player.y),
         };
+        const beforeRetreat = this.turn;
         this.handleAction({ type: 'move', dx: away.dx, dy: away.dy });
-        return this.dead ? 'dead' : 'playing';
+        if (this.dead) return 'dead';
+        // 撤退被堵（回合未推进）→ 记旗并落入后续策略兜底，否则 turn 冻结死循环（P0）
+        if (this.turn === beforeRetreat) retreatBlocked = true;
+        else return 'playing';
       }
     }
 
@@ -1480,12 +1485,15 @@ export class Game {
       if (this.dead) return 'dead';
     }
 
-    // 满血或优势时交战：接近并攻击（move 撞上即攻击）
-    if (nearest && !low) {
+    // 满血或优势时交战：接近并攻击（move 撞上即攻击）；撤退被堵时背水一战。
+    // 交战移动被墙堵死同样不耗回合——落入楼梯/探索兜底，保证回合必推进（P0 同源）
+    if (nearest && (!low || retreatBlocked)) {
       const dx = Math.max(-1, Math.min(1, nearest.x - this.player.x));
       const dy = Math.max(-1, Math.min(1, nearest.y - this.player.y));
+      const beforeEngage = this.turn;
       this.handleAction({ type: 'move', dx, dy });
-      return this.dead ? 'dead' : 'playing';
+      if (this.dead) return 'dead';
+      if (this.turn !== beforeEngage) return 'playing';
     }
 
     // 站在楼梯上直接下楼
@@ -1506,7 +1514,10 @@ export class Game {
       );
       const step = path?.[0];
       if (step) {
+        const beforeStep = this.turn;
         this.handleAction({ type: 'move', dx: step.x - this.player.x, dy: step.y - this.player.y });
+        // 楼梯路径被怪堵住（不耗回合）→ 原地等待保底，回合必推进
+        if (!this.dead && this.turn === beforeStep) this.handleAction({ type: 'wait' });
       } else {
         this.handleAction({ type: 'wait' });
       }

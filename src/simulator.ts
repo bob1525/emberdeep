@@ -42,8 +42,22 @@ export function simulateRun(
   const t0 = Date.now();
   const astarBefore = { ...pathfindingStats };
   let stuck = false;
+  let stagnant = 0;
+  let lastTurn = -1;
   while (!game.dead && game.depth < maxDepthCap) {
     game.simTurn();
+    // 保险丝：bot 策略若产生「回合冻结」（动作全被堵），8 次后强制断开，
+    // 标记 deadlock——防止单种子无限循环卡死整个测试进程（P0 兜底）
+    if (game.turn === lastTurn) {
+      stagnant += 1;
+      if (stagnant >= 8) {
+        stuck = true;
+        break;
+      }
+    } else {
+      stagnant = 0;
+      lastTurn = game.turn;
+    }
     if (game.turn >= turnCap) {
       stuck = true;
       break;
@@ -56,7 +70,7 @@ export function simulateRun(
     maxDepth: game.depth,
     reached30: game.depth >= maxDepthCap,
     dead: game.dead,
-    cause: game.dead ? game.deathCause : stuck ? '回合上限（机器人卡死）' : `到达第 ${game.depth} 层`,
+    cause: game.dead ? game.deathCause : stuck ? (game.turn >= turnCap ? '回合上限（机器人卡死）' : '回合冻结（bot 无动作可用，已断开）') : `到达第 ${game.depth} 层`,
     turns: game.turn,
     kills: game.kills,
     gold: game.gold,
