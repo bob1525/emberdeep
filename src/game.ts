@@ -2,6 +2,7 @@ import { isMuted, playSfx, setMuted } from './engine/audio';
 import type { Action } from './engine/input';
 import { computeFov } from './engine/fov';
 import { decideMonsterAction } from './engine/ai';
+import type { AiAction } from './engine/ai';
 import { resolveAttack } from './engine/combat';
 import { hasLineOfSight } from './engine/los';
 import type { Pt } from './engine/los';
@@ -29,6 +30,8 @@ import { CLASSES, canUseSkill, makeCooldown, startCooldown, tickCooldown } from 
 import type { ClassId, SkillCooldown } from './entities/classes';
 import { TALENTS, talentBonus, rollTalentChoices } from './entities/talents';
 import type { TalentMods } from './entities/talents';
+import { runBrain, newMemory, tickMemory } from './engine/brain';
+import type { MonsterMemory } from './engine/brain';
 import { findPathWithFn } from './engine/pathfinding';
 import { itemDef, rollLoot, weaponBonus, armorBonus } from './items/catalog';
 import { displayName, rarityColor, rollAffixData, bonusOf } from './items/affixes';
@@ -127,6 +130,7 @@ export interface SaveData {
   skillRemaining?: number;
   ownedTalents?: string[];
   shrines?: { x: number; y: number; kind: ShrineKind }[];
+  memories?: [number, { lastSeenPlayer: Pt | null; alert: number; rallyPoint: Pt | null; rallyAge: number; cooldowns: [string, number][] }][];
 }
 
 const FOV_RADIUS = 8;
@@ -163,6 +167,7 @@ export class Game {
   private monsters: Actor[] = [];
   private boss: Actor | null = null;
   private bossDef: BossDef | null = null;
+  private memories = new Map<number, MonsterMemory>();
   private groundItems: GroundItem[] = [];
   private traps: PlacedTrap[] = [];
   private shrines: { x: number; y: number; kind: ShrineKind }[] = [];
@@ -249,6 +254,16 @@ export class Game {
         skillRemaining: this.skill.remaining,
         ownedTalents: this.ownedTalents,
         shrines: this.shrines,
+        memories: [...this.memories.entries()].map(([id, m]) => [
+          id,
+          {
+            lastSeenPlayer: m.lastSeenPlayer,
+            alert: m.alert,
+            rallyPoint: m.rallyPoint,
+            rallyAge: m.rallyAge,
+            cooldowns: [...m.cooldowns],
+          },
+        ]),
       };
   }
 
@@ -318,6 +333,16 @@ export class Game {
     this.ownedTalents = save.ownedTalents ?? [];
     this.talentChoices = [];
     this.shrines = save.shrines ?? [];
+    this.memories.clear();
+    for (const [id, m] of save.memories ?? []) {
+      this.memories.set(id, {
+        lastSeenPlayer: m.lastSeenPlayer,
+        alert: m.alert,
+        rallyPoint: m.rallyPoint,
+        rallyAge: m.rallyAge,
+        cooldowns: new Map(m.cooldowns),
+      });
+    }
     this.gold = save.gold ?? 0;
     this.kills = save.kills ?? 0;
     this.deathCause = save.deathCause ?? '未知';
@@ -767,6 +792,7 @@ export class Game {
   private endPlayerTurn(): void {
     this.turn += 1;
     tickCooldown(this.skill);
+    for (const memory of this.memories.values()) tickMemory(memory);
     // 天赋·活力：每 5 回合回复生命
     const regen = this.talentMods().regen;
     if (regen > 0 && this.turn % 5 === 0 && this.player.hp < this.player.maxHp) {
@@ -1470,12 +1496,7 @@ export class Game {
             }
           }
         }
-        const act = decideMonsterAction({
-          self: m,
-          player: this.player,
-          isBlocked: (x, y) => !this.map.isWalkable(x, y),
-          rng: this.rng,
-        });
+        const act = this.decideMonster(m);
         if (act.type === 'attack') {
           this.monsterAttack(m);
           if (this.dead) break;
@@ -1503,6 +1524,40 @@ export class Game {
         }
       }
     }
+  }
+
+  /** 怪物决策入口：Boss 走专属阶段逻辑，普通怪走行为树（有记忆/会呼救/会逃跑） */
+  private decideMonster(m: Actor): AiAction {
+    if (m === this.boss) {
+      // Boss 由 monsterTurns 内联处理阶段特技，这里只做常规决策
+      return decideMonsterAction({
+        self: m,
+        player: this.player,
+        isBlocked: (x, y) => !this.map.isWalkable(x, y),
+        rng: this.rng,
+      });
+    }
+    const memory = this.memories.get(m.id) ?? newMemory();
+    this.memories.set(m.id, memory);
+    const allies = this.monsters
+      .filter((o) => o !== m && o.side === m.side)
+      .map((o) => ({
+        actor: o,
+        memory: this.memories.get(o.id) ?? newMemory(),
+      }));
+    const result = runBrain({
+      self: m,
+      player: this.player,
+      allies,
+      isBlocked: (x, y) => !this.map.isWalkable(x, y),
+      isOnFire: () => false, // 火势系统接入后改为真实判定
+      rng: this.rng,
+      memory,
+    });
+    for (const event of result.events) {
+      this.log.push({ text: event.text, tone: 'info' });
+    }
+    return result.action;
   }
 
   private monsterAttack(m: Actor): void {
@@ -1568,6 +1623,7 @@ export class Game {
         ai: { mode: 'sleep', senseRadius: t.senseRadius },
       });
     });
+    this.memories.clear();
     this.goldPiles = [];
     this.groundItems = [];
     for (const p of floor.itemSpots) {
@@ -1766,6 +1822,7 @@ export class Game {
     this.ownedTalents = [];
     this.talentChoices = [];
     this.shrines = [];
+    this.memories.clear();
     this.mightUntil = 0;
     this.log = [{ text: '新的冒险开始了。你在余烬深渊的第 1 层醒来……', tone: 'info' }];
     Game.clearSave();
