@@ -14,9 +14,30 @@ import {
   tickStatuses,
   totalDefenseBonus,
 } from './engine/statuses';
-import { createPlayer, makeActor, type Actor, type ItemInstance } from './entities/actor';
+import {
+  createPlayer,
+  makeActor,
+  allocateItemUid,
+  type Actor,
+  type ItemInstance,
+} from './entities/actor';
 import { rollMonster } from './entities/monsters';
 import { itemDef, rollLoot, weaponBonus, armorBonus } from './items/catalog';
+import { RANGED, resolveShot } from './engine/ranged';
+
+/** 统一取物品展示信息：远程武器走 RANGED 目录，其余走通用目录 */
+function itemInfo(item: ItemInstance): {
+  name: string;
+  glyph: string;
+  color: string;
+  description?: string;
+} {
+  if (item.category === 'ranged') {
+    const def = RANGED[item.catalogId];
+    if (def) return def;
+  }
+  return itemDef(item);
+}
 import { generateFloor } from './world/generators/floor';
 import { GameMap } from './world/map';
 import { TRAPS, rollTraps, triggerTrap } from './world/traps';
@@ -32,7 +53,7 @@ export interface LogEntry {
 }
 
 /** UI 界面模式：菜单 / 背包 / 消息历史等界面功能的地基 */
-export type UiMode = 'title' | 'play' | 'inventory' | 'log';
+export type UiMode = 'title' | 'play' | 'inventory' | 'log' | 'targeting';
 
 export interface GroundItem {
   x: number;
@@ -235,6 +256,9 @@ export class Game {
       case 'play':
         this.handlePlay(action);
         break;
+      case 'targeting':
+        this.handleTargeting(action);
+        break;
     }
 
     if (this.mode === 'play') this.updateFov();
@@ -264,7 +288,91 @@ export class Game {
       this.mode = 'log';
       return;
     }
+    if (action.type === 'aimBow') {
+      this.tryEnterTargeting();
+      return;
+    }
     if (this.doPlayerAction(action)) this.endPlayerTurn();
+  }
+
+  private handleTargeting(action: Action): void {
+    if (action.type === 'closeOverlay') {
+      this.mode = 'play';
+      return;
+    }
+    if (action.type === 'move') {
+      if (this.fire(action.dx, action.dy)) {
+        this.mode = 'play';
+        this.endPlayerTurn();
+      }
+      return;
+    }
+    // 其他按键一律取消瞄准
+    this.mode = 'play';
+  }
+
+  /** 背包里可用的远程武器：优先弓（可重复），其次投掷物 */
+  private rangedInInventory(): ItemInstance | null {
+    return (
+      this.player.inventory.find(
+        (it) => it.category === 'ranged' && RANGED[it.catalogId]?.kind === 'bow',
+      ) ??
+      this.player.inventory.find((it) => it.category === 'ranged' && RANGED[it.catalogId]?.thrown) ??
+      null
+    );
+  }
+
+  private tryEnterTargeting(): void {
+    if (!this.rangedInInventory()) {
+      this.log.push({ text: '背包里没有远程武器。', tone: 'info' });
+      return;
+    }
+    this.mode = 'targeting';
+  }
+
+  /** 朝方向射一箭 / 掷一刀 */
+  private fire(dx: number, dy: number): boolean {
+    const weapon = this.rangedInInventory();
+    if (!weapon) {
+      this.log.push({ text: '背包里没有远程武器。', tone: 'info' });
+      return false;
+    }
+    const def = RANGED[weapon.catalogId];
+    if (!def) return false;
+    const report = resolveShot({
+      from: { x: this.player.x, y: this.player.y },
+      dx,
+      dy,
+      def,
+      isBlocked: (x, y) => !this.map.isWalkable(x, y),
+      targetAt: (x, y) => this.monsterAt(x, y) !== undefined,
+      rng: this.rng,
+    });
+    if (report.hit) {
+      const target = this.monsterAt(report.x, report.y);
+      if (target) {
+        const damage = Math.max(1, report.damage - target.defense);
+        target.hp -= damage;
+        playSfx('hit');
+        this.effects.push(
+          { kind: 'float', x: target.x, y: target.y, text: `-${damage}`, color: '#8ecafc' },
+          { kind: 'flash', x: target.x, y: target.y, color: '#8ecafc' },
+        );
+        this.log.push({
+          text: `${def.name}命中了${target.name}（${damage} 伤害）。`,
+          tone: 'combat',
+        });
+        if (target.hp <= 0) this.killMonster(target);
+      }
+    } else {
+      this.log.push({ text: `${def.name}射空了。`, tone: 'info' });
+    }
+    // 投掷物掷出即消耗
+    if (def.thrown) {
+      const idx = this.player.inventory.indexOf(weapon);
+      if (idx !== -1) this.player.inventory.splice(idx, 1);
+    }
+    return true;
   }
 
   private handleInventory(action: Action): void {
@@ -500,7 +608,7 @@ export class Game {
     }
     const ground = this.groundItems.splice(idx, 1)[0];
     if (!ground) return false;
-    const def = itemDef(ground.item);
+    const def = itemInfo(ground.item);
 
     if (ground.item.category === 'weapon' || ground.item.category === 'armor') {
       const slot = ground.item.category === 'weapon' ? 'weapon' : 'armor';
@@ -510,11 +618,13 @@ export class Game {
           ? weaponBonus(current)
           : armorBonus(current)
         : -1;
-      const nextBonus = def.bonus ?? 0;
+      // 该分支里必是普通装备，直接查通用目录拿加成
+      const catalogDef = itemDef(ground.item);
+      const nextBonus = catalogDef.bonus ?? 0;
       if (nextBonus > currentBonus) {
         this.player.equipment[slot] = ground.item;
         this.log.push({
-          text: `装备了${def.name}（${slot === 'weapon' ? '攻击' : '防御'} +${nextBonus}）。`,
+          text: `装备了${catalogDef.name}（${slot === 'weapon' ? '攻击' : '防御'} +${nextBonus}）。`,
           tone: 'good',
         });
         if (current) this.groundItems.push({ x: this.player.x, y: this.player.y, item: current });
@@ -657,6 +767,10 @@ export class Game {
   private useInventorySlot(index: number): boolean {
     const item = this.player.inventory[index];
     if (!item) return false;
+    if (item.category === 'ranged') {
+      this.log.push({ text: '远程武器直接按 z 射击。', tone: 'info' });
+      return false;
+    }
     const def = itemDef(item);
 
     if (item.category === 'potion' && def.effect === 'might') {
@@ -818,11 +932,25 @@ export class Game {
         ai: { mode: 'sleep', senseRadius: t.senseRadius },
       });
     });
-    this.groundItems = floor.itemSpots.map((p) => ({
-      x: p.x,
-      y: p.y,
-      item: rollLoot(this.depth, this.rng),
-    }));
+    this.groundItems = floor.itemSpots.map((p) => {
+      // 25% 概率出现远程武器，其余走普通掉落表
+      if (this.rng.next() < 0.25) {
+        const pool = Object.entries(RANGED).filter(([, d]) => d.minDepth <= this.depth);
+        const entry = this.rng.pick(pool);
+        if (entry) {
+          return {
+            x: p.x,
+            y: p.y,
+            item: {
+              uid: allocateItemUid(),
+              catalogId: entry[0],
+              category: 'ranged' as const,
+            },
+          };
+        }
+      }
+      return { x: p.x, y: p.y, item: rollLoot(this.depth, this.rng) };
+    });
     this.placeTraps(floor);
     this.explored = new Set();
     this.updateFov();
@@ -957,7 +1085,7 @@ export class Game {
       actors.push({ x: m.x, y: m.y, glyph: m.glyph, color: m.color });
     }
     const items: Glyph[] = this.groundItems.map((g) => {
-      const def = itemDef(g.item);
+      const def = itemInfo(g.item);
       return { x: g.x, y: g.y, glyph: def.glyph, color: def.color };
     });
     const trapGlyphs: Glyph[] = this.traps.map((t) => {

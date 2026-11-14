@@ -3,7 +3,7 @@
  * 纯数据 + 工厂函数，不含任何游戏逻辑。
  */
 
-export type ItemCategory = 'potion' | 'scroll' | 'weapon' | 'armor';
+export type ItemCategory = 'potion' | 'scroll' | 'weapon' | 'armor' | 'ranged';
 
 /** 背包里的一件物品。名称/效果等定义由物品目录（items 模块）按 catalogId 提供 */
 export interface ItemInstance {

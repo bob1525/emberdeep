@@ -3,6 +3,7 @@ import { Game } from './game';
 import { bindInput, bindTouch, type Action } from './engine/input';
 import { STATUSES } from './engine/statuses';
 import type { StatusKind } from './engine/statuses';
+import { RANGED } from './engine/ranged';
 import { itemDef } from './items/catalog';
 import { Renderer } from './ui/renderer';
 
@@ -74,15 +75,20 @@ function renderOverlay(): void {
       panel.append(hint('（空空如也）'));
     } else {
       inventory.forEach((item, i) => {
-        const def = itemDef(item);
+        const info =
+          item.category === 'ranged' ? RANGED[item.catalogId] : itemDef(item);
         const equipped =
           game.player.equipment.weapon?.uid === item.uid
             ? '（已装备）'
             : game.player.equipment.armor?.uid === item.uid
               ? '（已装备）'
               : '';
+        const description =
+          item.category === 'ranged'
+            ? '远程武器（z 键射击）'
+            : ((info as { description?: string } | null)?.description ?? '');
         const row = document.createElement('p');
-        row.textContent = `${i + 1}. ${def.name}${equipped} — ${def.description}`;
+        row.textContent = `${i + 1}. ${info?.name ?? item.catalogId}${equipped} — ${description}`;
         panel.append(row);
       });
     }
@@ -102,6 +108,11 @@ function renderOverlay(): void {
       panel.append(p);
     }
     panel.append(hint('PgUp/PgDn 翻页 · Esc 返回'));
+  } else if (game.mode === 'targeting') {
+    const heading = document.createElement('h3');
+    heading.textContent = '射击';
+    panel.append(heading);
+    panel.append(hint('方向键 / yubn 选择方向 · Esc 取消'));
   }
 
   overlayEl.replaceChildren(panel);

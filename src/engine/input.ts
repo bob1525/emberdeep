@@ -10,6 +10,7 @@ export type Action =
   // UI 模式
   | { type: 'openInventory' }
   | { type: 'openLog' }
+  | { type: 'aimBow' }
   | { type: 'closeOverlay' }
   | { type: 'useSlot'; slot: number }
   | { type: 'dropSlot'; slot: number }
@@ -62,6 +63,7 @@ function buildKeyCommands(): Record<string, Action> {
     r: { type: 'restart' },
     i: { type: 'openInventory' },
     '?': { type: 'openLog' },
+    z: { type: 'aimBow' },
     Escape: { type: 'closeOverlay' },
     PageUp: { type: 'scrollLog', dir: -1 },
     PageDown: { type: 'scrollLog', dir: 1 },

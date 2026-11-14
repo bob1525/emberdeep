@@ -5,7 +5,8 @@ import { Rng } from '../src/engine/rng';
 import { ITEMS, armorBonus, createItem, itemDef, itemName, rollLoot, weaponBonus } from '../src/items/catalog';
 
 /** 类别 → 地面字符的约定 */
-const GLYPHS: Record<ItemCategory, string> = { potion: '!', scroll: '?', weapon: '/', armor: '[' };
+const GLYPHS: Record<ItemCategory, string> = { potion: '!', scroll: '?', weapon: '/', armor: '[',
+  ranged: '}', };
 const CATEGORIES: readonly ItemCategory[] = ['potion', 'scroll', 'weapon', 'armor'];
 
 describe('物品目录完整性', () => {
