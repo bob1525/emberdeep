@@ -108,7 +108,7 @@ describe('三职业数值梯度', () => {
     const { warrior, ranger, mage } = CLASSES;
     expect(warrior.baseHp).toBe(40);
     expect(ranger.baseHp).toBe(28);
-    expect(mage.baseHp).toBe(22);
+    expect(mage.baseHp).toBe(26);
     expect(warrior.baseHp).toBeGreaterThan(ranger.baseHp);
     expect(ranger.baseHp).toBeGreaterThan(mage.baseHp);
   });

@@ -46,18 +46,9 @@ import { rollGold } from './economy/gold';
 import { rollStock, sellPrice } from './economy/merchant';
 import type { StockEntry } from './economy/merchant';
 
-/** 统一取物品展示信息：远程武器走 RANGED 目录，其余走通用目录 */
-function itemInfo(item: ItemInstance): {
-  name: string;
-  glyph: string;
-  color: string;
-  description?: string;
-} {
-  if (item.category === 'ranged') {
-    const def = RANGED[item.catalogId];
-    if (def) return def;
-  }
-  return itemDef(item);
+/** 统一取物品展示信息（SceneBuilder 边界委托，M4） */
+function itemInfo(item: ItemInstance) {
+  return sbItemInfo(item);
 }
 import { generateFloor } from './world/generators/floor';
 import { GameMap } from './world/map';
@@ -66,7 +57,8 @@ import type { PlacedTrap } from './world/traps';
 import { SHRINES, resolveAltar, resolveWell } from './world/shrines';
 import type { ShrineKind } from './world/shrines';
 import type { Tile } from './world/tiles';
-import { drawMinimap, type Effect, type Glyph, type Renderer, type Scene } from './ui/renderer';
+import { drawMinimap, type Effect, type Renderer, type Scene } from './ui/renderer';
+import { buildScene as sbBuildScene, itemInfo as sbItemInfo } from './ui/sceneBuilder';
 
 export type Tone = 'info' | 'good' | 'bad' | 'combat';
 
@@ -187,6 +179,8 @@ export class Game {
   private potionsUsed = 0;
   /** 上次尝试技能的回合（模拟器防重试死循环） */
   private lastSkillTryTurn = -100;
+  /** 游戏倍速（M7：玩家 1-5x，模拟器 50-100x；影响动画时长和自动探索批量） */
+  private speedMult = 1;
   /** 当前界面模式；游戏从标题画面开始 */
   mode: UiMode = 'title';
   /** 消息历史查看游标（log 模式；null = 定位在最新） */
@@ -252,7 +246,8 @@ export class Game {
 
   /** 自动存档：自动探索批量模式下按回合节流（P0-7）；失败静默降级 */
   private persist(): void {
-    if (this.turn - this.lastPersistTurn < 8 && this.turn !== 0) return;
+    const throttle = Math.max(8, Math.round(8 * this.speedMult));
+    if (this.turn - this.lastPersistTurn < throttle && this.turn !== 0) return;
     this.lastPersistTurn = this.turn;
     try {
       const data = this.buildSaveData();
@@ -566,6 +561,17 @@ export class Game {
     }
     if (action.type === 'useSkill') {
       if (this.useClassSkill()) this.endPlayerTurn();
+      return;
+    }
+    if (action.type === 'setSpeed') {
+      // [ 降速 / ] 升速：循环切换 1x → 2x → 3x → 5x → 1x
+      const speeds = [1, 2, 3, 5];
+      const cur = speeds.indexOf(this.speedMult);
+      const next = action.mult === 1 ? speeds[(cur + 1) % speeds.length] ?? 1 : speeds[(cur - 1 + speeds.length) % speeds.length] ?? 1;
+      this.setSpeedMult(next);
+      this.log.push({ text: `游戏倍速：${next}x`, tone: 'info' });
+      this.render();
+      this.onChange?.();
       return;
     }
     if (this.doPlayerAction(action)) this.endPlayerTurn();
@@ -919,11 +925,12 @@ export class Game {
    */
   private autoStep(): void {
     let steps = 0;
+    const budget = Math.round(AUTO_EXPLORE_BUDGET * this.speedMult);
     while (
       this.autoExploring &&
       !this.dead &&
       this.mode === 'play' &&
-      steps < AUTO_EXPLORE_BUDGET
+      steps < budget
     ) {
       if (this.visibleTargets().length > 0) {
         this.autoExploring = false;
@@ -984,12 +991,13 @@ export class Game {
         this.autoPath.shift();
         steps += 1;
         this.endPlayerTurn();
+        // 倍速：每 speedMult 步才做一次批量存档（高频 turn 时降低 IO 压力）
       } else {
         // 被堵住：重新寻路
         this.autoPath = null;
       }
     }
-    if (this.autoExploring && steps >= AUTO_EXPLORE_BUDGET) {
+    if (this.autoExploring && steps >= budget) {
       // 预算耗尽：暂停（置 false），再按 o 从下一批继续（P0-7 语义修正）
       this.autoExploring = false;
       this.log.push({ text: '自动探索暂歇——再按 o 继续。', tone: 'info' });
@@ -1169,6 +1177,15 @@ export class Game {
   /** 商店货架（只读副本） */
   merchantStock(): StockEntry[] {
     return this.merchant ? [...this.merchant.stock] : [];
+  }
+
+  /** 设置游戏倍速（P0-7 延伸：玩家 1-5x，模拟器 50-100x） */
+  setSpeedMult(m: number): void {
+    this.speedMult = Math.max(0.5, Math.min(100, m));
+  }
+
+  getSpeedMult(): number {
+    return this.speedMult;
   }
 
   // ---------- 内部钩子（@internal 供无头模拟器与测试使用，不参与 UI） ----------
@@ -2571,60 +2588,22 @@ export class Game {
     return pending;
   }
 
+  /** 场景组装委托到 SceneBuilder（M4 纯转换） */
   private buildScene(): Scene {
-    const actors: Glyph[] = [
-      {
-        x: this.player.x,
-        y: this.player.y,
-        glyph: this.player.glyph,
-        color: this.player.color,
-        hp: this.player.hp,
-        maxHp: this.player.maxHp,
-      },
-    ];
-    for (const m of this.monsters) {
-      actors.push({
-        x: m.x,
-        y: m.y,
-        glyph: m.glyph,
-        color: m.color,
-        hp: m.hp,
-        maxHp: m.maxHp,
-      });
-    }
-    const items: Glyph[] = this.groundItems.map((g) => {
-      const def = itemInfo(g.item);
-      // 带词缀的装备按稀有度颜色显示
-      const affix = this.affixData.get(g.item.uid) ?? null;
-      const color = affix && affix.affixIds.length > 0 ? rarityColor(affix) : def.color;
-      return { x: g.x, y: g.y, glyph: def.glyph, color };
-    });
-    for (const g of this.goldPiles) {
-      items.push({ x: g.x, y: g.y, glyph: '$', color: '#e8c14a' });
-    }
-    if (this.merchant) {
-      actors.push({ x: this.merchant.x, y: this.merchant.y, glyph: '$', color: '#e8c14a' });
-    }
-    const trapGlyphs: Glyph[] = this.traps.map((t) => {
-      const def = TRAPS[t.kind];
-      return { x: t.x, y: t.y, glyph: def.glyph, color: def.color };
-    });
-    const shrineGlyphs: Glyph[] = this.shrines.map((s) => {
-      const def = SHRINES[s.kind];
-      return { x: s.x, y: s.y, glyph: def.glyph, color: def.color };
-    });
-    return {
+    return sbBuildScene({
       map: this.map,
       depth: this.depth,
       visible: this.visible,
       explored: this.explored,
-      markers: [
-        { x: this.stairsDown.x, y: this.stairsDown.y, glyph: '>', color: '#c9a227' },
-        ...trapGlyphs,
-        ...shrineGlyphs,
-      ],
-      items,
-      actors,
+      stairsDown: this.stairsDown,
+      traps: this.traps,
+      shrines: this.shrines,
+      player: this.player,
+      monsters: this.monsters,
+      groundItems: this.groundItems,
+      goldPiles: this.goldPiles,
+      merchant: this.merchant,
+      affixColorOf: (uid) => this.affixData.get(uid) ? rarityColor(this.affixData.get(uid)!) : null,
       dead: this.dead,
       stats: this.dead
         ? {
@@ -2635,8 +2614,9 @@ export class Game {
             cause: this.deathCause,
           }
         : undefined,
-    };
+    });
   }
+
 
   private render(): void {
     // 回放/无头模式下没有渲染器，只推进逻辑

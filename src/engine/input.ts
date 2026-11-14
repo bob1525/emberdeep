@@ -13,6 +13,7 @@ export type Action =
   | { type: 'aimBow' }
   | { type: 'autoExplore' }
   | { type: 'useSkill' }
+  | { type: 'setSpeed'; mult: number }
   | { type: 'closeOverlay' }
   | { type: 'useSlot'; slot: number }
   | { type: 'dropSlot'; slot: number }
@@ -68,6 +69,8 @@ function buildKeyCommands(): Record<string, Action> {
     z: { type: 'aimBow' },
     o: { type: 'autoExplore' },
     v: { type: 'useSkill' },
+    '[': { type: 'setSpeed', mult: -1 },
+    ']': { type: 'setSpeed', mult: 1 },
     Escape: { type: 'closeOverlay' },
     PageUp: { type: 'scrollLog', dir: -1 },
     PageDown: { type: 'scrollLog', dir: 1 },

@@ -120,6 +120,23 @@ export function summarize(list: SimResult[]): ClassSummary {
   };
 }
 
+/** 按职业批量模拟（Q3：500 seeds 大规模数据采集用，增量输出进度） */
+export function simulateClassBatch(
+  classId: ClassId,
+  seedCount: number,
+  turnCap = 2500,
+  seedOffset = 0,
+): SimResult[] {
+  const results: SimResult[] = [];
+  for (let i = 1; i <= seedCount; i++) {
+    results.push(simulateRun(seedOffset + i * 13, classId, 30, turnCap));
+    if (i % 50 === 0) {
+      console.log(`[sim ${classId}] ${i}/${seedCount} 局完成`);
+    }
+  }
+  return results;
+}
+
 export function simulateAll(seedsPerClass: number, turnCap = 3000): {
   summary: Record<string, unknown>;
   results: SimResult[];

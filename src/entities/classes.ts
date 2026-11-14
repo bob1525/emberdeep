@@ -95,7 +95,7 @@ export const CLASSES: Record<ClassId, ClassDef> = {
     id: 'mage',
     name: '法师',
     description: '追逐余烬之火的咒法学徒，脆弱的身躯里握着毁灭性的烈焰。',
-    baseHp: 22,
+    baseHp: 26,
     baseAttack: 4,
     baseDefense: 0,
     startWeapon: 'dagger',

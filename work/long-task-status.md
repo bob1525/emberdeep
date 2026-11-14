@@ -24,7 +24,7 @@
 | M1 | DONE | 22 项修复逐条核验矩阵（下方） | reverse.test.ts 5 反例 + input 6 + game-fixes 8 | 触屏/浏览器路径留 M8 | M8 |
 | M2 | DONE | canonical.ts（键排序/Map/Set 规范化/64 位双哈希/firstDifference）+ replay.ts v2（协议头/录制器/断点/分歧诊断） | replay 8（含断点续玩逐位一致/第 5 步分歧定位/协议拒绝/双实例隔离）+ canonical 6 | UI 导出按钮（记录） | — |
 | M3 | DONE | saveSchema.ts（版本/数值范围/瓦片/实体/物品类别↔目录/Boss species/引用完整性）；readSave 接线；未知版本拒绝；缺字段默认迁移 | saveSchema 11（损坏/旧档/悬空词缀警告/重复 ID 拒绝） | 逐字段 canonical 化 SaveData 序列化（M2 已覆盖哈希路径） | — |
-| M4 | PARTIAL | **本轮新增：EntityRegistry（registry.ts）+ SaveCodec（saveCodec.ts：encodeSaveData/migrateV1Defaults，game.buildSaveData 已委托）** + saveSchema.ts；**SaveCodec 抽取当场抓到 memories 编解码不匹配 bug（对象数组 vs 元组）→ 已修复并有往返测试守卫** | game-fixes/replay round-trip ✅ | TurnEngine/FloorService/InventoryEconomyService/ReplayRunner/SceneBuilder 迁移；依赖图文档 | 每域先测后迁（下一批） |
+| M4 | PARTIAL | **本轮新增：EntityRegistry（registry.ts）+ SaveCodec（saveCodec.ts）+ SceneBuilder（sceneBuilder.ts 纯转换，game.buildScene 已委托）** + saveSchema.ts；**SaveCodec 抽取当场抓到 memories 编解码不匹配 bug → 已修复** | game-fixes/replay round-trip ✅ | TurnEngine/FloorService/InventoryEconomyService/ReplayRunner 迁移；依赖图文档 | 每域先测后迁（下一批） |
 | M5 | PARTIAL | scaling.ts 落地 + buildFloor/placeBoss 接线 + recordDepth/bestDepth 元进度 + simTurn 机器人策略修复（捡拾/撤退/技能/商人绕行寻路） | 模拟器两轮数据对比（修复前 24 局全灭 vs 修复后战士 0 死亡） | **数值未收敛**：游侠/法师仍 100% 死于 1 层（巨蝠威胁+bot 无走位，策略与数值问题需分离归因）；500 seeds 深跑待做 | 数值调整 + 深跑 |
 | M6 | PARTIAL | simulator.ts（turnCap 参数化：CI 快速档 1200 / 深跑档 6000）+ tests/simulator.test.ts（CI 档约 1-6 分钟）+ 卡死原因记录 | simulator.test ✅ | 500 seeds；失败局 Action 序列导出 | 扩 seeds |
 | M7 | PARTIAL | pathfindingStats 计数器 + 快照字节/耗时测量（A* 局均 19~5070、快照 30~49KB 无深度增长） | simulator 数据 | p50/p95/p99、最坏场景、A* tie-break、长程内存 | 基准测试 |
