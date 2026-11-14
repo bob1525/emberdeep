@@ -7,6 +7,8 @@ import { resolveAttack } from './engine/combat';
 import { hasLineOfSight } from './engine/los';
 import type { Pt } from './engine/los';
 import { Rng } from './engine/rng';
+import { canonicalJson, hash64 } from './engine/canonical';
+import { parseSaveData } from './engine/saveSchema';
 import {
   STATUSES,
   actionsPerTurn,
@@ -297,31 +299,27 @@ export class Game {
   }
 
   /**
-   * 逻辑状态哈希（FNV-1a）：用于回放验证与确定性回归测试。
-   * 任何非确定性泄漏（Math.random 混入逻辑、Date.now、遍历顺序）都会立刻暴露。
+   * 逻辑状态指纹（canonical 序列化 + 64 位双哈希，回放协议 v2）。
+   * 任何非确定性泄漏（Math.random 混入逻辑、Date.now、键序依赖）都会立刻暴露。
    */
   stateHash(): string {
-    const snapshot = JSON.stringify(this.buildSaveData());
-    let h = 2166136261;
-    for (let i = 0; i < snapshot.length; i++) {
-      h ^= snapshot.charCodeAt(i);
-      h = Math.imul(h, 16777619);
-    }
-    return (h >>> 0).toString(16).padStart(8, '0');
+    return hash64(canonicalJson(this.buildSaveData()));
   }
 
-  /** 读取并校验存档；损坏或版本不符返回 null */
+  /** 读取并校验存档（走 schema 校验层）；损坏或版本不符返回 null */
   static readSave(): SaveData | null {
     try {
       const raw = localStorage.getItem(SAVE_KEY);
       if (!raw) return null;
-      const data = JSON.parse(raw) as SaveData;
-      if (data.version !== 1) return null;
-      if (!Array.isArray(data.mapTiles) || !Array.isArray(data.explored)) return null;
-      if (!Array.isArray(data.monsters) || !Array.isArray(data.groundItems)) return null;
-      if (!data.player || data.player.hp <= 0) return null;
-      if (data.mapTiles.length !== data.mapWidth * data.mapHeight) return null;
-      return data;
+      const parsed = parseSaveData(JSON.parse(raw));
+      if (!parsed.ok) {
+        console.warn('[emberdeep] 存档被拒绝：', parsed.reason);
+        return null;
+      }
+      for (const warning of parsed.warnings) {
+        console.warn('[emberdeep 存档]', warning);
+      }
+      return parsed.data as unknown as SaveData;
     } catch {
       return null;
     }
