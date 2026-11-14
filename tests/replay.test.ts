@@ -3,10 +3,9 @@ import {
   CONTENT_VERSION,
   REPLAY_PROTOCOL_VERSION,
   ReplayRecorder,
-  replayHashes,
-  runReplay,
   type ReplayData,
 } from '../src/engine/replay';
+import { replayHashes, runReplay } from '../src/replayRunner';
 import type { Action } from '../src/engine/input';
 import { Game } from '../src/game';
 

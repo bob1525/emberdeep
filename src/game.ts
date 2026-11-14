@@ -9,7 +9,7 @@ import type { Pt } from './engine/los';
 import { Rng } from './engine/rng';
 import { canonicalJson, hash64 } from './engine/canonical';
 import { parseSaveData } from './engine/saveSchema';
-import { encodeSaveData, migrateV1Defaults } from './engine/saveCodec';
+import { encodeSaveData, migrateV1Defaults, type SaveData } from './engine/saveCodec';
 import {
   STATUSES,
   actionsPerTurn,
@@ -58,7 +58,6 @@ import { TRAPS, rollTraps, triggerTrap } from './world/traps';
 import type { PlacedTrap } from './world/traps';
 import { SHRINES, resolveAltar, resolveWell } from './world/shrines';
 import type { ShrineKind } from './world/shrines';
-import type { Tile } from './world/tiles';
 import { drawMinimap, type Effect, type Renderer, type Scene } from './ui/renderer';
 import { buildScene as sbBuildScene, itemInfo as sbItemInfo } from './ui/sceneBuilder';
 
@@ -85,42 +84,8 @@ export type { GroundItem };
 
 const SAVE_KEY = 'emberdeep-save-v1';
 
-/** localStorage 存档结构。version 用于未来格式迁移 */
-export interface SaveData {
-  version: 1;
-  depth: number;
-  turn: number;
-  level: number;
-  xp: number;
-  mightUntil: number;
-  runSeed: number;
-  player: Actor;
-  monsters: Actor[];
-  groundItems: GroundItem[];
-  explored: string[];
-  stairsDown: { x: number; y: number };
-  mapWidth: number;
-  mapHeight: number;
-  mapTiles: Tile[];
-  rngState: number;
-  kills: number;
-  deathCause: string;
-  traps?: PlacedTrap[];
-  gold?: number;
-  goldPiles?: GoldPile[];
-  merchant?: MerchantState | null;
-  affixData?: [number, AffixData][];
-  classId?: string;
-  skillRemaining?: number;
-  ownedTalents?: string[];
-  shrines?: { x: number; y: number; kind: ShrineKind }[];
-  memories?: [number, { lastSeenPlayer: Pt | null; alert: number; rallyPoint: Pt | null; rallyAge: number; cooldowns: [string, number][] }][];
-  mode?: string;
-  talentChoices?: string[];
-  pendingLevelUps?: number;
-  bossSummonCount?: number;
-  bossSpecies?: string | null;
-}
+/** 存档类型已迁至 SaveCodec（M4 边界：engine 层自持契约）；按原公开面再导出 */
+export type { SaveData };
 
 const FOV_RADIUS = 8;
 const MIGHT_ATTACK_BONUS = 3;
