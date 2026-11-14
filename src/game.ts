@@ -1407,6 +1407,26 @@ export class Game {
    */
   simTurn(): 'playing' | 'dead' {
     if (this.dead) return 'dead';
+    if (this.mode === 'targeting') {
+      // 游侠精准箭：瞄准模式朝最近敌人开火（否则关闭，防 useSkill 死循环）
+      const targets = this.visibleTargets();
+      if (targets.length > 0) {
+        const t = targets.reduce((a, b) =>
+          Math.max(Math.abs(b.x - this.player.x), Math.abs(b.y - this.player.y)) <
+          Math.max(Math.abs(a.x - this.player.x), Math.abs(a.y - this.player.y))
+            ? b
+            : a,
+        );
+        this.handleAction({
+          type: "move",
+          dx: Math.max(-1, Math.min(1, t.x - this.player.x)),
+          dy: Math.max(-1, Math.min(1, t.y - this.player.y)),
+        });
+      } else {
+        this.handleAction({ type: 'closeOverlay' });
+      }
+      return this.dead ? 'dead' : 'playing';
+    }
     if (this.mode === 'shop' || this.mode === 'inventory') {
       this.handleAction({ type: 'closeOverlay' });
     } else if (this.mode === 'levelUp') {
