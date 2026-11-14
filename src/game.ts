@@ -23,7 +23,12 @@ import {
 } from './entities/actor';
 import { rollMonster } from './entities/monsters';
 import { itemDef, rollLoot, weaponBonus, armorBonus } from './items/catalog';
+import { displayName, rarityColor, rollAffixData, bonusOf } from './items/affixes';
+import type { AffixData } from './items/affixes';
 import { RANGED, resolveShot } from './engine/ranged';
+import { rollGold } from './economy/gold';
+import { rollStock, sellPrice } from './economy/merchant';
+import type { StockEntry } from './economy/merchant';
 
 /** 统一取物品展示信息：远程武器走 RANGED 目录，其余走通用目录 */
 function itemInfo(item: ItemInstance): {
@@ -52,8 +57,20 @@ export interface LogEntry {
   tone: Tone;
 }
 
-/** UI 界面模式：菜单 / 背包 / 消息历史等界面功能的地基 */
-export type UiMode = 'title' | 'play' | 'inventory' | 'log' | 'targeting';
+/** UI 界面模式：菜单 / 背包 / 消息历史 / 商店等界面功能的地基 */
+export type UiMode = 'title' | 'play' | 'inventory' | 'log' | 'targeting' | 'shop';
+
+interface GoldPile {
+  x: number;
+  y: number;
+  amount: number;
+}
+
+interface MerchantState {
+  x: number;
+  y: number;
+  stock: StockEntry[];
+}
 
 export interface GroundItem {
   x: number;
@@ -84,6 +101,10 @@ export interface SaveData {
   kills: number;
   deathCause: string;
   traps?: PlacedTrap[];
+  gold?: number;
+  goldPiles?: GoldPile[];
+  merchant?: MerchantState | null;
+  affixData?: [number, AffixData][];
 }
 
 const FOV_RADIUS = 8;
@@ -101,6 +122,8 @@ export class Game {
   /** 本局击杀数（死亡统计用） */
   kills = 0;
   deathCause = '未知';
+  /** 钱袋 */
+  gold = 0;
   /** 当前界面模式；游戏从标题画面开始 */
   mode: UiMode = 'title';
   /** 消息历史查看游标（log 模式；null = 定位在最新） */
@@ -111,6 +134,9 @@ export class Game {
   private monsters: Actor[] = [];
   private groundItems: GroundItem[] = [];
   private traps: PlacedTrap[] = [];
+  private goldPiles: GoldPile[] = [];
+  private merchant: MerchantState | null = null;
+  private affixData = new Map<number, AffixData>();
   private visible = new Set<string>();
   private explored = new Set<string>();
   private effects: Effect[] = [];
@@ -173,6 +199,10 @@ export class Game {
         kills: this.kills,
         deathCause: this.deathCause,
         traps: this.traps,
+        gold: this.gold,
+        goldPiles: this.goldPiles,
+        merchant: this.merchant,
+        affixData: [...this.affixData.entries()],
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch {
@@ -223,6 +253,10 @@ export class Game {
     }));
     this.groundItems = save.groundItems;
     this.traps = save.traps ?? [];
+    this.goldPiles = save.goldPiles ?? [];
+    this.merchant = save.merchant ?? null;
+    this.affixData = new Map(save.affixData ?? []);
+    this.gold = save.gold ?? 0;
     this.kills = save.kills ?? 0;
     this.deathCause = save.deathCause ?? '未知';
     this.depth = save.depth;
@@ -260,6 +294,9 @@ export class Game {
         break;
       case 'targeting':
         this.handleTargeting(action);
+        break;
+      case 'shop':
+        this.handleShop(action);
         break;
     }
 
@@ -425,6 +462,58 @@ export class Game {
     // 任何其他按键都退出历史查看
     this.logCursor = null;
     this.mode = 'play';
+  }
+
+  private handleShop(action: Action): void {
+    if (action.type === 'closeOverlay' || action.type === 'openInventory') {
+      this.mode = 'play';
+      return;
+    }
+    // 商店里：数字键购买，Shift+数字键出售
+    if (action.type === 'useSlot') {
+      this.buyFromMerchant(action.slot);
+      return;
+    }
+    if (action.type === 'dropSlot') {
+      this.sellFromInventory(action.slot);
+      return;
+    }
+  }
+
+  private buyFromMerchant(slot: number): void {
+    if (!this.merchant) return;
+    const entry = this.merchant.stock[slot];
+    if (!entry) return;
+    if (this.gold < entry.price) {
+      this.log.push({ text: '金币不够，商人摇了摇头。', tone: 'info' });
+      return;
+    }
+    if (this.player.inventory.length >= MAX_INVENTORY) {
+      this.log.push({ text: '背包满了，拿不下更多货物。', tone: 'info' });
+      return;
+    }
+    const item: ItemInstance = {
+      uid: allocateItemUid(),
+      catalogId: entry.catalogId,
+      category: entry.category,
+    };
+    this.gold -= entry.price;
+    this.merchant.stock.splice(slot, 1);
+    this.player.inventory.push(item);
+    playSfx('pickup');
+    this.log.push({ text: `买下了${itemInfo(item).name}（-${entry.price} 金币）。`, tone: 'good' });
+  }
+
+  private sellFromInventory(slot: number): void {
+    if (!this.merchant) return;
+    const item = this.player.inventory[slot];
+    if (!item) return;
+    const price = sellPrice(item.catalogId, item.category, this.depth);
+    this.player.inventory.splice(slot, 1);
+    this.affixData.delete(item.uid);
+    this.gold += price;
+    playSfx('pickup');
+    this.log.push({ text: `卖掉了${itemInfo(item).name}，得到 ${price} 金币。`, tone: 'good' });
   }
 
   /** 玩家行动成功后的公共回合结算 */
@@ -618,16 +707,35 @@ export class Game {
 
   effectiveAttack(): number {
     const weapon = this.player.equipment.weapon;
+    const weaponBonusTotal =
+      (weapon ? weaponBonus(weapon) : 0) + bonusOf(this.affixData.get(weapon?.uid ?? -1) ?? null).attack;
     const mightPart =
       this.mightUntil !== 0 && this.turn <= this.mightUntil ? MIGHT_ATTACK_BONUS : 0;
-    return this.player.attack + (weapon ? weaponBonus(weapon) : 0) + mightPart;
+    return this.player.attack + weaponBonusTotal + mightPart;
   }
 
   effectiveDefense(): number {
     const armor = this.player.equipment.armor;
+    const armorBonusTotal =
+      (armor ? armorBonus(armor) : 0) + bonusOf(this.affixData.get(armor?.uid ?? -1) ?? null).defense;
     return (
-      this.player.defense + (armor ? armorBonus(armor) : 0) + totalDefenseBonus(this.player)
+      this.player.defense + armorBonusTotal + totalDefenseBonus(this.player)
     );
+  }
+
+  /** 带词缀前缀的物品名（背包/日志用） */
+  itemDisplayName(item: ItemInstance): string {
+    return displayName(itemInfo(item).name, this.affixData.get(item.uid) ?? null);
+  }
+
+  /** 物品词缀数据（可能为 null） */
+  itemAffix(item: ItemInstance): AffixData | null {
+    return this.affixData.get(item.uid) ?? null;
+  }
+
+  /** 商店货架（只读副本） */
+  merchantStock(): StockEntry[] {
+    return this.merchant ? [...this.merchant.stock] : [];
   }
 
   // ---------- 玩家回合 ----------
@@ -659,12 +767,27 @@ export class Game {
   private tryPlayerMove(dx: number, dy: number): boolean {
     const nx = this.player.x + dx;
     const ny = this.player.y + dy;
+    // 撞见商人：打开商店，不消耗回合
+    if (this.merchant && this.merchant.x === nx && this.merchant.y === ny) {
+      this.mode = 'shop';
+      return false;
+    }
     const target = this.monsterAt(nx, ny);
     if (target) {
       this.attackMonster(target);
       return true;
     }
     if (!this.map.isWalkable(nx, ny)) return false;
+    this.effects.push({
+      kind: 'step',
+      fromX: this.player.x,
+      fromY: this.player.y,
+      toX: nx,
+      toY: ny,
+      glyph: this.player.glyph,
+      color: this.player.color,
+      dur: 140,
+    });
     this.player.x = nx;
     this.player.y = ny;
     this.checkTrap();
@@ -672,6 +795,17 @@ export class Game {
   }
 
   private attackMonster(target: Actor): void {
+    // 攻击突进动画
+    this.effects.push({
+      kind: 'lunge',
+      x: this.player.x,
+      y: this.player.y,
+      dx: Math.sign(target.x - this.player.x),
+      dy: Math.sign(target.y - this.player.y),
+      glyph: this.player.glyph,
+      color: this.player.color,
+      dur: 170,
+    });
     const report = resolveAttack({
       attackerName: '你',
       attack: this.effectiveAttack(),
@@ -697,6 +831,14 @@ export class Game {
     playSfx('kill');
     this.effects.push({ kind: 'burst', x: target.x, y: target.y, color: '#d96a5a', dur: 420 });
     this.log.push({ text: `${target.name}倒下了！`, tone: 'good' });
+    // 怪物死后 30% 概率掉金币
+    if (this.rng.next() < 0.3) {
+      this.goldPiles.push({
+        x: target.x,
+        y: target.y,
+        amount: rollGold(this.depth, this.rng),
+      });
+    }
     this.gainXp(target.xpValue);
   }
 
@@ -720,6 +862,18 @@ export class Game {
   }
 
   private pickup(): boolean {
+    // 金币堆优先
+    const goldIdx = this.goldPiles.findIndex(
+      (g) => g.x === this.player.x && g.y === this.player.y,
+    );
+    if (goldIdx !== -1) {
+      const pile = this.goldPiles.splice(goldIdx, 1)[0];
+      if (!pile) return false;
+      this.gold += pile.amount;
+      playSfx('pickup');
+      this.log.push({ text: `拾起了 ${pile.amount} 金币。`, tone: 'good' });
+      return true;
+    }
     const idx = this.groundItems.findIndex(
       (g) => g.x === this.player.x && g.y === this.player.y,
     );
@@ -992,8 +1146,19 @@ export class Game {
           const ny = m.y + act.dy;
           const occupied =
             this.monsterAt(nx, ny) !== undefined ||
-            (this.player.x === nx && this.player.y === ny);
+            (this.player.x === nx && this.player.y === ny) ||
+            (this.merchant !== null && this.merchant.x === nx && this.merchant.y === ny);
           if (!occupied && this.map.isWalkable(nx, ny)) {
+            this.effects.push({
+              kind: 'step',
+              fromX: m.x,
+              fromY: m.y,
+              toX: nx,
+              toY: ny,
+              glyph: m.glyph,
+              color: m.color,
+              dur: 140,
+            });
             m.x = nx;
             m.y = ny;
           }
@@ -1003,6 +1168,16 @@ export class Game {
   }
 
   private monsterAttack(m: Actor): void {
+    this.effects.push({
+      kind: 'lunge',
+      x: m.x,
+      y: m.y,
+      dx: Math.sign(this.player.x - m.x),
+      dy: Math.sign(this.player.y - m.y),
+      glyph: m.glyph,
+      color: m.color,
+      dur: 170,
+    });
     const report = resolveAttack({
       attackerName: m.name,
       attack: m.attack,
@@ -1053,31 +1228,61 @@ export class Game {
         ai: { mode: 'sleep', senseRadius: t.senseRadius },
       });
     });
-    this.groundItems = floor.itemSpots.map((p) => {
-      // 25% 概率出现远程武器，其余走普通掉落表
-      if (this.rng.next() < 0.25) {
+    this.goldPiles = [];
+    this.groundItems = [];
+    for (const p of floor.itemSpots) {
+      if (this.rng.next() < 0.3) {
+        // 金币堆
+        this.goldPiles.push({ x: p.x, y: p.y, amount: rollGold(this.depth, this.rng) });
+      } else if (this.rng.next() < 0.25) {
+        // 远程武器
         const pool = Object.entries(RANGED).filter(([, d]) => d.minDepth <= this.depth);
         const entry = this.rng.pick(pool);
         if (entry) {
-          return {
+          this.groundItems.push({
             x: p.x,
             y: p.y,
-            item: {
-              uid: allocateItemUid(),
-              catalogId: entry[0],
-              category: 'ranged' as const,
-            },
-          };
+            item: { uid: allocateItemUid(), catalogId: entry[0], category: 'ranged' },
+          });
+          continue;
         }
+        this.groundItems.push({ x: p.x, y: p.y, item: rollLoot(this.depth, this.rng) });
+      } else {
+        const item = rollLoot(this.depth, this.rng);
+        // 装备类随机词缀
+        if (item.category === 'weapon' || item.category === 'armor') {
+          this.affixData.set(item.uid, rollAffixData(this.depth, this.rng));
+        }
+        this.groundItems.push({ x: p.x, y: p.y, item });
       }
-      return { x: p.x, y: p.y, item: rollLoot(this.depth, this.rng) };
-    });
+    }
+    this.placeMerchant(floor);
     this.placeTraps(floor);
     this.explored = new Set();
     this.updateFov();
   }
 
-  /** 按深度撒陷阱：避开出生点、楼梯与物品点 */
+  /** 每层放一位流浪商人：离出生点较远的随机地板 */
+  private placeMerchant(floor: { playerSpawn: Pt }): void {
+    const candidates: Pt[] = [];
+    for (let y = 1; y < this.map.height - 1; y++) {
+      for (let x = 1; x < this.map.width - 1; x++) {
+        if (!this.map.isWalkable(x, y)) continue;
+        if (x === this.stairsDown.x && y === this.stairsDown.y) continue;
+        const dist = Math.max(Math.abs(x - floor.playerSpawn.x), Math.abs(y - floor.playerSpawn.y));
+        if (dist < 12) continue;
+        candidates.push({ x, y });
+      }
+    }
+    if (candidates.length === 0) {
+      this.merchant = null;
+      return;
+    }
+    const spot = this.rng.pick(candidates);
+    this.merchant = { x: spot.x, y: spot.y, stock: rollStock(this.depth, this.rng) };
+  }
+
+  /** 按深度撒陷阱：避开出生点、楼梯、商人位与物品点 */
   private placeTraps(floor: { playerSpawn: Pt; stairsDown: Pt; itemSpots: Pt[] }): void {
     const candidates: Pt[] = [];
     for (let y = 1; y < this.map.height - 1; y++) {
@@ -1086,6 +1291,7 @@ export class Game {
         if (x === floor.playerSpawn.x && y === floor.playerSpawn.y) continue;
         if (x === floor.stairsDown.x && y === floor.stairsDown.y) continue;
         if (floor.itemSpots.some((p) => p.x === x && p.y === y)) continue;
+        if (this.merchant && this.merchant.x === x && this.merchant.y === y) continue;
         candidates.push({ x, y });
       }
     }
@@ -1141,6 +1347,8 @@ export class Game {
     this.logCursor = null;
     this.autoExploring = false;
     this.autoPath = null;
+    this.gold = 0;
+    this.affixData.clear();
     this.mightUntil = 0;
     this.log = [{ text: '新的冒险开始了。你在余烬深渊的第 1 层醒来……', tone: 'info' }];
     Game.clearSave();
@@ -1202,15 +1410,38 @@ export class Game {
 
   private buildScene(): Scene {
     const actors: Glyph[] = [
-      { x: this.player.x, y: this.player.y, glyph: this.player.glyph, color: this.player.color },
+      {
+        x: this.player.x,
+        y: this.player.y,
+        glyph: this.player.glyph,
+        color: this.player.color,
+        hp: this.player.hp,
+        maxHp: this.player.maxHp,
+      },
     ];
     for (const m of this.monsters) {
-      actors.push({ x: m.x, y: m.y, glyph: m.glyph, color: m.color });
+      actors.push({
+        x: m.x,
+        y: m.y,
+        glyph: m.glyph,
+        color: m.color,
+        hp: m.hp,
+        maxHp: m.maxHp,
+      });
     }
     const items: Glyph[] = this.groundItems.map((g) => {
       const def = itemInfo(g.item);
-      return { x: g.x, y: g.y, glyph: def.glyph, color: def.color };
+      // 带词缀的装备按稀有度颜色显示
+      const affix = this.affixData.get(g.item.uid) ?? null;
+      const color = affix && affix.affixIds.length > 0 ? rarityColor(affix) : def.color;
+      return { x: g.x, y: g.y, glyph: def.glyph, color };
     });
+    for (const g of this.goldPiles) {
+      items.push({ x: g.x, y: g.y, glyph: '$', color: '#e8c14a' });
+    }
+    if (this.merchant) {
+      actors.push({ x: this.merchant.x, y: this.merchant.y, glyph: '$', color: '#e8c14a' });
+    }
     const trapGlyphs: Glyph[] = this.traps.map((t) => {
       const def = TRAPS[t.kind];
       return { x: t.x, y: t.y, glyph: def.glyph, color: def.color };

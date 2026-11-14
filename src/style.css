@@ -29,6 +29,7 @@ h1 {
   letter-spacing: 6px;
   color: #f5b04c;
   font-weight: 700;
+  text-shadow: 0 0 18px rgba(245, 176, 76, 0.45);
 }
 
 .subtitle {
@@ -40,6 +41,31 @@ h1 {
 
 #stage {
   position: relative;
+}
+
+/* CRT 扫描线（极淡） */
+#stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.025) 0px,
+    rgba(255, 255, 255, 0.025) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  border-radius: 4px;
+}
+
+.ascii-logo {
+  margin: 0 0 10px;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 10px;
+  line-height: 1.15;
+  color: #f5b04c;
+  text-shadow: 0 0 14px rgba(245, 176, 76, 0.4);
 }
 
 #game {

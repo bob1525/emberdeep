@@ -37,13 +37,51 @@ const PRESETS: Record<SfxName, SfxPreset> = {
 
 let ctx: AudioContext | null = null;
 let muted = false;
+let ambientStarted = false;
+let ambientGain: GainNode | null = null;
 
 export function setMuted(value: boolean): void {
   muted = value;
+  if (ambientGain) ambientGain.gain.value = value ? 0 : 0.025;
 }
 
 export function isMuted(): boolean {
   return muted;
+}
+
+/**
+ * 深渊环境低音：55Hz 锯齿波经低通滤波，LFO 缓慢起伏。
+ * 只在首次用户手势后启动（浏览器自动播放策略），循环往复直到静音。
+ */
+export function startAmbient(): void {
+  if (ambientStarted || muted) return;
+  try {
+    ctx ??= new AudioContext();
+    if (ctx.state === 'suspended') void ctx.resume();
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.value = 55;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 150;
+    const gain = ctx.createGain();
+    gain.gain.value = 0.025;
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.11;
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = 0.012;
+    lfo.connect(lfoGain);
+    lfoGain.connect(gain.gain);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    lfo.start();
+    ambientGain = gain;
+    ambientStarted = true;
+  } catch {
+    // 无音频环境时静默降级
+  }
 }
 
 export function playSfx(name: SfxName): void {

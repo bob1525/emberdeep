@@ -3,7 +3,9 @@ import { Game } from './game';
 import { bindInput, bindTouch, type Action } from './engine/input';
 import { STATUSES } from './engine/statuses';
 import type { StatusKind } from './engine/statuses';
+import { startAmbient } from './engine/audio';
 import { RANGED } from './engine/ranged';
+import { rarityColor } from './items/affixes';
 import { itemDef } from './items/catalog';
 import { Renderer } from './ui/renderer';
 
@@ -25,7 +27,8 @@ game.onChange = () => {
   statusEl.textContent =
     `第 ${game.depth} 层 · 回合 ${game.turn} · HP ${game.player.hp}/${game.player.maxHp} · ` +
     `攻 ${game.effectiveAttack()} · 防 ${game.effectiveDefense()} · ` +
-    `等级 ${game.level} · 经验 ${game.xp}/${game.xpToNext()}` +
+    `等级 ${game.level} · 经验 ${game.xp}/${game.xpToNext()} · ` +
+    `金币 ${game.gold}` +
     (statusTags ? ` · 【${statusTags}】` : '');
   logEl.replaceChildren(
     ...game.recentLog().map((entry) => {
@@ -42,6 +45,15 @@ game.onChange = () => {
 
 // ---------- 覆盖层（标题 / 背包 / 消息历史） ----------
 
+const ASCII_LOGO = [
+  ' ███████╗███╗   ███╗██████╗ ███████╗██████╗ ██████╗ ███████╗██████╗ ',
+  ' ██╔════╝████╗ ████║██╔══██╗██╔════╝██╔══██╗██╔══██╗██╔════╝██╔══██╗',
+  ' █████╗  ██╔████╔██║██████╔╝█████╗  ██████╔╝██║  ██║█████╗  ██████╔╝',
+  ' ██╔══╝  ██║╚██╔╝██║██╔══██╗██╔══╝  ██╔══██╗██║  ██║██╔══╝  ██╔══██╗',
+  ' ███████╗██║ ╚═╝ ██║██████╔╝███████╗██║  ██║██████╔╝███████╗██║  ██║',
+  ' ╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝',
+].join('\n');
+
 function renderOverlay(): void {
   if (!overlayEl) return;
   if (game.mode === 'play') {
@@ -54,12 +66,13 @@ function renderOverlay(): void {
   panel.className = 'panel';
 
   if (game.mode === 'title') {
-    const title = document.createElement('h2');
-    title.textContent = 'EMBERDEEP';
+    const logo = document.createElement('pre');
+    logo.className = 'ascii-logo';
+    logo.textContent = ASCII_LOGO;
     const tagline = document.createElement('p');
     tagline.className = 'tagline';
     tagline.textContent = '余烬深渊 · 浏览器 Roguelike';
-    panel.append(title, tagline);
+    panel.append(logo, tagline);
     panel.append(option('[Enter] 新的冒险', '深入随机生成的地牢，死亡即失去一切'));
     if (Game.readSave() !== null) {
       panel.append(option('[C] 继续上局', '从停下的地方继续'));
@@ -88,7 +101,8 @@ function renderOverlay(): void {
             ? '远程武器（z 键射击）'
             : ((info as { description?: string } | null)?.description ?? '');
         const row = document.createElement('p');
-        row.textContent = `${i + 1}. ${info?.name ?? item.catalogId}${equipped} — ${description}`;
+        row.textContent = `${i + 1}. ${game.itemDisplayName(item)}${equipped} — ${description}`;
+        row.style.color = rarityColor(game.itemAffix(item));
         panel.append(row);
       });
     }
@@ -113,6 +127,26 @@ function renderOverlay(): void {
     heading.textContent = '射击';
     panel.append(heading);
     panel.append(hint('方向键 / yubn 选择方向 · Esc 取消'));
+  } else if (game.mode === 'shop') {
+    const heading = document.createElement('h3');
+    heading.textContent = `流浪商人 · 你的金币 ${game.gold}`;
+    panel.append(heading);
+    const merchantStock = game.merchantStock();
+    if (merchantStock.length === 0) {
+      panel.append(hint('（货架已空）'));
+    } else {
+      merchantStock.forEach((entry, i) => {
+        const row = document.createElement('p');
+        const name =
+          entry.category === 'ranged'
+            ? (RANGED[entry.catalogId]?.name ?? entry.catalogId)
+            : (itemDef({ uid: 0, catalogId: entry.catalogId, category: entry.category })?.name ??
+              entry.catalogId);
+        row.textContent = `${i + 1}. ${name} — ${entry.price} 金币`;
+        panel.append(row);
+      });
+    }
+    panel.append(hint('数字 购买 · Shift+数字 出售背包物品 · Esc 离开'));
   }
 
   overlayEl.replaceChildren(panel);
@@ -133,6 +167,15 @@ function hint(text: string): HTMLParagraphElement {
   p.textContent = text;
   return p;
 }
+
+// 首次用户手势启动环境低音（浏览器自动播放策略）
+const startAmbientOnce = (): void => {
+  startAmbient();
+  window.removeEventListener('keydown', startAmbientOnce);
+  window.removeEventListener('touchstart', startAmbientOnce);
+};
+window.addEventListener('keydown', startAmbientOnce, { once: true });
+window.addEventListener('touchstart', startAmbientOnce, { once: true });
 
 game.start();
 bindInput((action) => game.handleAction(action));
