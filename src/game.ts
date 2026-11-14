@@ -543,7 +543,7 @@ export class Game {
    */
   private autoStep(): void {
     let guard = 0;
-    while (this.autoExploring && !this.dead && guard < 500) {
+    while (this.autoExploring && !this.dead && guard < 2000) {
       guard += 1;
       if (this.visibleTargets().length > 0) {
         this.autoExploring = false;
@@ -578,7 +578,10 @@ export class Game {
         this.autoPath = null;
       }
     }
-    if (guard >= 500) this.autoExploring = false;
+    if (guard >= 2000) {
+      this.autoExploring = false;
+      this.log.push({ text: '自动探索告一段落。', tone: 'info' });
+    }
   }
 
   /** BFS 找最近一块"边上还有未探索格"的可达区域，返回一步步的路径 */
