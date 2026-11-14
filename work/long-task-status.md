@@ -1,7 +1,7 @@
 # Emberdeep 第二阶段长期工程 — 持续状态文件
 
 > 本文件是跨会话的唯一事实来源。每个里程碑的状态以此为准，未执行的绝不标记完成。
-> 最后更新：里程碑 1 完成 / 里程碑 2、3 本轮交付 / 4-8 待推进
+> 最后更新：M1/M2/M3 完成（commit bc63506，375 tests）已推送 GitHub，CI 复验中
 
 ## 基线（已验证）
 
@@ -13,14 +13,19 @@
 
 | # | 里程碑 | 状态 | 证据位置 |
 |---|---|---|---|
-| 1 | 第一轮修复独立复核（含反向测试） | ✅ 本轮完成 | 本文件矩阵 + tests/reverse.test.ts |
-| 2 | 回放协议 v2 + canonical state | ✅ 本轮完成 | src/engine/canonical.ts + src/engine/replay.ts + tests/replay.test.ts |
-| 3 | SaveData schema 校验 + 迁移 | ✅ 本轮完成 | src/engine/saveSchema.ts + tests/saveSchema.test.ts |
-| 4 | Game 领域拆分 | 🔶 部分完成（SaveCodec 已抽出；其余按依赖图逐域迁移） | src/engine/saveCodec.ts + 下方架构记录 |
+| 1 | 第一轮修复独立复核（含反向测试） | ✅ 完成 | 本文件矩阵 + tests/reverse.test.ts（4 反例）|
+| 2 | 回放协议 v2 + canonical state | ✅ 完成 | src/engine/canonical.ts + replay.ts v2 + tests/replay.test.ts（8）+ tests/canonical.test.ts（6）|
+| 3 | SaveData schema 校验 + 迁移 | ✅ 完成 | src/engine/saveSchema.ts + tests/saveSchema.test.ts（11）|
+| 4 | Game 领域拆分 | 🔶 部分完成（schema/codec 边界已抽出；TurnEngine/FloorService 等待迁移） | saveSchema.ts + 本文件架构记录 |
 | 5 | 深层曲线 / Boss / 终局设计 | 🔶 设计已定（ENDLESS + 缩放规则），实现未开始 | 本文件"终局设计决策" |
-| 6 | 职业/天赋/经济模拟器 | ⬜ 未开始（依赖 M2 无头回放 + grantXp 钩子，已就绪） | — |
-| 7 | AI/自动探索/渲染性能 | 🔶 A* 稳定 tie-break 本轮完成；基准测量未做 | pathfinding.ts |
+| 6 | 职业/天赋/经济模拟器 | ⬜ 未开始（无头回放 + grantXp/jumpToDepth/internalStats 钩子已就绪） | — |
+| 7 | AI/自动探索/渲染性能 | 🔶 BFS O(V) 修复✅；A* 稳定 tie-break 与基准测量未做 | pathfinding.ts |
 | 8 | 浏览器验收 / 文档 / 发布 | ⬜ 待 M4-M7 | — |
+
+## 最新验证（commit bc63506）
+
+- lint ✅ / typecheck ✅ / test ✅ **375/375**（27 文件，含 canonical 6、saveSchema 11、replay v2 8、reverse 4、game-fixes 8 新测试）/ build ✅ gzip 34.21 kB
+- GitHub CI：推送后自动运行（前次推送 CI 全绿，本次结果以 Actions 页为准）
 
 ## 里程碑 1：第一轮修复核验矩阵（逐项独立复核）
 

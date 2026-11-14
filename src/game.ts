@@ -33,6 +33,7 @@ import { CLASSES, canUseSkill, makeCooldown, startCooldown, tickCooldown } from 
 import type { ClassId, SkillCooldown } from './entities/classes';
 import { TALENTS, talentBonus, rollTalentChoices } from './entities/talents';
 import type { TalentMods } from './entities/talents';
+import { scaleHp, scaleAttack, rollElite } from './entities/scaling';
 import { runBrain, newMemory, tickMemory } from './engine/brain';
 import type { MonsterMemory } from './engine/brain';
 import { findPathWithFn } from './engine/pathfinding';
@@ -179,6 +180,12 @@ export class Game {
   private lastPersistTurn = -1;
   /** URL/每日种子时为 true：newRun 不得改写种子（P1-11） */
   private readonly fixedSeed: boolean;
+  /** 模拟器模式：自动探索跳过交互物停车（机器人自行处理）（M6） */
+  private simMode = false;
+  /** 已喝下的药水数（模拟统计，M6） */
+  private potionsUsed = 0;
+  /** 上次尝试技能的回合（模拟器防重试死循环） */
+  private lastSkillTryTurn = -100;
   /** 当前界面模式；游戏从标题画面开始 */
   mode: UiMode = 'title';
   /** 消息历史查看游标（log 模式；null = 定位在最新） */
@@ -209,12 +216,15 @@ export class Game {
   /** 状态变化后由 main 注入的刷新回调 */
   onChange: (() => void) | null = null;
 
+  private renderer: Renderer | null;
+
   constructor(
-    private renderer: Renderer | null,
+    renderer: Renderer | null,
     runSeed = Date.now() % 2147483647,
     save?: SaveData | null,
     opts?: { fixedSeed?: boolean },
   ) {
+    this.renderer = renderer;
     this.runSeed = (runSeed % 2147483647) || 1;
     this.fixedSeed = opts?.fixedSeed ?? false;
     this.rng = new Rng(this.runSeed);
@@ -304,6 +314,28 @@ export class Game {
    */
   stateHash(): string {
     return hash64(canonicalJson(this.buildSaveData()));
+  }
+
+  // ---------- ENDLESS 元进度（M5） ----------
+
+  static BEST_DEPTH_KEY = 'emberdeep-best-depth';
+
+  static bestDepth(): number {
+    try {
+      return Number(localStorage.getItem(Game.BEST_DEPTH_KEY) ?? '0') || 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  static recordDepth(depth: number): void {
+    try {
+      if (depth > Game.bestDepth()) {
+        localStorage.setItem(Game.BEST_DEPTH_KEY, String(depth));
+      }
+    } catch {
+      // 忽略存储异常
+    }
   }
 
   /** 读取并校验存档（走 schema 校验层）；损坏或版本不符返回 null */
@@ -914,17 +946,26 @@ export class Game {
         continue;
       }
       // 交互物与楼梯前停下：这些是不可逆/需要玩家确认的事件
-      if (this.merchant && this.merchant.x === next.x && this.merchant.y === next.y) {
+      // （模拟器模式跳过交互物停车，机器人策略自行处理）
+      if (
+        !this.simMode &&
+        this.merchant &&
+        this.merchant.x === next.x &&
+        this.merchant.y === next.y
+      ) {
         this.autoExploring = false;
         this.log.push({ text: '前方有一位流浪商人，自动探索停止。', tone: 'info' });
         return;
       }
-      if (this.shrines.some((s) => s.x === next.x && s.y === next.y)) {
+      if (
+        !this.simMode &&
+        this.shrines.some((s) => s.x === next.x && s.y === next.y)
+      ) {
         this.autoExploring = false;
         this.log.push({ text: '前方有一座奇异的建筑，自动探索停止。', tone: 'info' });
         return;
       }
-      if (this.traps.some((t) => t.x === next.x && t.y === next.y)) {
+      if (!this.simMode && this.traps.some((t) => t.x === next.x && t.y === next.y)) {
         this.autoExploring = false;
         this.log.push({ text: '前方地面上有陷阱的痕迹，是否冒险由你决定。', tone: 'info' });
         return;
@@ -951,6 +992,8 @@ export class Game {
       }
     }
     if (this.autoExploring && steps >= AUTO_EXPLORE_BUDGET) {
+      // 预算耗尽：暂停（置 false），再按 o 从下一批继续（P0-7 语义修正）
+      this.autoExploring = false;
       this.log.push({ text: '自动探索暂歇——再按 o 继续。', tone: 'info' });
     }
   }
@@ -972,12 +1015,17 @@ export class Game {
       [-1, 1],
       [-1, -1],
     ];
+    // 模拟模式下商人格视为障碍：防止"开店→关闭→同路径"死循环（M6 修复）
+    const merchantAt = (x: number, y: number): boolean =>
+      this.simMode && this.merchant !== null && this.merchant.x === x && this.merchant.y === y;
+    const passable = (x: number, y: number): boolean =>
+      this.map.isWalkable(x, y) && !merchantAt(x, y);
 
     const hasUnexploredNeighbor = (x: number, y: number): boolean => {
       for (const [dx, dy] of dirs) {
         const nx = x + dx;
         const ny = y + dy;
-        if (this.map.isWalkable(nx, ny) && !this.explored.has(`${nx},${ny}`)) return true;
+        if (passable(nx, ny) && !this.explored.has(`${nx},${ny}`)) return true;
       }
       return false;
     };
@@ -1004,7 +1052,7 @@ export class Game {
       for (const [dx, dy] of dirs) {
         const nx = cx + dx;
         const ny = cy + dy;
-        if (!this.map.isWalkable(nx, ny)) continue;
+        if (!passable(nx, ny)) continue;
         const nIdx = ny * w + nx;
         if (seen.has(nIdx)) continue;
         seen.add(nIdx);
@@ -1188,6 +1236,33 @@ export class Game {
     return this.buildSaveData();
   }
 
+  /** @internal 测试用：把玩家传送到指定交互物（商人/奇遇建筑）旁边 */
+  debugTeleportNextToInteraction(kind: 'merchant' | 'shrine' = 'merchant'): boolean {
+    const spots: Pt[] = [];
+    if (kind === 'merchant' && this.merchant) {
+      spots.push({ x: this.merchant.x, y: this.merchant.y });
+    }
+    if (kind === 'shrine') {
+      for (const s of this.shrines) spots.push({ x: s.x, y: s.y });
+    }
+    const dirs: readonly (readonly [number, number])[] = [
+      [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1],
+    ];
+    for (const spot of spots) {
+      for (const [dx, dy] of dirs) {
+        const x = spot.x + dx;
+        const y = spot.y + dy;
+        if (this.map.isWalkable(x, y) && !this.monsterAt(x, y)) {
+          this.player.x = x;
+          this.player.y = y;
+          this.updateFov();
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   // ---------- 玩家回合 ----------
 
   /** 返回 true 表示消耗了一个回合 */
@@ -1314,6 +1389,116 @@ export class Game {
     if (heal > 0) {
       this.player.hp = Math.min(this.player.maxHp, this.player.hp + heal);
     }
+  }
+
+  // ---------- 模拟器支持（M6，@internal 不参与 UI） ----------
+
+  /** @internal 模拟器模式开关：autoExplore 跳过交互物停车 */
+  setSimMode(value: boolean): void {
+    this.simMode = value;
+  }
+
+  /** @internal 统计：已喝药水数 */
+  getPotionsUsed(): number {
+    return this.potionsUsed;
+  }
+
+  /**
+   * @internal 模拟器单回合：简单机器人策略。
+   * 优先级：关界面 → 喝药（低血）→ 攻击/接近可见敌人 → 下楼 → 自动探索 → 奔向楼梯。
+   */
+  simTurn(): 'playing' | 'dead' {
+    if (this.dead) return 'dead';
+    if (this.mode === 'shop' || this.mode === 'inventory') {
+      this.handleAction({ type: 'closeOverlay' });
+    } else if (this.mode === 'levelUp') {
+      this.handleAction({ type: 'useSlot', slot: 0 });
+    } else if (this.mode !== 'play') {
+      this.handleAction({ type: 'closeOverlay' });
+    }
+    if (this.dead) return 'dead';
+
+    const visible = this.visibleTargets();
+    const nearest =
+      visible.length > 0
+        ? visible.reduce((a, b) =>
+            Math.max(Math.abs(b.x - this.player.x), Math.abs(b.y - this.player.y)) <
+            Math.max(Math.abs(a.x - this.player.x), Math.abs(a.y - this.player.y))
+              ? b
+              : a,
+          )
+        : null;
+    const low = this.player.hp < this.player.maxHp * 0.5;
+
+    // 低血：有药喝药；无药且有敌 → 撤退一格（远离最近敌人）
+    if (low) {
+      const hasPotion = this.player.inventory.some((it) => it.category === 'potion');
+      if (hasPotion) {
+        this.handleAction({ type: 'quaff' });
+        this.potionsUsed += 1;
+        if (this.dead) return 'dead';
+      } else if (nearest) {
+        const away = {
+          dx: -Math.sign(nearest.x - this.player.x),
+          dy: -Math.sign(nearest.y - this.player.y),
+        };
+        this.handleAction({ type: 'move', dx: away.dx, dy: away.dy });
+        return this.dead ? 'dead' : 'playing';
+      }
+    }
+
+    // 技能可用且有敌人可见 → 释放；失败则 20 回合内不重试（防死循环）
+    if (
+      nearest &&
+      this.skill.remaining === 0 &&
+      this.turn - this.lastSkillTryTurn > 20
+    ) {
+      this.lastSkillTryTurn = this.turn;
+      this.handleAction({ type: 'useSkill' });
+      if (this.dead) return 'dead';
+    }
+
+    // 站在物品/金币上 → 捡拾（机器人此前从不捡东西的根因）
+    const onGround =
+      this.groundItems.some((g) => g.x === this.player.x && g.y === this.player.y) ||
+      this.goldPiles.some((g) => g.x === this.player.x && g.y === this.player.y);
+    if (onGround) {
+      this.handleAction({ type: 'pickup' });
+      if (this.dead) return 'dead';
+    }
+
+    // 满血或优势时交战：接近并攻击（move 撞上即攻击）
+    if (nearest && !low) {
+      const dx = Math.max(-1, Math.min(1, nearest.x - this.player.x));
+      const dy = Math.max(-1, Math.min(1, nearest.y - this.player.y));
+      this.handleAction({ type: 'move', dx, dy });
+      return this.dead ? 'dead' : 'playing';
+    }
+
+    // 站在楼梯上直接下楼
+    if (this.player.x === this.stairsDown.x && this.player.y === this.stairsDown.y) {
+      this.handleAction({ type: 'descend' });
+      return this.dead ? 'dead' : 'playing';
+    }
+
+    // 自动探索一批
+    const before = this.turn;
+    this.handleAction({ type: 'autoExplore' });
+    if (this.turn === before && !this.dead) {
+      // 探索完毕或停滞：奔向楼梯
+      const path = findPathWithFn(
+        { x: this.player.x, y: this.player.y },
+        { x: this.stairsDown.x, y: this.stairsDown.y },
+        (x, y) => this.map.isWalkable(x, y),
+      );
+      const step = path?.[0];
+      if (step) {
+        this.handleAction({ type: 'move', dx: step.x - this.player.x, dy: step.y - this.player.y });
+      } else {
+        this.handleAction({ type: 'wait' });
+      }
+    }
+    return this.dead ? 'dead' : 'playing';
   }
 
   private killMonster(target: Actor): void {
@@ -1481,6 +1666,7 @@ export class Game {
     const def = itemDef(chosen.item);
     this.player.inventory.splice(chosen.index, 1);
     playSfx('quaff');
+    this.potionsUsed += 1;
     if (def.effect === 'might') {
       this.mightUntil = this.turn + (def.duration ?? 20);
       this.log.push({ text: `${def.name}下肚，余烬之力涌遍全身！攻击 +3。`, tone: 'good' });
@@ -1656,6 +1842,7 @@ export class Game {
   private descend(): boolean {
     if (this.player.x === this.stairsDown.x && this.player.y === this.stairsDown.y) {
       this.depth += 1;
+      Game.recordDepth(this.depth);
       this.log.push({ text: `你走下楼梯，来到第 ${this.depth} 层。`, tone: 'info' });
       playSfx('stairs');
       this.effects.push({ kind: 'flashScreen', color: '#2f7d4f', dur: 450 });
@@ -1813,6 +2000,7 @@ export class Game {
     if (report.killed) {
       this.dead = true;
       this.deathCause = m.name;
+      Game.recordDepth(this.depth);
       playSfx('die');
       this.effects.push({ kind: 'quake', dur: 500 }, { kind: 'flashScreen', color: '#5c1010', dur: 600 });
       this.log.push({ text: `你死在了第 ${this.depth} 层……按 R 重新开始。`, tone: 'bad' });
@@ -1840,18 +2028,22 @@ export class Game {
     this.player.y = floor.playerSpawn.y;
     this.monsters = floor.monsterSpawns.map((p) => {
       const t = rollMonster(this.depth, this.rng);
+      // ENDLESS 深度缩放（M5）：depth > 5 后 HP/攻击逐层增强；20 层起精英变体
+      const hp = scaleHp(t.maxHp, this.depth);
+      const attack = scaleAttack(t.attack, this.depth);
+      const elite = rollElite(this.depth, this.rng.next());
       return makeActor({
         species: t.species,
-        name: t.name,
+        name: elite ? `${elite.name}${t.name}` : t.name,
         glyph: t.glyph,
         color: t.color,
         x: p.x,
         y: p.y,
-        hp: t.maxHp,
-        maxHp: t.maxHp,
-        attack: t.attack,
+        hp: Math.round(hp * (elite?.hpFactor ?? 1)),
+        maxHp: Math.round(hp * (elite?.hpFactor ?? 1)),
+        attack: Math.round(attack * (elite?.attackFactor ?? 1)),
         defense: t.defense,
-        xpValue: t.xpValue,
+        xpValue: Math.round(t.xpValue * (elite?.xpFactor ?? 1)),
         ai: { mode: 'sleep', senseRadius: t.senseRadius },
       });
     });
@@ -1914,6 +2106,9 @@ export class Game {
     if (candidates.length === 0) return;
     const spot = this.rng.pick(candidates);
     const d = this.bossDef;
+    // ENDLESS 缩放（M5）：Boss 超过其 minDepth 重复登场时按层差 +12% HP / +8% 攻
+    const hp = scaleHp(d.maxHp, this.depth);
+    const attack = scaleAttack(d.attack, this.depth);
     this.boss = makeActor({
       species: d.species,
       name: d.name,
@@ -1921,11 +2116,11 @@ export class Game {
       color: d.color,
       x: spot.x,
       y: spot.y,
-      hp: d.maxHp,
-      maxHp: d.maxHp,
-      attack: d.attack,
+      hp,
+      maxHp: hp,
+      attack,
       defense: d.defense,
-      xpValue: d.xpValue,
+      xpValue: Math.round(d.xpValue * (hp / d.maxHp)),
       ai: { mode: 'sleep', senseRadius: d.senseRadius },
     });
     this.monsters.push(this.boss);

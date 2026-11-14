@@ -36,24 +36,37 @@ describe('里程碑 1：反向测试（修复的反例与边界）', () => {
     expect(game.ownedTalents.length).toBe(4);
   });
 
-  it('自动探索在交互物前停车（P0-7 反例：商人或奇遇建筑，确定性 seed 扫描）', () => {
-    let covered = false;
-    for (let seed = 1; seed <= 40 && !covered; seed++) {
-      const game = startGame(seed);
-      for (let batch = 0; batch < 30 && !covered; batch++) {
-        game.handleAction({ type: 'autoExplore' });
-        const stoppedAtInteraction = game
-          .allLog()
-          .some((entry) => entry.text.includes('流浪商人') || entry.text.includes('奇异的建筑'));
-        if (stoppedAtInteraction) {
-          covered = true;
-          // 停车验证：必须停在 play 模式等待玩家决定，而不是自动触发事件
-          expect(game.mode).toBe('play');
-        }
-        if (game.dead) break;
-      }
-    }
-    expect(covered).toBe(true);
+  it('自动探索在交互物前停车（P0-7：传送至商人/奇遇建筑旁确定性验证）', () => {
+    // 商人：深度 1 必有
+    const game = startGame(701);
+    game.jumpToDepth(1);
+    expect(game.debugTeleportNextToInteraction()).toBe(true);
+    game.handleAction({ type: 'autoExplore' });
+    expect(
+      game.allLog().some((entry) => entry.text.includes('流浪商人')),
+    ).toBe(true);
+    expect(game.mode).toBe('play');
+
+    // 奇遇建筑：深度 2 必有（许愿井）
+    const game2 = startGame(702);
+    game2.jumpToDepth(2);
+    expect(game2.debugTeleportNextToInteraction('shrine')).toBe(true);
+    game2.handleAction({ type: 'autoExplore' });
+    expect(
+      game2.allLog().some((entry) => entry.text.includes('奇异的建筑')),
+    ).toBe(true);
+    expect(game2.mode).toBe('play');
+  });
+
+  it('预算暂停后再按 o 从下一批继续（而不是关闭）', () => {
+    const game = startGame(703);
+    const before = game.turn;
+    game.handleAction({ type: 'autoExplore' });
+    const afterBatch1 = game.turn;
+    expect(afterBatch1).toBeGreaterThan(before); // 第一批跑满预算
+    // 继续第二批
+    game.handleAction({ type: 'autoExplore' });
+    expect(game.turn).toBeGreaterThan(afterBatch1);
   });
 
   it('双 Game 实例交替操作互不污染（P0-5 allocator 隔离反例）', () => {

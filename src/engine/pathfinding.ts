@@ -4,6 +4,9 @@ import type { GameMap } from '../world/map';
 const STRAIGHT = 10;
 const DIAGONAL = 14;
 
+/** 性能计数器（M7 基准用；纯观测，不影响逻辑与确定性） */
+export const pathfindingStats = { calls: 0, expanded: 0 };
+
 /** 八方向的 (dx, dy, 代价) */
 const NEIGHBORS: readonly (readonly [number, number, number])[] = [
   [1, 0, STRAIGHT],
@@ -117,6 +120,7 @@ export function findPathWithFn(
   const open = new MinHeap();
   open.push(startIdx, octile(from, to));
   let expanded = 0;
+  pathfindingStats.calls += 1;
 
   let cur = open.pop();
   while (cur) {
@@ -128,6 +132,7 @@ export function findPathWithFn(
     }
     closed.add(curIdx);
     expanded += 1;
+    pathfindingStats.expanded += 1;
     if (expanded > maxNodes) return null;
 
     const cx = curIdx % width;
