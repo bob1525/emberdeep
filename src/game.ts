@@ -23,6 +23,8 @@ import {
   type ItemInstance,
 } from './entities/actor';
 import { rollMonster } from './entities/monsters';
+import { bossForDepth, decideBossSpecial, phaseForHp } from './entities/bosses';
+import type { BossDef, BossPhase, BossSpecialReport } from './entities/bosses';
 import { CLASSES, canUseSkill, makeCooldown, startCooldown, tickCooldown } from './entities/classes';
 import type { ClassId, SkillCooldown } from './entities/classes';
 import { TALENTS, talentBonus, rollTalentChoices } from './entities/talents';
@@ -53,6 +55,8 @@ import { generateFloor } from './world/generators/floor';
 import { GameMap } from './world/map';
 import { TRAPS, rollTraps, triggerTrap } from './world/traps';
 import type { PlacedTrap } from './world/traps';
+import { SHRINES, resolveAltar, resolveWell } from './world/shrines';
+import type { ShrineKind } from './world/shrines';
 import type { Tile } from './world/tiles';
 import { drawMinimap, type Effect, type Glyph, type Renderer, type Scene } from './ui/renderer';
 
@@ -122,6 +126,7 @@ export interface SaveData {
   classId?: string;
   skillRemaining?: number;
   ownedTalents?: string[];
+  shrines?: { x: number; y: number; kind: ShrineKind }[];
 }
 
 const FOV_RADIUS = 8;
@@ -156,8 +161,11 @@ export class Game {
   private map: GameMap = GameMap.filled(1, 1, 'wall');
   private stairsDown: { x: number; y: number } = { x: 0, y: 0 };
   private monsters: Actor[] = [];
+  private boss: Actor | null = null;
+  private bossDef: BossDef | null = null;
   private groundItems: GroundItem[] = [];
   private traps: PlacedTrap[] = [];
+  private shrines: { x: number; y: number; kind: ShrineKind }[] = [];
   private goldPiles: GoldPile[] = [];
   private merchant: MerchantState | null = null;
   private affixData = new Map<number, AffixData>();
@@ -240,6 +248,7 @@ export class Game {
         classId: this.classId,
         skillRemaining: this.skill.remaining,
         ownedTalents: this.ownedTalents,
+        shrines: this.shrines,
       };
   }
 
@@ -308,6 +317,7 @@ export class Game {
     this.skill.remaining = save.skillRemaining ?? 0;
     this.ownedTalents = save.ownedTalents ?? [];
     this.talentChoices = [];
+    this.shrines = save.shrines ?? [];
     this.gold = save.gold ?? 0;
     this.kills = save.kills ?? 0;
     this.deathCause = save.deathCause ?? '未知';
@@ -1028,6 +1038,14 @@ export class Game {
       this.mode = 'shop';
       return false;
     }
+    // 撞上祭坛/许愿井：触发事件（事件本身消耗一个回合，怪物获得行动权）
+    const shrineIdx = this.shrines.findIndex((s) => s.x === nx && s.y === ny);
+    if (shrineIdx !== -1) {
+      const shrine = this.shrines[shrineIdx];
+      if (shrine?.kind === 'altar') this.useAltar(shrineIdx);
+      else this.useWell(shrineIdx);
+      return true;
+    }
     const target = this.monsterAt(nx, ny);
     if (target) {
       this.attackMonster(target);
@@ -1121,6 +1139,17 @@ export class Game {
     playSfx('kill');
     this.effects.push({ kind: 'burst', x: target.x, y: target.y, color: '#d96a5a', dur: 420 });
     this.log.push({ text: `${target.name}倒下了！`, tone: 'good' });
+    // Boss 被击杀：专属演出 + 三倍金币
+    if (target === this.boss && this.bossDef) {
+      this.log.push({ text: this.bossDef.deathText, tone: 'good' });
+      this.effects.push({ kind: 'flashScreen', color: '#f5b04c', dur: 600 });
+      this.goldPiles.push({
+        x: target.x,
+        y: target.y,
+        amount: rollGold(this.depth, this.rng) * 3,
+      });
+      this.boss = null;
+    }
     // 怪物死后 30% 概率掉金币
     if (this.rng.next() < 0.3) {
       this.goldPiles.push({
@@ -1430,6 +1459,17 @@ export class Game {
       m.energy += actionsPerTurn(m);
       while (m.energy >= 1 && !this.dead) {
         m.energy -= 1;
+        // Boss：30% 概率释放阶段特技，否则按普通 AI 行动
+        if (m === this.boss && this.bossDef) {
+          const phase = this.bossPhase();
+          if (phase) {
+            const special = decideBossSpecial(phase, this.rng);
+            if (special.kind !== 'none') {
+              this.applyBossSpecial(special);
+              continue;
+            }
+          }
+        }
         const act = decideMonsterAction({
           self: m,
           player: this.player,
@@ -1476,9 +1516,11 @@ export class Game {
       color: m.color,
       dur: 170,
     });
+    // Boss 在狂暴阶段攻击力上升
+    const phase = m === this.boss ? this.bossPhase() : null;
     const report = resolveAttack({
       attackerName: m.name,
-      attack: m.attack,
+      attack: m.attack + (phase?.attackBonus ?? 0),
       defenderName: '你',
       defense: this.effectiveDefense(),
       defenderHp: this.player.hp,
@@ -1555,9 +1597,56 @@ export class Game {
       }
     }
     this.placeMerchant(floor);
+    this.placeShrines(floor);
     this.placeTraps(floor);
+    this.placeBoss(floor);
     this.explored = new Set();
     this.updateFov();
+  }
+
+  /** 每 5 层放置关底 Boss，并播报登场演出 */
+  private placeBoss(floor: { playerSpawn: Pt }): void {
+    this.boss = null;
+    this.bossDef = bossForDepth(this.depth);
+    if (!this.bossDef) return;
+    const candidates: Pt[] = [];
+    for (let y = 1; y < this.map.height - 1; y++) {
+      for (let x = 1; x < this.map.width - 1; x++) {
+        if (!this.map.isWalkable(x, y)) continue;
+        if (x === this.stairsDown.x && y === this.stairsDown.y) continue;
+        if (this.monsterAt(x, y)) continue;
+        if (this.merchant && this.merchant.x === x && this.merchant.y === y) continue;
+        if (this.shrines.some((s) => s.x === x && s.y === y)) continue;
+        const dist = Math.max(Math.abs(x - floor.playerSpawn.x), Math.abs(y - floor.playerSpawn.y));
+        if (dist < 14) continue;
+        candidates.push({ x, y });
+      }
+    }
+    if (candidates.length === 0) return;
+    const spot = this.rng.pick(candidates);
+    const d = this.bossDef;
+    this.boss = makeActor({
+      species: d.species,
+      name: d.name,
+      glyph: d.glyph,
+      color: d.color,
+      x: spot.x,
+      y: spot.y,
+      hp: d.maxHp,
+      maxHp: d.maxHp,
+      attack: d.attack,
+      defense: d.defense,
+      xpValue: d.xpValue,
+      ai: { mode: 'sleep', senseRadius: d.senseRadius },
+    });
+    this.monsters.push(this.boss);
+    this.log.push({ text: d.introText, tone: 'bad' });
+  }
+
+  /** Boss 当前所处阶段（非 Boss 怪返回 null） */
+  private bossPhase(): BossPhase | null {
+    if (!this.boss || !this.bossDef || this.boss.hp <= 0) return null;
+    return phaseForHp(this.bossDef, this.boss.hp);
   }
 
   /** 每层放一位流浪商人：离出生点较远的随机地板 */
@@ -1580,7 +1669,33 @@ export class Game {
     this.merchant = { x: spot.x, y: spot.y, stock: rollStock(this.depth, this.rng) };
   }
 
-  /** 按深度撒陷阱：避开出生点、楼梯、商人位与物品点 */
+  /** 每层一座奇遇建筑：奇数层祭坛 / 偶数层许愿井 */
+  private placeShrines(floor: {
+    playerSpawn: Pt;
+    stairsDown: Pt;
+    itemSpots: Pt[];
+    monsterSpawns: Pt[];
+  }): void {
+    this.shrines = [];
+    const candidates: Pt[] = [];
+    for (let y = 1; y < this.map.height - 1; y++) {
+      for (let x = 1; x < this.map.width - 1; x++) {
+        if (!this.map.isWalkable(x, y)) continue;
+        if (x === this.stairsDown.x && y === this.stairsDown.y) continue;
+        if (floor.playerSpawn.x === x && floor.playerSpawn.y === y) continue;
+        if (floor.itemSpots.some((p) => p.x === x && p.y === y)) continue;
+        if (floor.monsterSpawns.some((p) => p.x === x && p.y === y)) continue;
+        if (this.merchant && this.merchant.x === x && this.merchant.y === y) continue;
+        candidates.push({ x, y });
+      }
+    }
+    if (candidates.length === 0) return;
+    const spot = this.rng.pick(candidates);
+    const kind: ShrineKind = this.depth % 2 === 1 ? 'altar' : 'well';
+    this.shrines.push({ x: spot.x, y: spot.y, kind });
+  }
+
+  /** 按深度撒陷阱：避开出生点、楼梯、商人位、奇遇建筑与物品点 */
   private placeTraps(floor: { playerSpawn: Pt; stairsDown: Pt; itemSpots: Pt[] }): void {
     const candidates: Pt[] = [];
     for (let y = 1; y < this.map.height - 1; y++) {
@@ -1590,6 +1705,7 @@ export class Game {
         if (x === floor.stairsDown.x && y === floor.stairsDown.y) continue;
         if (floor.itemSpots.some((p) => p.x === x && p.y === y)) continue;
         if (this.merchant && this.merchant.x === x && this.merchant.y === y) continue;
+        if (this.shrines.some((s) => s.x === x && s.y === y)) continue;
         candidates.push({ x, y });
       }
     }
@@ -1649,6 +1765,7 @@ export class Game {
     this.affixData.clear();
     this.ownedTalents = [];
     this.talentChoices = [];
+    this.shrines = [];
     this.mightUntil = 0;
     this.log = [{ text: '新的冒险开始了。你在余烬深渊的第 1 层醒来……', tone: 'info' }];
     Game.clearSave();
@@ -1711,6 +1828,195 @@ export class Game {
 
   private monsterAt(x: number, y: number): Actor | undefined {
     return this.monsters.find((m) => m.x === x && m.y === y);
+  }
+
+  /** 献祭祭坛：付出 30% 生命上限赌一个结果（一次性） */
+  private useAltar(idx: number): void {
+    const shrine = this.shrines[idx];
+    if (!shrine) return;
+    const report = resolveAltar(this.player.maxHp, this.rng);
+    this.shrines.splice(idx, 1);
+    this.player.hp = Math.max(0, this.player.hp - report.cost);
+    playSfx('hurt');
+    this.effects.push(
+      { kind: 'flash', x: this.player.x, y: this.player.y, color: '#d43d2e' },
+      { kind: 'float', x: this.player.x, y: this.player.y, text: `-${report.cost}`, color: '#d43d2e' },
+    );
+    this.log.push({
+      text: report.message,
+      tone: report.blessing ? 'good' : report.curse ? 'bad' : 'info',
+    });
+    if (report.blessing) {
+      if (report.blessing.kind === 'might') {
+        // might 是计时器机制而非持续状态，走游戏层
+        this.mightUntil = this.turn + report.blessing.turns;
+      } else {
+        applyStatus(this.player, report.blessing.kind, report.blessing.turns, report.blessing.power);
+      }
+    }
+    if (report.curse) {
+      applyStatus(this.player, report.curse.kind, report.curse.turns, report.curse.power);
+    }
+    if (report.fullHeal) {
+      this.player.hp = this.player.maxHp;
+      this.effects.push({ kind: 'flashScreen', color: '#ffd76b', dur: 500 });
+    }
+    if (this.player.hp <= 0) {
+      this.dead = true;
+      this.deathCause = SHRINES.altar.name;
+      playSfx('die');
+      this.effects.push(
+        { kind: 'quake', dur: 500 },
+        { kind: 'flashScreen', color: '#5c1010', dur: 600 },
+      );
+      this.log.push({ text: '你把自己的生命献给了深渊……按 R 重新开始。', tone: 'bad' });
+    }
+  }
+
+  /** 许愿井：25 金币赌运气（可重复） */
+  private useWell(idx: number): void {
+    const shrine = this.shrines[idx];
+    if (!shrine) return;
+    if (this.gold < 25) {
+      this.log.push({ text: '许愿井需要 25 金币。', tone: 'info' });
+      return;
+    }
+    const report = resolveWell(this.rng);
+    this.gold -= report.goldCost;
+    playSfx('quaff');
+    this.effects.push({ kind: 'flash', x: this.player.x, y: this.player.y, color: '#4fc3f7' });
+    this.log.push({
+      text: report.message,
+      tone: report.angered ? 'bad' : report.nothing ? 'info' : 'good',
+    });
+    if (report.heal) {
+      this.player.hp = this.player.maxHp;
+      this.effects.push({ kind: 'flashScreen', color: '#4fc3f7', dur: 400 });
+    }
+    if (report.item) {
+      const item: ItemInstance = {
+        uid: allocateItemUid(),
+        catalogId: report.item.catalogId,
+        category: report.item.category,
+      };
+      if (item.category === 'weapon' || item.category === 'armor') {
+        this.affixData.set(item.uid, rollAffixData(this.depth, this.rng));
+      }
+      this.player.inventory.push(item);
+      this.log.push({ text: `井底捞出了${itemInfo(item).name}！`, tone: 'good' });
+    }
+    if (report.angered) {
+      // 在玩家周围逐环搜索空位，惊醒 1-2 只怪物
+      const count = this.rng.int(1, 2);
+      let placed = 0;
+      for (let r = 1; r <= 4 && placed < count; r++) {
+        for (let dy = -r; dy <= r && placed < count; dy++) {
+          for (let dx = -r; dx <= r && placed < count; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+            const x = this.player.x + dx;
+            const y = this.player.y + dy;
+            if (!this.map.isWalkable(x, y) || this.monsterAt(x, y)) continue;
+            const t = rollMonster(this.depth, this.rng);
+            this.monsters.push(
+              makeActor({
+                species: t.species,
+                name: t.name,
+                glyph: t.glyph,
+                color: t.color,
+                x,
+                y,
+                hp: t.maxHp,
+                maxHp: t.maxHp,
+                attack: t.attack,
+                defense: t.defense,
+                xpValue: t.xpValue,
+                ai: { mode: 'chase', senseRadius: t.senseRadius },
+              }),
+            );
+            this.effects.push({ kind: 'burst', x, y, color: '#7d4bd1', dur: 400 });
+            placed += 1;
+          }
+        }
+      }
+      if (placed > 0) this.log.push({ text: '深渊的怪物被惊醒了！', tone: 'bad' });
+    }
+  }
+
+  /** Boss 阶段特技落地：召唤 / 冲击波 / 加速 / 自愈 */
+  private applyBossSpecial(report: BossSpecialReport): void {
+    this.log.push({ text: report.message, tone: 'bad' });
+    playSfx('zap');
+    this.effects.push({ kind: 'quake', dur: 260 });
+    if (report.kind === 'aoe' && this.boss) {
+      const dist = Math.max(
+        Math.abs(this.player.x - this.boss.x),
+        Math.abs(this.player.y - this.boss.y),
+      );
+      if (dist <= 3) {
+        const damage = Math.max(1, report.damage - this.effectiveDefense());
+        this.player.hp -= damage;
+        this.effects.push({
+          kind: 'float',
+          x: this.player.x,
+          y: this.player.y,
+          text: `-${damage}`,
+          color: '#d96a5a',
+        });
+        this.log.push({ text: `冲击波击中了你（${damage} 伤害）！`, tone: 'bad' });
+        if (this.player.hp <= 0) {
+          this.dead = true;
+          this.deathCause = this.bossDef?.name ?? '深渊';
+          playSfx('die');
+          this.log.push({ text: '你被冲击波撕碎了……按 R 重新开始。', tone: 'bad' });
+        }
+      }
+    } else if (report.kind === 'summon' && this.boss) {
+      for (let i = 0; i < report.count; i++) {
+        let placed = false;
+        for (let r = 1; r <= 3 && !placed; r++) {
+          for (let dy = -r; dy <= r && !placed; dy++) {
+            for (let dx = -r; dx <= r && !placed; dx++) {
+              if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+              const x = this.boss.x + dx;
+              const y = this.boss.y + dy;
+              if (!this.map.isWalkable(x, y) || this.monsterAt(x, y)) continue;
+              if (this.player.x === x && this.player.y === y) continue;
+              const t = rollMonster(this.depth, this.rng);
+              this.monsters.push(
+                makeActor({
+                  species: t.species,
+                  name: t.name,
+                  glyph: t.glyph,
+                  color: t.color,
+                  x,
+                  y,
+                  hp: t.maxHp,
+                  maxHp: t.maxHp,
+                  attack: t.attack,
+                  defense: t.defense,
+                  xpValue: t.xpValue,
+                  ai: { mode: 'chase', senseRadius: t.senseRadius },
+                }),
+              );
+              this.effects.push({ kind: 'burst', x, y, color: '#7d4bd1', dur: 400 });
+              placed = true;
+            }
+          }
+        }
+      }
+    } else if (report.kind === 'haste' && this.boss) {
+      this.boss.energy += 2;
+    } else if (report.kind === 'heal' && this.boss) {
+      const heal = Math.floor(this.boss.maxHp * 0.15);
+      this.boss.hp = Math.min(this.boss.maxHp, this.boss.hp + heal);
+      this.effects.push({
+        kind: 'float',
+        x: this.boss.x,
+        y: this.boss.y,
+        text: `+${heal}`,
+        color: '#7fbf6a',
+      });
+    }
   }
 
   /** 深渊生物的附加攻击：按物种概率施加状态 */
@@ -1779,6 +2085,10 @@ export class Game {
       const def = TRAPS[t.kind];
       return { x: t.x, y: t.y, glyph: def.glyph, color: def.color };
     });
+    const shrineGlyphs: Glyph[] = this.shrines.map((s) => {
+      const def = SHRINES[s.kind];
+      return { x: s.x, y: s.y, glyph: def.glyph, color: def.color };
+    });
     return {
       map: this.map,
       depth: this.depth,
@@ -1787,6 +2097,7 @@ export class Game {
       markers: [
         { x: this.stairsDown.x, y: this.stairsDown.y, glyph: '>', color: '#c9a227' },
         ...trapGlyphs,
+        ...shrineGlyphs,
       ],
       items,
       actors,
