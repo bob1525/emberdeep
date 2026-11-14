@@ -25,6 +25,15 @@ export interface AiState {
   wanderDir?: { dx: number; dy: number };
 }
 
+/** 持续状态实例（种类定义与结算逻辑在 src/engine/statuses.ts） */
+export interface StatusInstance {
+  kind: string;
+  /** 剩余持续回合 */
+  remaining: number;
+  /** 强度（如每回合伤害） */
+  power: number;
+}
+
 export interface Actor {
   id: number;
   side: 'player' | 'monster';
@@ -45,6 +54,10 @@ export interface Actor {
   xpValue: number;
   inventory: ItemInstance[];
   equipment: Equipment;
+  /** 持续状态（毒/燃烧/加速…），无状态时为空数组 */
+  statuses: StatusInstance[];
+  /** 行动能量累积：加速能一回合行动两次，减速隔回合行动 */
+  energy: number;
   /** 玩家为 null */
   ai: AiState | null;
 }
@@ -76,6 +89,8 @@ export function makeActor(template: Partial<Actor> & Pick<Actor, 'species' | 'na
     xpValue: 3,
     inventory: [],
     equipment: EMPTY_EQUIPMENT,
+    statuses: [],
+    energy: 0,
     ai: { mode: 'sleep' },
     ...template,
   };

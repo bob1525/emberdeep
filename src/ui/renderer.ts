@@ -227,7 +227,7 @@ export class Renderer {
     // 标记（楼梯）属于地形记忆，探索过就一直显示
     for (const m of scene.markers) {
       if (explored.has(`${m.x},${m.y}`)) {
-        this.drawGlyph(m.x, m.y, cellW, m.glyph, explored.has(`${m.x},${m.y}`) && visible.has(`${m.x},${m.y}`) ? m.color : dimColor(m.color));
+        this.drawGlyph(m.x, m.y, cellW, m.glyph, explored.has(`${m.x},${m.y}`) && visible.has(`${m.x},${m.y}`) ? m.color : dimColor(m.color, theme.bg));
       }
     }
     // 物品与角色只在当前视野内出现

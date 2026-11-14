@@ -8,7 +8,10 @@
   <body>
     <main id="app">
       <h1>EMBERDEEP <span class="subtitle">余烬深渊</span></h1>
-      <canvas id="game"></canvas>
+      <div id="stage">
+        <canvas id="game"></canvas>
+        <div id="overlay" hidden></div>
+      </div>
       <div id="status"></div>
       <canvas id="minimap"></canvas>
       <div id="log"></div>
@@ -18,6 +21,7 @@
         <button data-act="teleport" type="button">传</button>
         <button data-act="fireblast" type="button">焰</button>
         <button data-act="descend" type="button">下</button>
+        <button data-act="inventory" type="button">包</button>
         <button data-act="toggleMute" type="button">音</button>
         <button data-act="restart" type="button">重</button>
       </div>

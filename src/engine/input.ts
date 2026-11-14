@@ -6,7 +6,17 @@ export type Action =
   | { type: 'useScroll'; scroll: 'teleport' | 'fireblast' }
   | { type: 'descend' }
   | { type: 'toggleMute' }
-  | { type: 'restart' };
+  | { type: 'restart' }
+  // UI 模式
+  | { type: 'openInventory' }
+  | { type: 'openLog' }
+  | { type: 'closeOverlay' }
+  | { type: 'useSlot'; slot: number }
+  | { type: 'dropSlot'; slot: number }
+  | { type: 'scrollLog'; dir: 1 | -1 }
+  // 标题菜单
+  | { type: 'titleNew' }
+  | { type: 'titleContinue' };
 
 /** 键位 → 方向。支持方向键、WASD、vi 键（hjkl）以及斜向（yubn） */
 const KEY_DIRS: Record<string, readonly [number, number]> = {
@@ -28,16 +38,48 @@ const KEY_DIRS: Record<string, readonly [number, number]> = {
   n: [1, 1],
 };
 
-/** 功能键位 */
-const KEY_COMMANDS: Record<string, Action> = {
-  g: { type: 'pickup' },
-  q: { type: 'quaff' },
-  t: { type: 'useScroll', scroll: 'teleport' },
-  f: { type: 'useScroll', scroll: 'fireblast' },
-  '>': { type: 'descend' },
-  m: { type: 'toggleMute' },
-  r: { type: 'restart' },
+/** 与数字键 1-9 对应的 Shift 符号（背包丢弃快捷键） */
+const SHIFT_DIGITS: Record<string, number> = {
+  '!': 0,
+  '@': 1,
+  '#': 2,
+  $: 3,
+  '%': 4,
+  '^': 5,
+  '&': 6,
+  '*': 7,
+  '(': 8,
 };
+
+function buildKeyCommands(): Record<string, Action> {
+  const commands: Record<string, Action> = {
+    g: { type: 'pickup' },
+    q: { type: 'quaff' },
+    t: { type: 'useScroll', scroll: 'teleport' },
+    f: { type: 'useScroll', scroll: 'fireblast' },
+    '>': { type: 'descend' },
+    m: { type: 'toggleMute' },
+    r: { type: 'restart' },
+    i: { type: 'openInventory' },
+    '?': { type: 'openLog' },
+    Escape: { type: 'closeOverlay' },
+    PageUp: { type: 'scrollLog', dir: -1 },
+    PageDown: { type: 'scrollLog', dir: 1 },
+    n: { type: 'titleNew' },
+    N: { type: 'titleNew' },
+    c: { type: 'titleContinue' },
+    C: { type: 'titleContinue' },
+  };
+  for (let i = 0; i < 9; i++) {
+    commands[String(i + 1)] = { type: 'useSlot', slot: i };
+  }
+  for (const [symbol, slot] of Object.entries(SHIFT_DIGITS)) {
+    commands[symbol] = { type: 'dropSlot', slot };
+  }
+  return commands;
+}
+
+const KEY_COMMANDS = buildKeyCommands();
 
 /** 绑定键盘输入，返回解绑函数 */
 export function bindInput(onAction: (action: Action) => void): () => void {

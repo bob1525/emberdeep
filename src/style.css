@@ -38,11 +38,79 @@ h1 {
   margin-left: 8px;
 }
 
+#stage {
+  position: relative;
+}
+
 #game {
   border: 1px solid #232a36;
   border-radius: 4px;
   max-width: 100%;
   touch-action: none; /* 手势移动交给游戏，不触发页面滚动 */
+}
+
+/* 覆盖层：标题菜单 / 背包 / 消息历史 */
+#overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 6, 10, 0.82);
+  border-radius: 4px;
+}
+
+#overlay[hidden] {
+  display: none;
+}
+
+#overlay .panel {
+  background: #10151f;
+  border: 1px solid #2a3140;
+  border-radius: 8px;
+  padding: 22px 30px;
+  max-width: 82%;
+  max-height: 92%;
+  overflow: auto;
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+#overlay .panel h2 {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 8px;
+  color: #f5b04c;
+}
+
+#overlay .panel h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  letter-spacing: 3px;
+  color: #f5b04c;
+}
+
+#overlay .panel .tagline {
+  margin: 2px 0 16px;
+  font-size: 13px;
+  color: #8a6a3a;
+  letter-spacing: 2px;
+}
+
+#overlay .panel .opt {
+  margin: 6px 0;
+  color: #cdd6e2;
+}
+
+#overlay .panel .opt strong {
+  color: #f5b04c;
+  margin-right: 6px;
+}
+
+#overlay .panel .hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #566070;
 }
 
 /* 触屏设备的动作按钮排：桌面端隐藏 */

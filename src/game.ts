@@ -5,6 +5,14 @@ import { decideMonsterAction } from './engine/ai';
 import { resolveAttack } from './engine/combat';
 import { hasLineOfSight } from './engine/los';
 import { Rng } from './engine/rng';
+import {
+  STATUSES,
+  actionsPerTurn,
+  applyStatus,
+  hasStatus,
+  tickStatuses,
+  totalDefenseBonus,
+} from './engine/statuses';
 import { createPlayer, makeActor, type Actor, type ItemInstance } from './entities/actor';
 import { rollMonster } from './entities/monsters';
 import { itemDef, rollLoot, weaponBonus, armorBonus } from './items/catalog';
@@ -19,6 +27,9 @@ export interface LogEntry {
   text: string;
   tone: Tone;
 }
+
+/** UI 界面模式：菜单 / 背包 / 消息历史等界面功能的地基 */
+export type UiMode = 'title' | 'play' | 'inventory' | 'log';
 
 export interface GroundItem {
   x: number;
@@ -46,6 +57,8 @@ export interface SaveData {
   mapHeight: number;
   mapTiles: Tile[];
   rngState: number;
+  kills: number;
+  deathCause: string;
 }
 
 const FOV_RADIUS = 8;
@@ -63,6 +76,10 @@ export class Game {
   /** 本局击杀数（死亡统计用） */
   kills = 0;
   deathCause = '未知';
+  /** 当前界面模式；游戏从标题画面开始 */
+  mode: UiMode = 'title';
+  /** 消息历史查看游标（log 模式；null = 定位在最新） */
+  logCursor: number | null = null;
 
   private map: GameMap = GameMap.filled(1, 1, 'wall');
   private stairsDown: { x: number; y: number } = { x: 0, y: 0 };
@@ -125,6 +142,8 @@ export class Game {
         mapHeight: this.map.height,
         mapTiles: this.map.exportGrid(),
         rngState: this.rng.snapshot(),
+        kills: this.kills,
+        deathCause: this.deathCause,
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(data));
     } catch {
@@ -160,11 +179,22 @@ export class Game {
   private hydrate(save: SaveData): void {
     // 先恢复最可能损坏的地图，失败时构造函数能干净回退
     this.map = new GameMap(save.mapWidth, save.mapHeight, save.mapTiles);
-    this.monsters = save.monsters;
-    this.groundItems = save.groundItems;
     this.stairsDown = { ...save.stairsDown };
     this.explored = new Set(save.explored);
-    this.player = save.player;
+    // 兼容旧存档：statuses / energy 是后加字段，缺失时补默认值
+    this.player = {
+      ...save.player,
+      statuses: save.player.statuses ?? [],
+      energy: save.player.energy ?? 0,
+    };
+    this.monsters = save.monsters.map((m) => ({
+      ...m,
+      statuses: m.statuses ?? [],
+      energy: m.energy ?? 0,
+    }));
+    this.groundItems = save.groundItems;
+    this.kills = save.kills ?? 0;
+    this.deathCause = save.deathCause ?? '未知';
     this.depth = save.depth;
     this.turn = save.turn;
     this.level = save.level;
@@ -184,25 +214,166 @@ export class Game {
       this.onChange?.();
       return;
     }
-    if (this.dead) {
-      if (action.type === 'restart') this.newRun();
-    } else if (this.doPlayerAction(action)) {
-      this.turn += 1;
-      this.monsterTurns();
-      this.tickMight();
-      if (this.dead) {
-        Game.clearSave();
-      } else {
-        this.persist();
-      }
+
+    switch (this.mode) {
+      case 'title':
+        this.handleTitle(action);
+        break;
+      case 'inventory':
+        this.handleInventory(action);
+        break;
+      case 'log':
+        this.handleLog(action);
+        break;
+      case 'play':
+        this.handlePlay(action);
+        break;
     }
-    this.updateFov();
+
+    if (this.mode === 'play') this.updateFov();
     this.render();
     this.onChange?.();
   }
 
+  private handleTitle(action: Action): void {
+    if (action.type === 'titleNew') {
+      this.newRun();
+      this.mode = 'play';
+    } else if (action.type === 'titleContinue') {
+      if (this.continueFromSave()) this.mode = 'play';
+    }
+  }
+
+  private handlePlay(action: Action): void {
+    if (this.dead) {
+      if (action.type === 'restart') this.newRun();
+      return;
+    }
+    if (action.type === 'openInventory') {
+      this.mode = 'inventory';
+      return;
+    }
+    if (action.type === 'openLog') {
+      this.mode = 'log';
+      return;
+    }
+    if (this.doPlayerAction(action)) this.endPlayerTurn();
+  }
+
+  private handleInventory(action: Action): void {
+    switch (action.type) {
+      case 'closeOverlay':
+      case 'openInventory':
+        this.mode = 'play';
+        return;
+      case 'useSlot':
+        if (this.useInventorySlot(action.slot)) {
+          this.mode = 'play';
+          this.endPlayerTurn();
+        }
+        return;
+      case 'dropSlot':
+        if (this.dropInventorySlot(action.slot)) {
+          this.mode = 'play';
+          this.endPlayerTurn();
+        }
+        return;
+      default:
+        return;
+    }
+  }
+
+  private handleLog(action: Action): void {
+    if (action.type === 'scrollLog') {
+      const base = this.logCursor ?? this.log.length - 1;
+      this.logCursor = Math.max(0, Math.min(this.log.length - 1, base + action.dir));
+      return;
+    }
+    // 任何其他按键都退出历史查看
+    this.logCursor = null;
+    this.mode = 'play';
+  }
+
+  /** 玩家行动成功后的公共回合结算 */
+  private endPlayerTurn(): void {
+    this.turn += 1;
+    this.tickPlayerStatuses();
+    if (!this.dead) {
+      // 玩家加速 → 怪物隔回合行动；玩家减速 → 怪物一回合行动两轮
+      const hasted = hasStatus(this.player, 'haste');
+      const slowed = hasStatus(this.player, 'slow');
+      if (!hasted || this.turn % 2 === 0) this.monsterTurns();
+      if (slowed && !this.dead) this.monsterTurns();
+    }
+    this.tickMight();
+    if (this.dead) {
+      Game.clearSave();
+    } else {
+      this.persist();
+    }
+  }
+
+  /** 玩家身上的持续状态结算（中毒/燃烧/再生…），可能致死 */
+  private tickPlayerStatuses(): void {
+    const report = tickStatuses(this.player);
+    for (const event of report.events) {
+      const info = STATUSES[event.kind];
+      if (!info) continue;
+      if (event.damage > 0) {
+        this.effects.push({
+          kind: 'float',
+          x: this.player.x,
+          y: this.player.y,
+          text: `-${event.damage}`,
+          color: info.color,
+        });
+        this.log.push({ text: `${info.name}侵蚀着你（${event.damage} 伤害）。`, tone: 'bad' });
+      } else if (event.damage < 0) {
+        this.effects.push({
+          kind: 'float',
+          x: this.player.x,
+          y: this.player.y,
+          text: `+${-event.damage}`,
+          color: info.color,
+        });
+        this.log.push({ text: `${info.name}让你恢复了 ${-event.damage} 点生命。`, tone: 'good' });
+      } else if (event.expired) {
+        this.log.push({ text: `${info.name}消退了。`, tone: 'info' });
+      }
+      if (this.player.hp <= 0) {
+        this.dead = true;
+        this.deathCause = info.name;
+        playSfx('die');
+        this.effects.push(
+          { kind: 'quake', dur: 500 },
+          { kind: 'flashScreen', color: '#5c1010', dur: 600 },
+        );
+        this.log.push({ text: `你死于${info.name}……按 R 重新开始。`, tone: 'bad' });
+        break;
+      }
+    }
+  }
+
+  /** 从存档继续（标题菜单用）；失败保持当前界面 */
+  continueFromSave(): boolean {
+    const save = Game.readSave();
+    if (!save) return false;
+    try {
+      this.hydrate(save);
+      return true;
+    } catch {
+      this.log.push({ text: '存档已损坏，无法继续。', tone: 'info' });
+      return false;
+    }
+  }
+
   recentLog(count = 8): LogEntry[] {
     return this.log.slice(-count);
+  }
+
+  /** 完整消息历史（log 界面用） */
+  allLog(): LogEntry[] {
+    return this.log;
   }
 
   xpToNext(): number {
@@ -218,7 +389,9 @@ export class Game {
 
   effectiveDefense(): number {
     const armor = this.player.equipment.armor;
-    return this.player.defense + (armor ? armorBonus(armor) : 0);
+    return (
+      this.player.defense + (armor ? armorBonus(armor) : 0) + totalDefenseBonus(this.player)
+    );
   }
 
   // ---------- 玩家回合 ----------
@@ -240,6 +413,9 @@ export class Game {
         return this.descend();
       case 'restart':
         // 活着时按 R 不做任何事，防误触
+        return false;
+      default:
+        // 其余 UI 类动作不会进入 play 模式的处理链
         return false;
     }
   }
@@ -402,6 +578,12 @@ export class Game {
       this.log.push({ text: '没有传送卷轴。', tone: 'info' });
       return false;
     }
+    this.player.inventory.splice(idx, 1);
+    return this.applyTeleport();
+  }
+
+  /** 传送到随机地板格（快捷键与背包使用共用） */
+  private applyTeleport(): boolean {
     let tx = 0;
     let ty = 0;
     let ok = false;
@@ -414,7 +596,6 @@ export class Game {
       this.log.push({ text: '卷轴失效了……', tone: 'info' });
       return false;
     }
-    this.player.inventory.splice(idx, 1);
     this.player.x = tx;
     this.player.y = ty;
     this.log.push({ text: '空间在你面前折叠，你出现在另一处。', tone: 'good' });
@@ -429,21 +610,31 @@ export class Game {
       this.log.push({ text: '没有烈焰卷轴。', tone: 'info' });
       return false;
     }
-    const los = (x: number, y: number) => !this.map.isWalkable(x, y);
-    const targets = this.monsters.filter((m) =>
-      hasLineOfSight(this.player.x, this.player.y, m.x, m.y, los),
-    );
+    const targets = this.visibleTargets();
     if (targets.length === 0) {
       this.log.push({ text: '视野内没有敌人，卷轴没有点燃的理由。', tone: 'info' });
       return false;
     }
     this.player.inventory.splice(idx, 1);
+    return this.applyFireblast(targets);
+  }
+
+  /** 视线内所有存活怪物 */
+  private visibleTargets(): Actor[] {
+    const los = (x: number, y: number) => !this.map.isWalkable(x, y);
+    return this.monsters.filter((m) =>
+      hasLineOfSight(this.player.x, this.player.y, m.x, m.y, los),
+    );
+  }
+
+  private applyFireblast(targets: Actor[]): boolean {
     this.log.push({ text: '烈焰从卷轴中喷涌而出！', tone: 'combat' });
     playSfx('zap');
     this.effects.push({ kind: 'quake', dur: 260 });
     for (const t of targets) {
       const damage = this.rng.int(8, 14);
       t.hp -= damage;
+      applyStatus(t, 'burn', 3, 2);
       this.effects.push(
         { kind: 'flash', x: t.x, y: t.y, color: '#f5803a' },
         { kind: 'float', x: t.x, y: t.y, text: `-${damage}`, color: '#f5803a' },
@@ -451,6 +642,69 @@ export class Game {
       this.log.push({ text: `火焰吞噬了${t.name}（${damage} 伤害）。`, tone: 'combat' });
       if (t.hp <= 0) this.killMonster(t);
     }
+    return true;
+  }
+
+  /** 背包界面：使用 / 装备指定槽位 */
+  private useInventorySlot(index: number): boolean {
+    const item = this.player.inventory[index];
+    if (!item) return false;
+    const def = itemDef(item);
+
+    if (item.category === 'potion' && def.effect === 'might') {
+      this.player.inventory.splice(index, 1);
+      this.mightUntil = this.turn + (def.duration ?? 20);
+      playSfx('quaff');
+      this.log.push({ text: `${def.name}下肚，余烬之力涌遍全身！攻击 +3。`, tone: 'good' });
+      return true;
+    }
+    if (item.category === 'potion' && def.heal) {
+      this.player.inventory.splice(index, 1);
+      const [lo, hi] = def.heal;
+      const amount = this.rng.int(lo ?? 0, hi ?? 0);
+      const before = this.player.hp;
+      this.player.hp = Math.min(this.player.maxHp, this.player.hp + amount);
+      playSfx('quaff');
+      this.log.push({
+        text: `喝下${def.name}，恢复了 ${this.player.hp - before} 点生命。`,
+        tone: 'good',
+      });
+      return true;
+    }
+    if (item.category === 'scroll' && def.effect === 'teleport') {
+      this.player.inventory.splice(index, 1);
+      return this.applyTeleport();
+    }
+    if (item.category === 'scroll' && def.effect === 'fireblast') {
+      const targets = this.visibleTargets();
+      if (targets.length === 0) {
+        this.log.push({ text: '视野内没有敌人，卷轴没有点燃的理由。', tone: 'info' });
+        return false;
+      }
+      this.player.inventory.splice(index, 1);
+      return this.applyFireblast(targets);
+    }
+    if (item.category === 'weapon' || item.category === 'armor') {
+      // 强制换装，原装备放回背包
+      const slot = item.category;
+      const current = this.player.equipment[slot];
+      this.player.equipment[slot] = item;
+      this.player.inventory.splice(index, 1);
+      if (current) this.player.inventory.push(current);
+      playSfx('pickup');
+      this.log.push({ text: `装备了${def.name}。`, tone: 'good' });
+      return true;
+    }
+    return false;
+  }
+
+  /** 背包界面：丢弃指定槽位到脚下 */
+  private dropInventorySlot(index: number): boolean {
+    const item = this.player.inventory[index];
+    if (!item) return false;
+    this.player.inventory.splice(index, 1);
+    this.groundItems.push({ x: this.player.x, y: this.player.y, item });
+    this.log.push({ text: `丢下了${itemDef(item).name}。`, tone: 'info' });
     return true;
   }
 
@@ -477,24 +731,29 @@ export class Game {
 
   private monsterTurns(): void {
     for (const m of [...this.monsters]) {
-      const act = decideMonsterAction({
-        self: m,
-        player: this.player,
-        isBlocked: (x, y) => !this.map.isWalkable(x, y),
-        rng: this.rng,
-      });
-      if (act.type === 'attack') {
-        this.monsterAttack(m);
-        if (this.dead) break;
-      } else if (act.type === 'move') {
-        const nx = m.x + act.dx;
-        const ny = m.y + act.dy;
-        const occupied =
-          this.monsterAt(nx, ny) !== undefined ||
-          (this.player.x === nx && this.player.y === ny);
-        if (!occupied && this.map.isWalkable(nx, ny)) {
-          m.x = nx;
-          m.y = ny;
+      // 能量制行动频率：加速怪一回合两次，减速怪隔回合一次
+      m.energy += actionsPerTurn(m);
+      while (m.energy >= 1 && !this.dead) {
+        m.energy -= 1;
+        const act = decideMonsterAction({
+          self: m,
+          player: this.player,
+          isBlocked: (x, y) => !this.map.isWalkable(x, y),
+          rng: this.rng,
+        });
+        if (act.type === 'attack') {
+          this.monsterAttack(m);
+          if (this.dead) break;
+        } else if (act.type === 'move') {
+          const nx = m.x + act.dx;
+          const ny = m.y + act.dy;
+          const occupied =
+            this.monsterAt(nx, ny) !== undefined ||
+            (this.player.x === nx && this.player.y === ny);
+          if (!occupied && this.map.isWalkable(nx, ny)) {
+            m.x = nx;
+            m.y = ny;
+          }
         }
       }
     }
@@ -516,6 +775,7 @@ export class Game {
       { kind: 'flash', x: this.player.x, y: this.player.y, color: '#d96a5a' },
     );
     this.log.push({ text: `${m.name}击中了你，造成 ${report.damage} 点伤害！`, tone: 'bad' });
+    this.applyOnHitStatus(m);
     if (report.killed) {
       this.dead = true;
       this.deathCause = m.name;
@@ -567,6 +827,7 @@ export class Game {
     this.dead = false;
     this.kills = 0;
     this.deathCause = '未知';
+    this.logCursor = null;
     this.mightUntil = 0;
     this.log = [{ text: '新的冒险开始了。你在余烬深渊的第 1 层醒来……', tone: 'info' }];
     Game.clearSave();
@@ -596,6 +857,22 @@ export class Game {
 
   private monsterAt(x: number, y: number): Actor | undefined {
     return this.monsters.find((m) => m.x === x && m.y === y);
+  }
+
+  /** 深渊生物的附加攻击：按物种概率施加状态 */
+  private applyOnHitStatus(m: Actor): void {
+    if (this.dead) return;
+    const roll = this.rng.next();
+    if (m.species === 'rat' && roll < 0.15) {
+      applyStatus(this.player, 'poison', 4, 1);
+      this.log.push({ text: '鼠人的咬伤让你中毒了！', tone: 'bad' });
+    } else if (m.species === 'ember_wraith' && roll < 0.35) {
+      applyStatus(this.player, 'burn', 3, 2);
+      this.log.push({ text: '余烬幽魂的火焰灼烧着你！', tone: 'bad' });
+    } else if (m.species === 'skeleton' && roll < 0.1) {
+      applyStatus(this.player, 'slow', 4, 0);
+      this.log.push({ text: '骷髅兵的寒气让你行动迟缓！', tone: 'bad' });
+    }
   }
 
   /** 供 main 把小地图画到指定画布上 */
