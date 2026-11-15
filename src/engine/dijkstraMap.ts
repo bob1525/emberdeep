@@ -37,28 +37,35 @@ export function computeDijkstra(
 ): DijkstraMap {
   const w = map.width;
   const h = map.height;
-  const dist = new Int32Array(w * h).fill(-1);
+  const size = w * h;
+  const dist = new Int32Array(size).fill(-1);
   const startIdx = oy * w + ox;
   dist[startIdx] = 0;
-  const queue: number[] = [startIdx];
+  // 平铺队列：每格至多入队一次（dist 去重保证），容量恰为格子总数
+  const queue = new Int32Array(size);
   let head = 0;
+  let tail = 0;
+  queue[tail] = startIdx;
+  tail += 1;
 
-  while (head < queue.length) {
+  while (head < tail) {
     const cur = queue[head];
     head += 1;
     if (cur === undefined) break;
     const curDist = dist[cur] ?? -1;
     const cx = cur % w;
-    const cy = Math.floor(cur / w);
+    const cy = (cur - cx) / w;
     for (const [dx, dy] of ALL_DIRS) {
       const nx = cx + dx;
       const ny = cy + dy;
-      if (!map.inBounds(nx, ny)) continue;
+      // 与 map.inBounds 同语义的内联边界检查（热路径省一次方法调用）
+      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
       const nIdx = ny * w + nx;
       if (dist[nIdx] !== -1) continue;
       if (!isPassable(nx, ny)) continue;
       dist[nIdx] = curDist + 1;
-      queue.push(nIdx);
+      queue[tail] = nIdx;
+      tail += 1;
     }
   }
   return { dist, width: w, height: h, ox, oy };
