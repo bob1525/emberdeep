@@ -1,7 +1,7 @@
 # Emberdeep 第二阶段长期工程 — 持续状态文件
 
 > 本文件是跨会话的唯一事实来源。每个里程碑的状态以此为准，未执行的绝不标记完成。
-> 最后更新：**M1-M8 全部 DONE**（本地 0ae5c15；f4556b4 起的 5 个 commit 待网络恢复推送——github.com:443 SNI 干扰复发，本地安全）
+> 最后更新：**M1-M8 全 DONE + 三轮后续优化**（火势接入 76617d4 / 平衡三轮 8bd927b+22179e0，393 tests；本地领先 3 commit，推送待网络恢复——github.com:443 SNI 干扰复发）
 
 ## ⚠️ 当前外部阻塞
 
@@ -25,7 +25,7 @@
 | M2 | DONE | canonical.ts（键排序/Map/Set 规范化/64 位双哈希/firstDifference）+ replay.ts v2（协议头/录制器/断点/分歧诊断） | replay 8（含断点续玩逐位一致/第 5 步分歧定位/协议拒绝/双实例隔离）+ canonical 6 | UI 导出按钮（记录） | — |
 | M3 | DONE | saveSchema.ts（版本/数值范围/瓦片/实体/物品类别↔目录/Boss species/引用完整性）；readSave 接线；未知版本拒绝；缺字段默认迁移 | saveSchema 11（损坏/旧档/悬空词缀警告/重复 ID 拒绝） | 逐字段 canonical 化 SaveData 序列化（M2 已覆盖哈希路径） | — |
 | M4 | DONE | **六域全部迁出**：SaveCodec + EntityRegistry + SceneBuilder（bc63506/7d1b8ee）→ InventoryEconomyService（249d548，13 方法/396 行）→ FloorService（34c13fb，6 方法/309 行）→ ReplayRunner（f06511c：runReplay/replayHashes 迁 src/replayRunner.ts、SaveData 契约入 saveCodec、ReplayRecorder 改结构化 ReplaySource——**engine/economy→game 反向依赖清零**）→ TurnEngine（0ae5c15，endPlayerTurn/monsterTurns/decideMonster/monsterAttack/Boss 特技/482 行）。**game.ts 2626→1917 行**；全部经最小 Ctx 接口注入、门面同名委托、**RNG 消耗顺序逐位一致**（replay 哈希一致性 8 例全程盯着）；依赖图见 work/architecture.md | 每次迁移后 380/380 全绿 | — | — |
-| M5 | DONE | scaling.ts ENDLESS 缩放 + 法师 HP 22→26 + simTurn bot 策略（捡拾/撤退/技能/商人绕行/targeting 开火）+ **P0 死循环修复**（撤退/交战/楼梯被堵三处回合冻结 → 兜底，5e9d127） | **500-seed 深跑数据**（work/sim-full-*.json，3×500 局，turnCap 2500）：1 层死亡 战士 42% / 游侠 74% / 法师 86% —— **无职业 1 层 100% 死亡（验收标准达成）**，梯度保持；死因 TOP：巨蝠/鼠人/中毒/骷髅兵；bot 无走位致绝对值偏陡（策略与数值分离归因） | — | — |
+| M5 | DONE | scaling.ts ENDLESS 缩放 + 法师 HP 22→26 + simTurn bot 策略 + **P0 死循环修复**（5e9d127）+ **平衡三轮**：R2 数值（鼠人 6HP/1攻、巨蝠 4HP/2攻、地刺/毒雾削弱，8bd927b）→ R3 autoExplore 批次内受伤即中断（22179e0） | **500-seed 三轮数据**（work/sim-analysis-round2.md）：1 层死亡 42/74/86% → 35/55/73% → **0/0/0%**（批次死亡模式清零；梯度严格保持；R3 后分母坍缩=bot 无下楼急迫度，已如实标注）；诊断方法：逐回合 HP 轨迹+死亡现场快照（死于批次内、包里剩 0.8 瓶药） | — | — |
 | M6 | DONE | simulator.ts turnCap 参数化 + **vitest.manual.config.ts**（深跑档仅手动，默认/CI 已排除）+ **回合冻结保险丝**（8 次停滞断开，本次触发 24 次=修复前的 24 个无限卡死种子） | 500-seed 全量落盘 4/4 tests ✅（2 分钟内完成，修复死循环后） | — | — |
 | M7 | DONE | pathfindingStats + scripts/analyze-sim.mjs（500-seed p50/p95/p99：单局耗时 mage p50=7ms/p95=106ms max=384ms；A* p50=19 max=723 无预算异常；快照 37-50KB）+ **tests/m7-benchmark.test.ts**：24 怪围城 150 回合最坏场景（回合推进 frozen≤8 / A*每回合 ≤24×2×2 / 单回合 <10ms 三重回归防线）+ 跳 15 层快照规模断言（<4 倍基线）。微残留：A* tie-break 微优化未做（预算上界已兜住性能）、超长会话内存画像未做（快照规模有界即代理） | m7-benchmark 2/2 ✅ + 500-seed perf 数据 | — | — |
 | M8 | DONE | **f4556b4**：README 全面翻新（在线地址/特性/键位/确定性核心/模拟器/已知限制）+ CHANGELOG + work/architecture.md 依赖图（import 机械提取）；**浏览器验收 13/13 全通过**（远程命中/背包拾取丢弃/商人买卖/祭坛/陷阱/升级三选一/倍速/死亡画面/中毒 tick）；main.ts `window.__emberdeep` 测试钩子 | browser-acceptance.md 13/13 | — | — |

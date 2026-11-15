@@ -1,6 +1,6 @@
 {
  "summary": {
-  "generatedAt": "2026-11-15T12:03:50.860Z",
+  "generatedAt": "2026-11-15T12:26:27.646Z",
   "seedsPerClass": 2,
   "classes": {
    "warrior": {
@@ -18,7 +18,7 @@
     "avgPotions": 0,
     "avgSnapshotBytes": 46815,
     "avgAstarCallsPerRun": 73,
-    "avgDurationMs": 214,
+    "avgDurationMs": 263,
     "topDeathCauses": "（无死亡）"
    },
    "ranger": {
@@ -36,7 +36,7 @@
     "avgPotions": 2,
     "avgSnapshotBytes": 47310,
     "avgAstarCallsPerRun": 64,
-    "avgDurationMs": 165,
+    "avgDurationMs": 187,
     "topDeathCauses": "（无死亡）"
    },
    "mage": {
@@ -54,7 +54,7 @@
     "avgPotions": 0,
     "avgSnapshotBytes": 41012,
     "avgAstarCallsPerRun": 37,
-    "avgDurationMs": 66,
+    "avgDurationMs": 67,
     "topDeathCauses": "（无死亡）"
    }
   }
@@ -73,7 +73,7 @@
    "level": 3,
    "potions": 0,
    "snapshotBytes": 45177,
-   "durationMs": 101,
+   "durationMs": 134,
    "astarCalls": 38
   },
   {
@@ -89,7 +89,7 @@
    "level": 3,
    "potions": 0,
    "snapshotBytes": 48453,
-   "durationMs": 327,
+   "durationMs": 391,
    "astarCalls": 108
   },
   {
@@ -105,7 +105,7 @@
    "level": 2,
    "potions": 4,
    "snapshotBytes": 46744,
-   "durationMs": 271,
+   "durationMs": 306,
    "astarCalls": 92
   },
   {
@@ -121,7 +121,7 @@
    "level": 3,
    "potions": 0,
    "snapshotBytes": 47876,
-   "durationMs": 58,
+   "durationMs": 67,
    "astarCalls": 36
   },
   {
@@ -137,7 +137,7 @@
    "level": 2,
    "potions": 0,
    "snapshotBytes": 34798,
-   "durationMs": 72,
+   "durationMs": 74,
    "astarCalls": 41
   },
   {
@@ -153,7 +153,7 @@
    "level": 3,
    "potions": 0,
    "snapshotBytes": 47225,
-   "durationMs": 59,
+   "durationMs": 60,
    "astarCalls": 32
   }
  ]
