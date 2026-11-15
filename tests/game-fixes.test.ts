@@ -90,6 +90,55 @@ describe('P0-7 自动探索预算', () => {
   });
 });
 
+describe('P0-7 自动探索批次内受伤即中断', () => {
+  /** 把玩家周围 (2r+1)² 范围全部点燃（公共 @internal debugIgniteAt；墙/不可燃格自动无效） */
+  function igniteAround(game: Game, r = 2): void {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        game.debugIgniteAt(game.player.x + dx, game.player.y + dy);
+      }
+    }
+  }
+
+  it('批次内受到 HP 损失（火伤）→ 本批立即停止（1 步 << 预算）且给出中断原因', () => {
+    const game = startGame(777);
+    const hpBefore = game.player.hp;
+    const before = game.turn;
+    igniteAround(game);
+    game.handleAction({ type: 'autoExplore' });
+    // 第一步踏进燃烧格 → 回合结算火伤 → 批次立刻中断（断言 1 步即证未跑满预算）
+    expect(game.turn - before).toBe(1);
+    expect(game.player.hp).toBeLessThan(hpBefore);
+    expect(
+      game.allLog().some((e) => e.text.includes('你受到了伤害，自动探索中断！')),
+    ).toBe(true);
+  });
+
+  it('受伤中断后再按 o 从中断处继续（P0-7 续批语义不被破坏）', () => {
+    const game = startGame(777);
+    igniteAround(game);
+    game.handleAction({ type: 'autoExplore' });
+    const afterInterrupt = game.turn;
+    game.handleAction({ type: 'autoExplore' });
+    // 续批从断点继续推进：仍被火伤中断，但确实又走了一步
+    expect(game.turn).toBeGreaterThan(afterInterrupt);
+    const interrupts = game
+      .allLog()
+      .filter((e) => e.text.includes('你受到了伤害，自动探索中断！'));
+    expect(interrupts.length).toBe(2);
+  });
+
+  it('不受伤的批次行为与改前一致（预算内正常停车，无受伤中断提示）', () => {
+    const game = startGame(77);
+    const before = game.turn;
+    game.handleAction({ type: 'autoExplore' });
+    expect(game.turn - before).toBeLessThanOrEqual(26);
+    expect(
+      game.allLog().some((e) => e.text.includes('你受到了伤害，自动探索中断！')),
+    ).toBe(false);
+  });
+});
+
 describe('P1-11 种子语义', () => {
   it('固定种子下两次开局的初始状态完全一致', () => {
     const a = startGame(424242);

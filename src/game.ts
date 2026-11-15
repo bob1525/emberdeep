@@ -930,7 +930,8 @@ export class Game {
 
   /**
    * 自动探索（P0-7）：分批推进，每批最多 AUTO_EXPLORE_BUDGET 步。
-   * 中断条件：视野内出现敌人 / 走到商人、奇遇建筑、已知陷阱、楼梯前 /
+   * 中断条件：视野内出现敌人 / 批次内受到任何 HP 损失（陷阱/毒/火/伏击）/
+   * 走到商人、奇遇建筑、已知陷阱、楼梯前 /
    * 玩家死亡 / 离开 play 模式 / 无路可走。批量存档由 persist 节流。
    */
   private autoStep(): void {
@@ -997,10 +998,19 @@ export class Game {
         this.autoPath = null;
         continue;
       }
+      const hpBefore = this.player.hp;
       if (this.tryPlayerMove(dx, dy)) {
         this.autoPath.shift();
         steps += 1;
         this.endPlayerTurn();
+        // 批次内受伤即中断（陷阱/毒/火/伏击）：纯 HP 比较，天然确定。
+        // 与「发现敌人中断」同语义——控制权交回正常决策（喝药/撤退判定），
+        // 再按 o 从中断处继续（P0-7 续批语义不变）。
+        if (!this.dead && this.player.hp < hpBefore) {
+          this.autoExploring = false;
+          this.log.push({ text: '你受到了伤害，自动探索中断！', tone: 'info' });
+          return;
+        }
         // 倍速：每 speedMult 步才做一次批量存档（高频 turn 时降低 IO 压力）
       } else {
         // 被堵住：重新寻路
