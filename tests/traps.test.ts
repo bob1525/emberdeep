@@ -103,13 +103,15 @@ describe('triggerTrap', () => {
     expect(run(77)).toEqual(run(77));
   });
 
-  it('地刺：伤害 3-6，无状态，不传送', () => {
+  it('地刺：伤害 2-4，无状态，不传送', () => {
+    // 第二轮早期死亡率收敛（work/sim-analysis-round2.md）：3-6→2-4，
+    // 削减自动探索批次内无法反应的被动消耗
     const rng = new Rng(9);
     for (let i = 0; i < 300; i++) {
       const r = triggerTrap('spikes', rng);
       expect(r.kind).toBe('spikes');
-      expect(r.damage).toBeGreaterThanOrEqual(3);
-      expect(r.damage).toBeLessThanOrEqual(6);
+      expect(r.damage).toBeGreaterThanOrEqual(2);
+      expect(r.damage).toBeLessThanOrEqual(4);
       expect(r.status).toBeNull();
       expect(r.teleport).toBe(false);
       expect(r.message.length).toBeGreaterThan(0);
@@ -132,11 +134,13 @@ describe('triggerTrap', () => {
     expect(rolled.size).toBe(5); // 4..8 每个值都掷到过
   });
 
-  it('毒雾符文：无直接伤害，附加中毒（5 回合 power 2）', () => {
+  it('毒雾符文：无直接伤害，附加中毒（5 回合 power 1）', () => {
+    // 第二轮早期死亡率收敛（work/sim-analysis-round2.md）：毒雾总伤 10→5，
+    // 保持 5 回合持续压力、减半对脆皮的消耗爆发
     const r = triggerTrap('poisonGas', new Rng(3));
     expect(r.kind).toBe('poisonGas');
     expect(r.damage).toBe(0);
-    expect(r.status).toEqual({ kind: 'poison', turns: 5, power: 2 });
+    expect(r.status).toEqual({ kind: 'poison', turns: 5, power: 1 });
     expect(r.teleport).toBe(false);
     expect(r.message.length).toBeGreaterThan(0);
   });

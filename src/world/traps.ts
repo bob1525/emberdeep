@@ -96,12 +96,12 @@ export interface TrapTriggerReport {
   message: string;
 }
 
-/** 地刺直接伤害区间 [min, max]（含端点） */
-const SPIKES_DAMAGE: [number, number] = [3, 6];
+/** 地刺直接伤害区间 [min, max]（含端点）（第二轮早期死亡率收敛：3-6→2-4，压制自动探索批次内的被动消耗） */
+const SPIKES_DAMAGE: [number, number] = [2, 4];
 /** 火焰喷口直接伤害区间 [min, max]（含端点） */
 const FLAME_DAMAGE: [number, number] = [4, 8];
-/** 毒雾附加的中毒参数：5 回合、每回合 2 点 */
-const POISON: { kind: StatusKind; turns: number; power: number } = { kind: 'poison', turns: 5, power: 2 };
+/** 毒雾附加的中毒参数：5 回合、每回合 1 点（第二轮早期死亡率收敛：10 点总伤对 26HP 法师过重，减半消耗压力） */
+const POISON: { kind: StatusKind; turns: number; power: number } = { kind: 'poison', turns: 5, power: 1 };
 /** 火焰附加的燃烧参数：3 回合、每回合 2 点 */
 const BURN: { kind: StatusKind; turns: number; power: number } = { kind: 'burn', turns: 3, power: 2 };
 

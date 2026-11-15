@@ -24,6 +24,9 @@ export interface MonsterTemplate {
  * 怪物图鉴：species → 模板。
  * 数值设计（以玩家 30HP / 攻击 4 / 防御 1 为基准）：
  * - 同层物种有定位梯度：鼠人皮厚迟钝，巨蝠脆弱敏捷、感知更远；
+ * - 第 1 层压制：鼠人攻 1 血 6 / 巨蝠攻 2 血 4——模拟数据显示玩家在自动探索批次内
+ *   只能被动承伤，低层小额消耗伤害与战斗时长是早期死亡率的主导项
+ *   （500-seed 数据见 work/sim-analysis-round2.md）；
  * - 深层物种的生命/攻击/防御/经验/感知全面不低于浅层物种；
  * - 余烬幽魂是第 5 层精英：攻高防厚感知远，经验值显著高于食人魔。
  */
@@ -33,8 +36,8 @@ export const MONSTERS: Record<string, MonsterTemplate> = {
     name: '鼠人',
     glyph: 'r',
     color: '#b0a080',
-    maxHp: 7,
-    attack: 2,
+    maxHp: 6,
+    attack: 1,
     defense: 0,
     xpValue: 3,
     senseRadius: 5,
@@ -44,8 +47,8 @@ export const MONSTERS: Record<string, MonsterTemplate> = {
     name: '巨蝠',
     glyph: 'B',
     color: '#8f7fb8',
-    maxHp: 5,
-    attack: 3,
+    maxHp: 4,
+    attack: 2,
     defense: 0,
     xpValue: 4,
     senseRadius: 7,
