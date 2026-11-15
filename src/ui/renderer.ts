@@ -47,11 +47,16 @@ export type Effect =
   | { kind: 'flash'; x: number; y: number; color: string; dur?: number }
   | { kind: 'burst'; x: number; y: number; color: string; dur?: number }
   | { kind: 'quake'; dur?: number }
-  | { kind: 'flashScreen'; color: string; dur?: number }
+  /** 全屏闪烁；alpha 可选（默认 0.35），升级等柔和高亮调低用 */
+  | { kind: 'flashScreen'; color: string; dur?: number; alpha?: number }
   /** 角色从 (fromX,fromY) 滑行到 (toX,toY) */
   | { kind: 'step'; fromX: number; fromY: number; toX: number; toY: number; glyph: string; color: string; dur?: number }
   /** 攻击突进：向 (dx,dy) 顶一下再收回 */
-  | { kind: 'lunge'; x: number; y: number; dx: number; dy: number; glyph: string; color: string; dur?: number };
+  | { kind: 'lunge'; x: number; y: number; dx: number; dy: number; glyph: string; color: string; dur?: number }
+  /** 受击红晕：屏幕边缘红色 vignette 脉冲一次（玩家受伤反馈） */
+  | { kind: 'hurt'; dur?: number }
+  /** 下楼转场：全屏快速压黑 → 新层淡入 */
+  | { kind: 'fade'; dur?: number };
 
 interface ActiveEffect {
   effect: Effect;
@@ -101,6 +106,22 @@ function tileHash(x: number, y: number): number {
   return (h >>> 0) % 1000;
 }
 
+// ---------- 火焰光源（视觉升级） ----------
+/** 明火点光源半径（格） */
+const FIRE_LIGHT_RADIUS = 3.5;
+/** 受光格的最大叠加强度（'lighter' 加性暖色，压住上限防多火源叠加过曝） */
+const FIRE_LIGHT_MAX_ALPHA = 0.34;
+/** 强度量化档位数：查表取预生成 rgba 字符串，避免逐格拼接每帧分配 */
+const FIRE_LIGHT_STEPS = 32;
+/** 火焰橙（与 sceneBuilder 的 FIRE_COLOR #f5803a 同源） */
+const FIRE_LIGHT_LUT: string[] = (() => {
+  const lut: string[] = [];
+  for (let i = 0; i <= FIRE_LIGHT_STEPS; i++) {
+    lut.push(`rgba(245, 128, 58, ${((i / FIRE_LIGHT_STEPS) * FIRE_LIGHT_MAX_ALPHA).toFixed(3)})`);
+  }
+  return lut;
+})();
+
 const WALL_GLYPHS = ['#', '▓', '▒'];
 const FLOOR_GLYPHS = ['·', ',', '`'];
 const FONT = '18px Consolas, "Courier New", monospace';
@@ -117,9 +138,14 @@ export class Renderer {
   private lastDpr = 0;
   private vignette: CanvasGradient | null = null;
   private vignetteKey = '';
+  /** 受击红晕渐变：按尺寸缓存，避免每帧新建 gradient */
+  private hurtVignette: CanvasGradient | null = null;
+  private hurtKey = '';
   /** 记忆层离屏缓存：只有 explored 变化/换层/尺寸变化时才重绘 */
   private staticLayer: HTMLCanvasElement | null = null;
   private staticKey = '';
+  /** 火焰光照强度场：每帧重算的动态层（绝不进离屏缓存），复用缓冲避免每帧分配 */
+  private fireLight: Float32Array | null = null;
 
   constructor(private canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext('2d');
@@ -242,6 +268,10 @@ export class Renderer {
       this.drawGlyph(hz.x, hz.y, cellW, hz.glyph, color);
     }
 
+    // 火焰光源照明（视觉升级）：可见明火作为点光源向四周溢出暖色光晕，
+    // 画在物品/角色之下（地形受光），动态层绝不进离屏缓存
+    this.drawFireLight(scene, cellW, now);
+
     for (const it of scene.items) {
       if (visible.has(`${it.x},${it.y}`)) this.drawGlyph(it.x, it.y, cellW, it.glyph, it.color);
     }
@@ -267,6 +297,80 @@ export class Renderer {
   private drawGlyph(x: number, y: number, cellW: number, glyph: string, color: string): void {
     this.ctx.fillStyle = color;
     this.ctx.fillText(glyph, x * cellW + cellW / 2, y * CELL_H + CELL_H / 2);
+  }
+
+  /**
+   * 明火点光源照明（视觉升级）：把当前可见的火苗格当作点光源，向半径
+   * FIRE_LIGHT_RADIUS 内「可见或已探索」的格子做加性暖色提亮（composite
+   * 'lighter'，色相偏向火焰橙），强度与火苗字形的呼吸 pulse 同频闪烁。
+   * 红线契约：
+   * - 只有玩家看得见的明火才发光——视野外的火不产生光晕，杜绝用光照
+   *   反推视野外火情；
+   * - 受光格只落在 visible/explored 上，未探索层保持黑，绝不揭示新信息；
+   * - 光照是每帧重算的动态层，绝不进离屏静态缓存（缓存失效语义不变）。
+   * 性能：强度场复用 Float32Array（无每帧分配）；光源数 ≤ 层内明火格数，
+   * 每个光源只触达半径邻域，绘制限定在光源包围盒内，颜色走预生成查表。
+   */
+  private drawFireLight(scene: Scene, cellW: number, now: number): void {
+    const { map, visible, explored, hazards } = scene;
+    const w = map.width;
+    const h = map.height;
+    if (this.fireLight === null || this.fireLight.length !== w * h) {
+      this.fireLight = new Float32Array(w * h);
+    }
+    const field = this.fireLight;
+    field.fill(0);
+
+    // 累加强度场（多火源自然叠合，单格封顶防过曝），同时记录受光包围盒
+    let lit = false;
+    let minX = w;
+    let minY = h;
+    let maxX = -1;
+    let maxY = -1;
+    const reach = Math.ceil(FIRE_LIGHT_RADIUS);
+    for (const hz of hazards) {
+      if (!hz.pulse) continue; // 烟字不是光源
+      if (!visible.has(`${hz.x},${hz.y}`)) continue;
+      lit = true;
+      // 与火苗字形 pulse 同频同相的呼吸闪烁
+      const flicker = 0.8 + 0.2 * Math.sin(now / 170 + tileHash(hz.x, hz.y));
+      const x0 = Math.max(0, hz.x - reach);
+      const x1 = Math.min(w - 1, hz.x + reach);
+      const y0 = Math.max(0, hz.y - reach);
+      const y1 = Math.min(h - 1, hz.y + reach);
+      if (x0 < minX) minX = x0;
+      if (y0 < minY) minY = y0;
+      if (x1 > maxX) maxX = x1;
+      if (y1 > maxY) maxY = y1;
+      for (let y = y0; y <= y1; y++) {
+        for (let x = x0; x <= x1; x++) {
+          const dist = Math.hypot(x - hz.x, y - hz.y);
+          if (dist >= FIRE_LIGHT_RADIUS) continue;
+          const fall = 1 - dist / FIRE_LIGHT_RADIUS;
+          const idx = y * w + x;
+          const next = (field[idx] ?? 0) + fall * fall * flicker;
+          field[idx] = next > 1 ? 1 : next;
+        }
+      }
+    }
+    if (!lit || maxX < minX) return;
+
+    // 加性暖色叠加（画在物品/角色之下，只提亮地形与火苗/烟字本身）
+    this.ctx.globalCompositeOperation = 'lighter';
+    for (let y = minY; y <= maxY; y++) {
+      for (let x = minX; x <= maxX; x++) {
+        // 红线：火光只落在可见/已探索格上，未探索层保持黑
+        const key = `${x},${y}`;
+        if (!visible.has(key) && !explored.has(key)) continue;
+        const v = field[y * w + x] ?? 0;
+        if (v < 0.03) continue;
+        const color = FIRE_LIGHT_LUT[Math.round(v * FIRE_LIGHT_STEPS)] ?? FIRE_LIGHT_LUT[0];
+        if (!color) continue;
+        this.ctx.fillStyle = color;
+        this.ctx.fillRect(x * cellW, y * CELL_H, cellW, CELL_H);
+      }
+    }
+    this.ctx.globalCompositeOperation = 'source-over';
   }
 
   /** 离屏缓存层：背景 + 记忆中的暗色地形（不含可见层与任何动态元素） */
@@ -355,6 +459,29 @@ export class Renderer {
     this.ctx.fillRect(0, 0, widthPx, heightPx);
   }
 
+  /** 受击红晕：屏幕边缘的深红渐变（与 CRT 暗角同款按尺寸缓存），strength 为脉冲强度 */
+  private drawHurtVignette(strength: number): void {
+    const key = `${this.lastW}x${this.lastH}`;
+    if (!this.hurtVignette || this.hurtKey !== key) {
+      const g = this.ctx.createRadialGradient(
+        this.lastW / 2,
+        this.lastH / 2,
+        Math.min(this.lastW, this.lastH) * 0.38,
+        this.lastW / 2,
+        this.lastH / 2,
+        Math.max(this.lastW, this.lastH) * 0.74,
+      );
+      g.addColorStop(0, 'rgba(150, 22, 16, 0)');
+      g.addColorStop(1, 'rgba(150, 22, 16, 0.62)');
+      this.hurtVignette = g;
+      this.hurtKey = key;
+    }
+    this.ctx.globalAlpha = strength;
+    this.ctx.fillStyle = this.hurtVignette;
+    this.ctx.fillRect(0, 0, this.lastW, this.lastH);
+    this.ctx.globalAlpha = 1;
+  }
+
   // ---------- 效果层 ----------
 
   private drawEffects(now: number): void {
@@ -414,8 +541,27 @@ export class Renderer {
           break;
         }
         case 'flashScreen': {
-          this.ctx.globalAlpha = 0.35 * ease;
+          this.ctx.globalAlpha = (effect.alpha ?? 0.35) * ease;
           this.ctx.fillStyle = effect.color;
+          this.ctx.fillRect(0, 0, this.lastW, this.lastH);
+          this.ctx.globalAlpha = 1;
+          break;
+        }
+        case 'hurt': {
+          // 受击红晕：前 22% 快速亮起、其余缓速退去（单次脉冲）
+          const rise = 0.22;
+          const strength = t < rise ? t / rise : 1 - (t - rise) / (1 - rise);
+          this.drawHurtVignette(strength);
+          break;
+        }
+        case 'fade': {
+          // 下楼转场：快速压黑 → 黑场驻留一瞬 → 新层淡入
+          let black: number;
+          if (t < 0.42) black = t / 0.42;
+          else if (t < 0.55) black = 1;
+          else black = 1 - (t - 0.55) / 0.45;
+          this.ctx.globalAlpha = black;
+          this.ctx.fillStyle = '#000000';
           this.ctx.fillRect(0, 0, this.lastW, this.lastH);
           this.ctx.globalAlpha = 1;
           break;

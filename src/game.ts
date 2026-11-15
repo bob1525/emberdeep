@@ -1588,7 +1588,11 @@ export class Game {
       this.player.hp = Math.min(this.player.maxHp, this.player.hp + heal);
       this.log.push({ text: `升到了 ${this.level} 级！选择一项成长：`, tone: 'good' });
       playSfx('levelup');
-      this.effects.push({ kind: 'flashScreen', color: '#f5b04c', dur: 450 });
+      // 升级演出（视觉升级）：金色 burst 从玩家位置炸开 + 柔和暖金闪屏，比单次闪屏更有仪式感
+      this.effects.push(
+        { kind: 'burst', x: this.player.x, y: this.player.y, color: '#f5b04c', dur: 500 },
+        { kind: 'flashScreen', color: '#f5b04c', dur: 400, alpha: 0.24 },
+      );
       need = this.xpToNext();
     }
     // 有待处理升级且当前没有展示中的候选 → 立即 offer 一组
@@ -1670,7 +1674,12 @@ export class Game {
 
   /** 下楼推进（M4 委托 FloorService）：站在楼梯上才能下一层 */
   private descend(): boolean {
-    return this.floorService().descend();
+    const ok = this.floorService().descend();
+    if (ok) {
+      // 下楼转场（视觉升级）：快速压黑 → 新层淡入（结算已完成，转场只遮画面不拦输入）
+      this.effects.push({ kind: 'fade', dur: 600 });
+    }
+    return ok;
   }
 
   // ---------- 楼层与渲染 ----------
@@ -1731,6 +1740,8 @@ export class Game {
         text: `-${report.damage}`,
         color: '#d96a5a',
       });
+      // 受击红晕（视觉升级）：陷阱伤害的屏幕边缘反馈
+      this.effects.push({ kind: 'hurt', dur: 350 });
     }
     if (report.status) {
       applyStatus(this.player, report.status.kind, report.status.turns, report.status.power);

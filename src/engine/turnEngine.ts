@@ -245,6 +245,8 @@ export class TurnEngine {
         { kind: 'flash', x: ctx.player.x, y: ctx.player.y, color: '#f5803a' },
         { kind: 'float', x: ctx.player.x, y: ctx.player.y, text: `-${FIRE_TICK_DAMAGE}`, color: '#f5803a' },
       );
+      // 受击红晕（视觉升级）：火伤的屏幕边缘反馈
+      ctx.effects.push({ kind: 'hurt', dur: 350 });
       ctx.log(`烈火灼烧着你（${FIRE_TICK_DAMAGE} 伤害）。`, 'bad');
       if (ctx.player.hp <= 0) {
         ctx.setDead(true);
@@ -492,6 +494,8 @@ export class TurnEngine {
       { kind: 'float', x: ctx.player.x, y: ctx.player.y, text: `-${report.damage}`, color: '#d96a5a' },
       { kind: 'flash', x: ctx.player.x, y: ctx.player.y, color: '#d96a5a' },
     );
+    // 受击红晕（视觉升级）：玩家受伤的屏幕边缘反馈
+    ctx.effects.push({ kind: 'hurt', dur: 350 });
     ctx.log(`${m.name}击中了你，造成 ${report.damage} 点伤害！`, 'bad');
     this.applyOnHitStatus(m);
     if (report.killed) {
