@@ -50,6 +50,19 @@ export const ITEMS: Record<string, ItemDef> = {
     description: '恢复 12-20 点生命的深红药剂，深渊中的救命稻草。',
     heal: [12, 20],
   },
+  // 高级治疗药水：治疗线第三档（小型 6-10 → 标准 12-20 → 高级 18-30，均值 +50%）。
+  // 喝药逻辑按 heal[1] 择优（受伤时优先大瓶），本条目无需任何分支改动即可走通；
+  // 掉落权重用 growth 而非 minDepth 做深层偏向（深层权重 5 倍于浅层，
+  // 且与经济侧 STOCK_MIN_DEPTH 对未收录条目"视为第 1 层"的门控语义保持一致）。
+  greater_healing: {
+    catalogId: 'greater_healing',
+    category: 'potion',
+    name: '高级治疗药水',
+    glyph: '!',
+    color: '#ff3d6e',
+    description: '恢复 18-30 点生命的璀璨洋红药剂，深渊老手的底气。',
+    heal: [18, 30],
+  },
   might: {
     catalogId: 'might',
     category: 'potion',
@@ -186,11 +199,13 @@ interface LootWeight {
 
 /**
  * 掉落权重表：depth 越大，武器/护甲/高级药水权重越高。
- * war_axe 与 plate_armor 从第 3 层才出现；匕首/皮甲在深层自然淘汰。
+ * war_axe 与 plate_armor 从第 3 层才出现；匕首/皮甲在深层自然淘汰；
+ * greater_healing 全深度可用但每层增值，深层占比约 9%（浅层约 3.6%）。
  */
 const LOOT_WEIGHTS: Record<string, LootWeight> = {
   minor_healing: { base: 10, minDepth: 1, growth: 0, decay: 0 },
   healing: { base: 3, minDepth: 1, growth: 1, decay: 0 },
+  greater_healing: { base: 1, minDepth: 1, growth: 1, decay: 0 },
   might: { base: 2, minDepth: 1, growth: 1, decay: 0 },
   teleport: { base: 2, minDepth: 1, growth: 1, decay: 0 },
   fireblast: { base: 1, minDepth: 1, growth: 1, decay: 0 },

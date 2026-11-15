@@ -15,8 +15,8 @@
    "gold": 0,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 45261,
-   "durationMs": 247,
+   "snapshotBytes": 45255,
+   "durationMs": 182,
    "astarCalls": 24
   },
   {
@@ -31,8 +31,8 @@
    "gold": 35,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46191,
-   "durationMs": 97,
+   "snapshotBytes": 46211,
+   "durationMs": 79,
    "astarCalls": 67
   },
   {
@@ -47,8 +47,8 @@
    "gold": 33,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 33938,
-   "durationMs": 217,
+   "snapshotBytes": 33944,
+   "durationMs": 158,
    "astarCalls": 136
   },
   {
@@ -63,8 +63,8 @@
    "gold": 16,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 37212,
-   "durationMs": 394,
+   "snapshotBytes": 37215,
+   "durationMs": 349,
    "astarCalls": 130
   },
   {
@@ -79,8 +79,8 @@
    "gold": 0,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 34278,
-   "durationMs": 274,
+   "snapshotBytes": 34268,
+   "durationMs": 294,
    "astarCalls": 134
   },
   {
@@ -95,8 +95,8 @@
    "gold": 52,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 39823,
-   "durationMs": 113,
+   "snapshotBytes": 39820,
+   "durationMs": 133,
    "astarCalls": 61
   },
   {
@@ -111,8 +111,8 @@
    "gold": 65,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 40713,
-   "durationMs": 63,
+   "snapshotBytes": 40729,
+   "durationMs": 60,
    "astarCalls": 60
   },
   {
@@ -127,8 +127,8 @@
    "gold": 46,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 43104,
-   "durationMs": 32,
+   "snapshotBytes": 43106,
+   "durationMs": 34,
    "astarCalls": 46
   },
   {
@@ -143,8 +143,8 @@
    "gold": 22,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 42512,
-   "durationMs": 174,
+   "snapshotBytes": 42528,
+   "durationMs": 166,
    "astarCalls": 141
   },
   {
@@ -159,8 +159,8 @@
    "gold": 54,
    "level": 4,
    "potions": 4,
-   "snapshotBytes": 45828,
-   "durationMs": 276,
+   "snapshotBytes": 45825,
+   "durationMs": 206,
    "astarCalls": 133
   },
   {
@@ -175,8 +175,8 @@
    "gold": 54,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47476,
-   "durationMs": 328,
+   "snapshotBytes": 47486,
+   "durationMs": 339,
    "astarCalls": 177
   },
   {
@@ -191,8 +191,8 @@
    "gold": 71,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47897,
-   "durationMs": 196,
+   "snapshotBytes": 47900,
+   "durationMs": 170,
    "astarCalls": 166
   },
   {
@@ -207,8 +207,8 @@
    "gold": 57,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 39627,
-   "durationMs": 256,
+   "snapshotBytes": 39633,
+   "durationMs": 209,
    "astarCalls": 157
   },
   {
@@ -223,8 +223,8 @@
    "gold": 46,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 37027,
-   "durationMs": 215,
+   "snapshotBytes": 37021,
+   "durationMs": 203,
    "astarCalls": 195
   },
   {
@@ -239,8 +239,8 @@
    "gold": 22,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 35366,
-   "durationMs": 126,
+   "snapshotBytes": 35367,
+   "durationMs": 125,
    "astarCalls": 65
   },
   {
@@ -255,8 +255,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46121,
-   "durationMs": 233,
+   "snapshotBytes": 46125,
+   "durationMs": 239,
    "astarCalls": 172
   },
   {
@@ -271,8 +271,8 @@
    "gold": 170,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 47335,
-   "durationMs": 262,
+   "snapshotBytes": 47334,
+   "durationMs": 268,
    "astarCalls": 149
   },
   {
@@ -287,7 +287,7 @@
    "gold": 12,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 43786,
+   "snapshotBytes": 43789,
    "durationMs": 465,
    "astarCalls": 137
   },
@@ -303,8 +303,8 @@
    "gold": 16,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 43782,
-   "durationMs": 175,
+   "snapshotBytes": 43796,
+   "durationMs": 163,
    "astarCalls": 138
   },
   {
@@ -319,8 +319,8 @@
    "gold": 34,
    "level": 6,
    "potions": 2,
-   "snapshotBytes": 45885,
-   "durationMs": 208,
+   "snapshotBytes": 45895,
+   "durationMs": 195,
    "astarCalls": 158
   },
   {
@@ -335,8 +335,8 @@
    "gold": 3,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 42225,
-   "durationMs": 167,
+   "snapshotBytes": 42235,
+   "durationMs": 157,
    "astarCalls": 115
   },
   {
@@ -351,8 +351,8 @@
    "gold": 109,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 37286,
-   "durationMs": 210,
+   "snapshotBytes": 37282,
+   "durationMs": 207,
    "astarCalls": 175
   },
   {
@@ -367,8 +367,8 @@
    "gold": 21,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46641,
-   "durationMs": 111,
+   "snapshotBytes": 46642,
+   "durationMs": 117,
    "astarCalls": 67
   },
   {
@@ -383,8 +383,8 @@
    "gold": 17,
    "level": 2,
    "potions": 0,
-   "snapshotBytes": 47216,
-   "durationMs": 122,
+   "snapshotBytes": 47222,
+   "durationMs": 119,
    "astarCalls": 81
   },
   {
@@ -399,8 +399,8 @@
    "gold": 24,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 45844,
-   "durationMs": 161,
+   "snapshotBytes": 45851,
+   "durationMs": 142,
    "astarCalls": 189
   },
   {
@@ -410,14 +410,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2523,
-   "kills": 18,
-   "gold": 45,
+   "turns": 2516,
+   "kills": 17,
+   "gold": 17,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47631,
-   "durationMs": 264,
-   "astarCalls": 156
+   "snapshotBytes": 46984,
+   "durationMs": 228,
+   "astarCalls": 142
   },
   {
    "seed": 351,
@@ -431,7 +431,7 @@
    "gold": 43,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 39652,
+   "snapshotBytes": 39664,
    "durationMs": 45,
    "astarCalls": 80
   },
@@ -447,8 +447,8 @@
    "gold": 86,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 44752,
-   "durationMs": 211,
+   "snapshotBytes": 44753,
+   "durationMs": 219,
    "astarCalls": 153
   },
   {
@@ -463,8 +463,8 @@
    "gold": 0,
    "level": 1,
    "potions": 0,
-   "snapshotBytes": 34858,
-   "durationMs": 61,
+   "snapshotBytes": 34860,
+   "durationMs": 49,
    "astarCalls": 1
   },
   {
@@ -479,8 +479,8 @@
    "gold": 16,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48183,
-   "durationMs": 140,
+   "snapshotBytes": 48188,
+   "durationMs": 112,
    "astarCalls": 110
   },
   {
@@ -495,8 +495,8 @@
    "gold": 0,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46034,
-   "durationMs": 253,
+   "snapshotBytes": 46047,
+   "durationMs": 210,
    "astarCalls": 144
   },
   {
@@ -511,8 +511,8 @@
    "gold": 58,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 49459,
-   "durationMs": 308,
+   "snapshotBytes": 49461,
+   "durationMs": 251,
    "astarCalls": 175
   },
   {
@@ -527,8 +527,8 @@
    "gold": 59,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 48696,
-   "durationMs": 250,
+   "snapshotBytes": 48686,
+   "durationMs": 269,
    "astarCalls": 172
   },
   {
@@ -543,7 +543,7 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45787,
+   "snapshotBytes": 45784,
    "durationMs": 139,
    "astarCalls": 93
   },
@@ -559,8 +559,8 @@
    "gold": 78,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 36429,
-   "durationMs": 350,
+   "snapshotBytes": 36433,
+   "durationMs": 335,
    "astarCalls": 191
   },
   {
@@ -575,8 +575,8 @@
    "gold": 115,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 44298,
-   "durationMs": 62,
+   "snapshotBytes": 44293,
+   "durationMs": 53,
    "astarCalls": 73
   },
   {
@@ -591,8 +591,8 @@
    "gold": 78,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 45845,
-   "durationMs": 145,
+   "snapshotBytes": 45861,
+   "durationMs": 154,
    "astarCalls": 103
   },
   {
@@ -608,7 +608,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 45314,
-   "durationMs": 108,
+   "durationMs": 126,
    "astarCalls": 88
   },
   {
@@ -623,8 +623,8 @@
    "gold": 21,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 42692,
-   "durationMs": 93,
+   "snapshotBytes": 42699,
+   "durationMs": 130,
    "astarCalls": 109
   },
   {
@@ -639,8 +639,8 @@
    "gold": 32,
    "level": 2,
    "potions": 0,
-   "snapshotBytes": 47710,
-   "durationMs": 123,
+   "snapshotBytes": 47697,
+   "durationMs": 136,
    "astarCalls": 74
   },
   {
@@ -655,8 +655,8 @@
    "gold": 12,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 46246,
-   "durationMs": 46,
+   "snapshotBytes": 46251,
+   "durationMs": 50,
    "astarCalls": 44
   },
   {
@@ -665,15 +665,15 @@
    "maxDepth": 4,
    "reached30": false,
    "dead": true,
-   "cause": "骷髅兵",
-   "turns": 2330,
-   "kills": 25,
+   "cause": "兽人",
+   "turns": 2348,
+   "kills": 29,
    "gold": 81,
-   "level": 5,
+   "level": 6,
    "potions": 2,
-   "snapshotBytes": 37191,
-   "durationMs": 155,
-   "astarCalls": 175
+   "snapshotBytes": 34873,
+   "durationMs": 139,
+   "astarCalls": 212
   },
   {
    "seed": 559,
@@ -687,8 +687,8 @@
    "gold": 39,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46371,
-   "durationMs": 170,
+   "snapshotBytes": 46372,
+   "durationMs": 166,
    "astarCalls": 108
   },
   {
@@ -704,7 +704,7 @@
    "level": 3,
    "potions": 2,
    "snapshotBytes": 42524,
-   "durationMs": 312,
+   "durationMs": 333,
    "astarCalls": 185
   },
   {
@@ -719,8 +719,8 @@
    "gold": 22,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46978,
-   "durationMs": 193,
+   "snapshotBytes": 46988,
+   "durationMs": 187,
    "astarCalls": 139
   },
   {
@@ -735,8 +735,8 @@
    "gold": 52,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48220,
-   "durationMs": 364,
+   "snapshotBytes": 48244,
+   "durationMs": 374,
    "astarCalls": 200
   },
   {
@@ -751,8 +751,8 @@
    "gold": 0,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 45852,
-   "durationMs": 103,
+   "snapshotBytes": 45854,
+   "durationMs": 116,
    "astarCalls": 94
   },
   {
@@ -767,8 +767,8 @@
    "gold": 63,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48450,
-   "durationMs": 232,
+   "snapshotBytes": 48451,
+   "durationMs": 253,
    "astarCalls": 162
   },
   {
@@ -783,25 +783,25 @@
    "gold": 14,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45512,
-   "durationMs": 300,
+   "snapshotBytes": 45509,
+   "durationMs": 332,
    "astarCalls": 197
   },
   {
    "seed": 650,
    "classId": "mage",
-   "maxDepth": 2,
+   "maxDepth": 3,
    "reached30": false,
-   "dead": false,
-   "cause": "回合上限（机器人卡死）",
-   "turns": 2515,
-   "kills": 18,
-   "gold": 82,
-   "level": 4,
+   "dead": true,
+   "cause": "兽人",
+   "turns": 1646,
+   "kills": 13,
+   "gold": 62,
+   "level": 3,
    "potions": 2,
-   "snapshotBytes": 49810,
-   "durationMs": 221,
-   "astarCalls": 134
+   "snapshotBytes": 37708,
+   "durationMs": 213,
+   "astarCalls": 136
   },
   {
    "seed": 663,
@@ -815,8 +815,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47073,
-   "durationMs": 232,
+   "snapshotBytes": 47086,
+   "durationMs": 248,
    "astarCalls": 141
   },
   {
@@ -832,7 +832,7 @@
    "level": 5,
    "potions": 2,
    "snapshotBytes": 49527,
-   "durationMs": 283,
+   "durationMs": 284,
    "astarCalls": 205
   },
   {
@@ -847,8 +847,8 @@
    "gold": 10,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 37610,
-   "durationMs": 54,
+   "snapshotBytes": 37605,
+   "durationMs": 61,
    "astarCalls": 29
   },
   {
@@ -863,8 +863,8 @@
    "gold": 0,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 37166,
-   "durationMs": 122,
+   "snapshotBytes": 37177,
+   "durationMs": 141,
    "astarCalls": 65
   },
   {
@@ -879,8 +879,8 @@
    "gold": 0,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 34534,
-   "durationMs": 258,
+   "snapshotBytes": 34535,
+   "durationMs": 241,
    "astarCalls": 132
   },
   {
@@ -895,8 +895,8 @@
    "gold": 28,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47700,
-   "durationMs": 53,
+   "snapshotBytes": 47701,
+   "durationMs": 54,
    "astarCalls": 59
   },
   {
@@ -911,8 +911,8 @@
    "gold": 27,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48203,
-   "durationMs": 127,
+   "snapshotBytes": 48206,
+   "durationMs": 128,
    "astarCalls": 114
   },
   {
@@ -927,8 +927,8 @@
    "gold": 47,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 43905,
-   "durationMs": 134,
+   "snapshotBytes": 43912,
+   "durationMs": 145,
    "astarCalls": 106
   },
   {
@@ -943,8 +943,8 @@
    "gold": 36,
    "level": 5,
    "potions": 4,
-   "snapshotBytes": 40271,
-   "durationMs": 195,
+   "snapshotBytes": 40267,
+   "durationMs": 193,
    "astarCalls": 146
   },
   {
@@ -959,8 +959,8 @@
    "gold": 151,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 40089,
-   "durationMs": 263,
+   "snapshotBytes": 40094,
+   "durationMs": 309,
    "astarCalls": 204
   },
   {
@@ -975,8 +975,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 38378,
-   "durationMs": 165,
+   "snapshotBytes": 38384,
+   "durationMs": 196,
    "astarCalls": 128
   },
   {
@@ -991,8 +991,8 @@
    "gold": 0,
    "level": 1,
    "potions": 0,
-   "snapshotBytes": 34365,
-   "durationMs": 10,
+   "snapshotBytes": 34361,
+   "durationMs": 12,
    "astarCalls": 33
   },
   {
@@ -1007,8 +1007,8 @@
    "gold": 8,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 45238,
-   "durationMs": 176,
+   "snapshotBytes": 45251,
+   "durationMs": 165,
    "astarCalls": 129
   },
   {
@@ -1023,8 +1023,8 @@
    "gold": 52,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 39752,
-   "durationMs": 351,
+   "snapshotBytes": 39751,
+   "durationMs": 330,
    "astarCalls": 176
   },
   {
@@ -1039,8 +1039,8 @@
    "gold": 45,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 44975,
-   "durationMs": 164,
+   "snapshotBytes": 44973,
+   "durationMs": 159,
    "astarCalls": 109
   },
   {
@@ -1055,8 +1055,8 @@
    "gold": 135,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 45504,
-   "durationMs": 269,
+   "snapshotBytes": 45503,
+   "durationMs": 247,
    "astarCalls": 164
   },
   {
@@ -1071,8 +1071,8 @@
    "gold": 19,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 40439,
-   "durationMs": 217,
+   "snapshotBytes": 40441,
+   "durationMs": 191,
    "astarCalls": 165
   },
   {
@@ -1087,8 +1087,8 @@
    "gold": 31,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47138,
-   "durationMs": 53,
+   "snapshotBytes": 47134,
+   "durationMs": 46,
    "astarCalls": 71
   },
   {
@@ -1103,8 +1103,8 @@
    "gold": 64,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 36283,
-   "durationMs": 259,
+   "snapshotBytes": 36287,
+   "durationMs": 197,
    "astarCalls": 195
   },
   {
@@ -1119,25 +1119,25 @@
    "gold": 83,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 36910,
-   "durationMs": 258,
+   "snapshotBytes": 36909,
+   "durationMs": 215,
    "astarCalls": 162
   },
   {
    "seed": 923,
    "classId": "mage",
-   "maxDepth": 3,
+   "maxDepth": 2,
    "reached30": false,
-   "dead": false,
-   "cause": "回合上限（机器人卡死）",
-   "turns": 2519,
-   "kills": 17,
-   "gold": 44,
-   "level": 4,
+   "dead": true,
+   "cause": "骷髅兵",
+   "turns": 1986,
+   "kills": 14,
+   "gold": 0,
+   "level": 3,
    "potions": 2,
-   "snapshotBytes": 39551,
-   "durationMs": 98,
-   "astarCalls": 81
+   "snapshotBytes": 41850,
+   "durationMs": 76,
+   "astarCalls": 108
   },
   {
    "seed": 936,
@@ -1151,8 +1151,8 @@
    "gold": 22,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 45060,
-   "durationMs": 373,
+   "snapshotBytes": 45061,
+   "durationMs": 330,
    "astarCalls": 170
   },
   {
@@ -1167,8 +1167,8 @@
    "gold": 1,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 40452,
-   "durationMs": 313,
+   "snapshotBytes": 40455,
+   "durationMs": 234,
    "astarCalls": 120
   },
   {
@@ -1183,8 +1183,8 @@
    "gold": 76,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47452,
-   "durationMs": 126,
+   "snapshotBytes": 47441,
+   "durationMs": 118,
    "astarCalls": 129
   },
   {
@@ -1199,8 +1199,8 @@
    "gold": 27,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 45798,
-   "durationMs": 162,
+   "snapshotBytes": 45789,
+   "durationMs": 165,
    "astarCalls": 159
   },
   {
@@ -1216,7 +1216,7 @@
    "level": 3,
    "potions": 0,
    "snapshotBytes": 39672,
-   "durationMs": 63,
+   "durationMs": 56,
    "astarCalls": 36
   },
   {
@@ -1231,8 +1231,8 @@
    "gold": 16,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 37981,
-   "durationMs": 230,
+   "snapshotBytes": 37977,
+   "durationMs": 204,
    "astarCalls": 118
   },
   {
@@ -1247,8 +1247,8 @@
    "gold": 38,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 44110,
-   "durationMs": 72,
+   "snapshotBytes": 44120,
+   "durationMs": 78,
    "astarCalls": 89
   },
   {
@@ -1263,8 +1263,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47072,
-   "durationMs": 326,
+   "snapshotBytes": 47092,
+   "durationMs": 314,
    "astarCalls": 168
   },
   {
@@ -1279,8 +1279,8 @@
    "gold": 41,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 42105,
-   "durationMs": 267,
+   "snapshotBytes": 42109,
+   "durationMs": 236,
    "astarCalls": 195
   },
   {
@@ -1295,8 +1295,8 @@
    "gold": 0,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 42433,
-   "durationMs": 95,
+   "snapshotBytes": 42430,
+   "durationMs": 100,
    "astarCalls": 28
   },
   {
@@ -1311,8 +1311,8 @@
    "gold": 29,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 47793,
-   "durationMs": 133,
+   "snapshotBytes": 47807,
+   "durationMs": 119,
    "astarCalls": 103
   },
   {
@@ -1328,7 +1328,7 @@
    "level": 3,
    "potions": 0,
    "snapshotBytes": 43150,
-   "durationMs": 293,
+   "durationMs": 252,
    "astarCalls": 172
   },
   {
@@ -1343,8 +1343,8 @@
    "gold": 127,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47323,
-   "durationMs": 150,
+   "snapshotBytes": 47318,
+   "durationMs": 127,
    "astarCalls": 110
   },
   {
@@ -1360,7 +1360,7 @@
    "level": 5,
    "potions": 2,
    "snapshotBytes": 43922,
-   "durationMs": 263,
+   "durationMs": 255,
    "astarCalls": 163
   },
   {
@@ -1375,8 +1375,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45483,
-   "durationMs": 149,
+   "snapshotBytes": 45486,
+   "durationMs": 141,
    "astarCalls": 100
   },
   {
@@ -1391,8 +1391,8 @@
    "gold": 30,
    "level": 4,
    "potions": 4,
-   "snapshotBytes": 36437,
-   "durationMs": 328,
+   "snapshotBytes": 36441,
+   "durationMs": 324,
    "astarCalls": 199
   },
   {
@@ -1407,8 +1407,8 @@
    "gold": 121,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 36732,
-   "durationMs": 156,
+   "snapshotBytes": 36741,
+   "durationMs": 98,
    "astarCalls": 106
   },
   {
@@ -1423,8 +1423,8 @@
    "gold": 37,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 40909,
-   "durationMs": 121,
+   "snapshotBytes": 40910,
+   "durationMs": 116,
    "astarCalls": 163
   },
   {
@@ -1440,7 +1440,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 46827,
-   "durationMs": 208,
+   "durationMs": 197,
    "astarCalls": 143
   },
   {
@@ -1455,8 +1455,8 @@
    "gold": 37,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 35910,
-   "durationMs": 443,
+   "snapshotBytes": 35906,
+   "durationMs": 393,
    "astarCalls": 351
   },
   {
@@ -1471,7 +1471,7 @@
    "gold": 83,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48445,
+   "snapshotBytes": 48443,
    "durationMs": 84,
    "astarCalls": 87
   },
@@ -1487,8 +1487,8 @@
    "gold": 100,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 34770,
-   "durationMs": 107,
+   "snapshotBytes": 34760,
+   "durationMs": 121,
    "astarCalls": 96
   },
   {
@@ -1503,7 +1503,7 @@
    "gold": 28,
    "level": 4,
    "potions": 4,
-   "snapshotBytes": 38538,
+   "snapshotBytes": 38551,
    "durationMs": 115,
    "astarCalls": 106
   },
@@ -1519,8 +1519,8 @@
    "gold": 33,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 48020,
-   "durationMs": 138,
+   "snapshotBytes": 48019,
+   "durationMs": 129,
    "astarCalls": 97
   },
   {
@@ -1535,8 +1535,8 @@
    "gold": 102,
    "level": 6,
    "potions": 2,
-   "snapshotBytes": 47957,
-   "durationMs": 71,
+   "snapshotBytes": 47970,
+   "durationMs": 55,
    "astarCalls": 94
   },
   {
@@ -1551,8 +1551,8 @@
    "gold": 32,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 36501,
-   "durationMs": 144,
+   "snapshotBytes": 36502,
+   "durationMs": 107,
    "astarCalls": 118
   },
   {
@@ -1567,8 +1567,8 @@
    "gold": 58,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 36109,
-   "durationMs": 191,
+   "snapshotBytes": 36121,
+   "durationMs": 185,
    "astarCalls": 156
   },
   {
@@ -1583,8 +1583,8 @@
    "gold": 129,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48928,
-   "durationMs": 171,
+   "snapshotBytes": 48936,
+   "durationMs": 119,
    "astarCalls": 124
   },
   {
@@ -1599,8 +1599,8 @@
    "gold": 0,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 38112,
-   "durationMs": 229,
+   "snapshotBytes": 38120,
+   "durationMs": 271,
    "astarCalls": 142
   },
   {
@@ -1615,8 +1615,8 @@
    "gold": 16,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 49133,
-   "durationMs": 119,
+   "snapshotBytes": 49134,
+   "durationMs": 99,
    "astarCalls": 93
   },
   {
@@ -1631,8 +1631,8 @@
    "gold": 47,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47017,
-   "durationMs": 108,
+   "snapshotBytes": 47016,
+   "durationMs": 84,
    "astarCalls": 90
   },
   {
@@ -1647,8 +1647,8 @@
    "gold": 8,
    "level": 6,
    "potions": 0,
-   "snapshotBytes": 45329,
-   "durationMs": 192,
+   "snapshotBytes": 45335,
+   "durationMs": 164,
    "astarCalls": 134
   },
   {
@@ -1656,16 +1656,16 @@
    "classId": "mage",
    "maxDepth": 4,
    "reached30": false,
-   "dead": false,
-   "cause": "回合上限（机器人卡死）",
-   "turns": 2500,
-   "kills": 22,
+   "dead": true,
+   "cause": "食人魔",
+   "turns": 2286,
+   "kills": 20,
    "gold": 74,
    "level": 6,
    "potions": 2,
-   "snapshotBytes": 44211,
-   "durationMs": 164,
-   "astarCalls": 160
+   "snapshotBytes": 41441,
+   "durationMs": 109,
+   "astarCalls": 158
   },
   {
    "seed": 1365,
@@ -1679,8 +1679,8 @@
    "gold": 65,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 45842,
-   "durationMs": 44,
+   "snapshotBytes": 45849,
+   "durationMs": 40,
    "astarCalls": 91
   },
   {
@@ -1695,8 +1695,8 @@
    "gold": 26,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 44124,
-   "durationMs": 118,
+   "snapshotBytes": 44130,
+   "durationMs": 110,
    "astarCalls": 84
   },
   {
@@ -1711,8 +1711,8 @@
    "gold": 34,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48923,
-   "durationMs": 184,
+   "snapshotBytes": 48921,
+   "durationMs": 146,
    "astarCalls": 138
   },
   {
@@ -1727,8 +1727,8 @@
    "gold": 11,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 34882,
-   "durationMs": 146,
+   "snapshotBytes": 34898,
+   "durationMs": 121,
    "astarCalls": 77
   },
   {
@@ -1743,8 +1743,8 @@
    "gold": 76,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 42242,
-   "durationMs": 131,
+   "snapshotBytes": 42240,
+   "durationMs": 127,
    "astarCalls": 108
   },
   {
@@ -1759,8 +1759,8 @@
    "gold": 97,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 50165,
-   "durationMs": 249,
+   "snapshotBytes": 50161,
+   "durationMs": 209,
    "astarCalls": 151
   },
   {
@@ -1775,8 +1775,8 @@
    "gold": 0,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 48691,
-   "durationMs": 71,
+   "snapshotBytes": 48688,
+   "durationMs": 67,
    "astarCalls": 55
   },
   {
@@ -1791,8 +1791,8 @@
    "gold": 83,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47547,
-   "durationMs": 84,
+   "snapshotBytes": 47550,
+   "durationMs": 92,
    "astarCalls": 85
   },
   {
@@ -1807,8 +1807,8 @@
    "gold": 74,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 35386,
-   "durationMs": 307,
+   "snapshotBytes": 35388,
+   "durationMs": 297,
    "astarCalls": 183
   },
   {
@@ -1823,8 +1823,8 @@
    "gold": 43,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 48968,
-   "durationMs": 163,
+   "snapshotBytes": 48965,
+   "durationMs": 155,
    "astarCalls": 110
   },
   {
@@ -1839,8 +1839,8 @@
    "gold": 35,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 44691,
-   "durationMs": 224,
+   "snapshotBytes": 44685,
+   "durationMs": 242,
    "astarCalls": 141
   },
   {
@@ -1855,8 +1855,8 @@
    "gold": 60,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 47207,
-   "durationMs": 159,
+   "snapshotBytes": 47214,
+   "durationMs": 118,
    "astarCalls": 95
   },
   {
@@ -1871,8 +1871,8 @@
    "gold": 62,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 49095,
-   "durationMs": 145,
+   "snapshotBytes": 49090,
+   "durationMs": 166,
    "astarCalls": 143
   },
   {
@@ -1888,7 +1888,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 47965,
-   "durationMs": 135,
+   "durationMs": 145,
    "astarCalls": 110
   },
   {
@@ -1903,25 +1903,25 @@
    "gold": 114,
    "level": 6,
    "potions": 0,
-   "snapshotBytes": 44238,
-   "durationMs": 79,
+   "snapshotBytes": 44243,
+   "durationMs": 83,
    "astarCalls": 103
   },
   {
    "seed": 1560,
    "classId": "mage",
-   "maxDepth": 3,
+   "maxDepth": 2,
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2517,
+   "turns": 2504,
    "kills": 18,
-   "gold": 0,
-   "level": 5,
-   "potions": 0,
-   "snapshotBytes": 41040,
-   "durationMs": 73,
-   "astarCalls": 86
+   "gold": 17,
+   "level": 4,
+   "potions": 2,
+   "snapshotBytes": 47188,
+   "durationMs": 152,
+   "astarCalls": 101
   },
   {
    "seed": 1573,
@@ -1935,8 +1935,8 @@
    "gold": 81,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48949,
-   "durationMs": 195,
+   "snapshotBytes": 48962,
+   "durationMs": 168,
    "astarCalls": 122
   },
   {
@@ -1951,8 +1951,8 @@
    "gold": 23,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 34466,
-   "durationMs": 59,
+   "snapshotBytes": 34464,
+   "durationMs": 56,
    "astarCalls": 24
   },
   {
@@ -1967,8 +1967,8 @@
    "gold": 85,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46499,
-   "durationMs": 232,
+   "snapshotBytes": 46505,
+   "durationMs": 195,
    "astarCalls": 150
   },
   {
@@ -1983,8 +1983,8 @@
    "gold": 23,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47122,
-   "durationMs": 72,
+   "snapshotBytes": 47124,
+   "durationMs": 66,
    "astarCalls": 98
   },
   {
@@ -1999,8 +1999,8 @@
    "gold": 196,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 41764,
-   "durationMs": 150,
+   "snapshotBytes": 41765,
+   "durationMs": 151,
    "astarCalls": 124
   },
   {
@@ -2016,7 +2016,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 45303,
-   "durationMs": 139,
+   "durationMs": 108,
    "astarCalls": 102
   },
   {
@@ -2031,8 +2031,8 @@
    "gold": 124,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 49363,
-   "durationMs": 231,
+   "snapshotBytes": 49370,
+   "durationMs": 207,
    "astarCalls": 133
   },
   {
@@ -2047,8 +2047,8 @@
    "gold": 92,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47379,
-   "durationMs": 202,
+   "snapshotBytes": 47380,
+   "durationMs": 177,
    "astarCalls": 119
   },
   {
@@ -2063,8 +2063,8 @@
    "gold": 89,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 37539,
-   "durationMs": 127,
+   "snapshotBytes": 37541,
+   "durationMs": 105,
    "astarCalls": 103
   },
   {
@@ -2079,8 +2079,8 @@
    "gold": 0,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 38278,
-   "durationMs": 163,
+   "snapshotBytes": 38288,
+   "durationMs": 154,
    "astarCalls": 99
   },
   {
@@ -2095,8 +2095,8 @@
    "gold": 25,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47938,
-   "durationMs": 209,
+   "snapshotBytes": 47948,
+   "durationMs": 208,
    "astarCalls": 146
   },
   {
@@ -2111,8 +2111,8 @@
    "gold": 59,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 50118,
-   "durationMs": 170,
+   "snapshotBytes": 50131,
+   "durationMs": 149,
    "astarCalls": 125
   },
   {
@@ -2127,8 +2127,8 @@
    "gold": 14,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 39502,
-   "durationMs": 102,
+   "snapshotBytes": 39514,
+   "durationMs": 87,
    "astarCalls": 75
   },
   {
@@ -2143,8 +2143,8 @@
    "gold": 45,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47896,
-   "durationMs": 258,
+   "snapshotBytes": 47904,
+   "durationMs": 234,
    "astarCalls": 160
   },
   {
@@ -2159,8 +2159,8 @@
    "gold": 0,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 49193,
-   "durationMs": 173,
+   "snapshotBytes": 49198,
+   "durationMs": 163,
    "astarCalls": 128
   },
   {
@@ -2175,8 +2175,8 @@
    "gold": 79,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48395,
-   "durationMs": 208,
+   "snapshotBytes": 48390,
+   "durationMs": 190,
    "astarCalls": 142
   },
   {
@@ -2191,8 +2191,8 @@
    "gold": 63,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46822,
-   "durationMs": 158,
+   "snapshotBytes": 46832,
+   "durationMs": 140,
    "astarCalls": 116
   },
   {
@@ -2207,8 +2207,8 @@
    "gold": 0,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 39024,
-   "durationMs": 284,
+   "snapshotBytes": 39021,
+   "durationMs": 219,
    "astarCalls": 151
   },
   {
@@ -2224,7 +2224,7 @@
    "level": 3,
    "potions": 2,
    "snapshotBytes": 36789,
-   "durationMs": 279,
+   "durationMs": 257,
    "astarCalls": 129
   },
   {
@@ -2239,8 +2239,8 @@
    "gold": 0,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 40255,
-   "durationMs": 179,
+   "snapshotBytes": 40257,
+   "durationMs": 183,
    "astarCalls": 164
   },
   {
@@ -2255,8 +2255,8 @@
    "gold": 28,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46985,
-   "durationMs": 188,
+   "snapshotBytes": 46979,
+   "durationMs": 148,
    "astarCalls": 133
   },
   {
@@ -2271,8 +2271,8 @@
    "gold": 21,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 40139,
-   "durationMs": 276,
+   "snapshotBytes": 40134,
+   "durationMs": 251,
    "astarCalls": 94
   },
   {
@@ -2287,8 +2287,8 @@
    "gold": 8,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 45393,
-   "durationMs": 155,
+   "snapshotBytes": 45402,
+   "durationMs": 141,
    "astarCalls": 106
   },
   {
@@ -2303,8 +2303,8 @@
    "gold": 55,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47240,
-   "durationMs": 89,
+   "snapshotBytes": 47256,
+   "durationMs": 80,
    "astarCalls": 79
   },
   {
@@ -2319,8 +2319,8 @@
    "gold": 37,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 47898,
-   "durationMs": 147,
+   "snapshotBytes": 47901,
+   "durationMs": 116,
    "astarCalls": 85
   },
   {
@@ -2335,8 +2335,8 @@
    "gold": 9,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48592,
-   "durationMs": 128,
+   "snapshotBytes": 48589,
+   "durationMs": 142,
    "astarCalls": 119
   },
   {
@@ -2351,8 +2351,8 @@
    "gold": 11,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46715,
-   "durationMs": 272,
+   "snapshotBytes": 46718,
+   "durationMs": 246,
    "astarCalls": 152
   },
   {
@@ -2367,8 +2367,8 @@
    "gold": 29,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 49569,
-   "durationMs": 213,
+   "snapshotBytes": 49566,
+   "durationMs": 183,
    "astarCalls": 128
   },
   {
@@ -2383,8 +2383,8 @@
    "gold": 59,
    "level": 4,
    "potions": 4,
-   "snapshotBytes": 47453,
-   "durationMs": 156,
+   "snapshotBytes": 47444,
+   "durationMs": 143,
    "astarCalls": 91
   },
   {
@@ -2399,8 +2399,8 @@
    "gold": 0,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 37485,
-   "durationMs": 262,
+   "snapshotBytes": 37487,
+   "durationMs": 245,
    "astarCalls": 133
   },
   {
@@ -2415,8 +2415,8 @@
    "gold": 12,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46497,
-   "durationMs": 219,
+   "snapshotBytes": 46501,
+   "durationMs": 239,
    "astarCalls": 129
   },
   {
@@ -2431,8 +2431,8 @@
    "gold": 37,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48732,
-   "durationMs": 78,
+   "snapshotBytes": 48729,
+   "durationMs": 63,
    "astarCalls": 80
   },
   {
@@ -2447,8 +2447,8 @@
    "gold": 14,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 42177,
-   "durationMs": 364,
+   "snapshotBytes": 42184,
+   "durationMs": 352,
    "astarCalls": 84
   },
   {
@@ -2463,8 +2463,8 @@
    "gold": 45,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47063,
-   "durationMs": 232,
+   "snapshotBytes": 47071,
+   "durationMs": 246,
    "astarCalls": 154
   },
   {
@@ -2479,8 +2479,8 @@
    "gold": 13,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45965,
-   "durationMs": 361,
+   "snapshotBytes": 45960,
+   "durationMs": 387,
    "astarCalls": 186
   },
   {
@@ -2495,8 +2495,8 @@
    "gold": 0,
    "level": 2,
    "potions": 0,
-   "snapshotBytes": 33439,
-   "durationMs": 47,
+   "snapshotBytes": 33449,
+   "durationMs": 55,
    "astarCalls": 10
   },
   {
@@ -2511,7 +2511,7 @@
    "gold": 66,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 44238,
+   "snapshotBytes": 44236,
    "durationMs": 179,
    "astarCalls": 149
   },
@@ -2527,8 +2527,8 @@
    "gold": 11,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 38825,
-   "durationMs": 119,
+   "snapshotBytes": 38831,
+   "durationMs": 122,
    "astarCalls": 132
   },
   {
@@ -2543,8 +2543,8 @@
    "gold": 14,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47862,
-   "durationMs": 180,
+   "snapshotBytes": 47857,
+   "durationMs": 171,
    "astarCalls": 135
   },
   {
@@ -2559,8 +2559,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 36868,
-   "durationMs": 120,
+   "snapshotBytes": 36886,
+   "durationMs": 121,
    "astarCalls": 102
   },
   {
@@ -2575,8 +2575,8 @@
    "gold": 64,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47062,
-   "durationMs": 280,
+   "snapshotBytes": 47057,
+   "durationMs": 309,
    "astarCalls": 164
   },
   {
@@ -2591,8 +2591,8 @@
    "gold": 40,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46454,
-   "durationMs": 188,
+   "snapshotBytes": 46471,
+   "durationMs": 159,
    "astarCalls": 107
   },
   {
@@ -2607,8 +2607,8 @@
    "gold": 26,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 44277,
-   "durationMs": 195,
+   "snapshotBytes": 44289,
+   "durationMs": 227,
    "astarCalls": 135
   },
   {
@@ -2624,7 +2624,7 @@
    "level": 2,
    "potions": 0,
    "snapshotBytes": 37903,
-   "durationMs": 23,
+   "durationMs": 20,
    "astarCalls": 34
   },
   {
@@ -2639,7 +2639,7 @@
    "gold": 40,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48509,
+   "snapshotBytes": 48504,
    "durationMs": 58,
    "astarCalls": 69
   },
@@ -2655,8 +2655,8 @@
    "gold": 18,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47398,
-   "durationMs": 273,
+   "snapshotBytes": 47397,
+   "durationMs": 248,
    "astarCalls": 174
   },
   {
@@ -2671,8 +2671,8 @@
    "gold": 12,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 39803,
-   "durationMs": 168,
+   "snapshotBytes": 39812,
+   "durationMs": 171,
    "astarCalls": 123
   },
   {
@@ -2687,8 +2687,8 @@
    "gold": 92,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48209,
-   "durationMs": 55,
+   "snapshotBytes": 48222,
+   "durationMs": 50,
    "astarCalls": 64
   },
   {
@@ -2703,8 +2703,8 @@
    "gold": 96,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46666,
-   "durationMs": 339,
+   "snapshotBytes": 46683,
+   "durationMs": 376,
    "astarCalls": 207
   },
   {
@@ -2719,8 +2719,8 @@
    "gold": 15,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 42246,
-   "durationMs": 305,
+   "snapshotBytes": 42244,
+   "durationMs": 287,
    "astarCalls": 161
   },
   {
@@ -2735,8 +2735,8 @@
    "gold": 75,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46701,
-   "durationMs": 238,
+   "snapshotBytes": 46716,
+   "durationMs": 252,
    "astarCalls": 173
   },
   {
@@ -2751,8 +2751,8 @@
    "gold": 32,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 44625,
-   "durationMs": 376,
+   "snapshotBytes": 44628,
+   "durationMs": 352,
    "astarCalls": 184
   },
   {
@@ -2767,8 +2767,8 @@
    "gold": 55,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47114,
-   "durationMs": 249,
+   "snapshotBytes": 47120,
+   "durationMs": 233,
    "astarCalls": 197
   },
   {
@@ -2783,8 +2783,8 @@
    "gold": 27,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48144,
-   "durationMs": 175,
+   "snapshotBytes": 48135,
+   "durationMs": 192,
    "astarCalls": 164
   },
   {
@@ -2799,8 +2799,8 @@
    "gold": 29,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 41970,
-   "durationMs": 204,
+   "snapshotBytes": 41974,
+   "durationMs": 208,
    "astarCalls": 166
   },
   {
@@ -2815,8 +2815,8 @@
    "gold": 62,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 44617,
-   "durationMs": 57,
+   "snapshotBytes": 44610,
+   "durationMs": 60,
    "astarCalls": 57
   },
   {
@@ -2831,8 +2831,8 @@
    "gold": 12,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 39182,
-   "durationMs": 123,
+   "snapshotBytes": 39187,
+   "durationMs": 132,
    "astarCalls": 50
   },
   {
@@ -2847,8 +2847,8 @@
    "gold": 23,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48743,
-   "durationMs": 129,
+   "snapshotBytes": 48737,
+   "durationMs": 156,
    "astarCalls": 123
   },
   {
@@ -2863,8 +2863,8 @@
    "gold": 10,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 35804,
-   "durationMs": 245,
+   "snapshotBytes": 35814,
+   "durationMs": 292,
    "astarCalls": 125
   },
   {
@@ -2879,8 +2879,8 @@
    "gold": 14,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 37525,
-   "durationMs": 147,
+   "snapshotBytes": 37534,
+   "durationMs": 142,
    "astarCalls": 84
   },
   {
@@ -2896,7 +2896,7 @@
    "level": 5,
    "potions": 0,
    "snapshotBytes": 41125,
-   "durationMs": 162,
+   "durationMs": 166,
    "astarCalls": 163
   },
   {
@@ -2911,8 +2911,8 @@
    "gold": 62,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46399,
-   "durationMs": 112,
+   "snapshotBytes": 46391,
+   "durationMs": 113,
    "astarCalls": 87
   },
   {
@@ -2927,8 +2927,8 @@
    "gold": 0,
    "level": 2,
    "potions": 2,
-   "snapshotBytes": 46984,
-   "durationMs": 94,
+   "snapshotBytes": 46977,
+   "durationMs": 101,
    "astarCalls": 67
   },
   {
@@ -2943,8 +2943,8 @@
    "gold": 31,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 35183,
-   "durationMs": 136,
+   "snapshotBytes": 35173,
+   "durationMs": 124,
    "astarCalls": 86
   },
   {
@@ -2959,8 +2959,8 @@
    "gold": 12,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48342,
-   "durationMs": 98,
+   "snapshotBytes": 48346,
+   "durationMs": 119,
    "astarCalls": 98
   },
   {
@@ -2975,8 +2975,8 @@
    "gold": 0,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47538,
-   "durationMs": 67,
+   "snapshotBytes": 47542,
+   "durationMs": 73,
    "astarCalls": 55
   },
   {
@@ -2991,8 +2991,8 @@
    "gold": 91,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 38777,
-   "durationMs": 55,
+   "snapshotBytes": 38779,
+   "durationMs": 56,
    "astarCalls": 72
   },
   {
@@ -3007,8 +3007,8 @@
    "gold": 0,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 43347,
-   "durationMs": 236,
+   "snapshotBytes": 43344,
+   "durationMs": 217,
    "astarCalls": 153
   },
   {
@@ -3023,8 +3023,8 @@
    "gold": 110,
    "level": 4,
    "potions": 4,
-   "snapshotBytes": 48234,
-   "durationMs": 43,
+   "snapshotBytes": 48227,
+   "durationMs": 30,
    "astarCalls": 56
   },
   {
@@ -3039,8 +3039,8 @@
    "gold": 76,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 39437,
-   "durationMs": 136,
+   "snapshotBytes": 39440,
+   "durationMs": 152,
    "astarCalls": 135
   },
   {
@@ -3055,8 +3055,8 @@
    "gold": 0,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 36292,
-   "durationMs": 90,
+   "snapshotBytes": 36294,
+   "durationMs": 107,
    "astarCalls": 44
   },
   {
@@ -3072,7 +3072,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 46725,
-   "durationMs": 196,
+   "durationMs": 206,
    "astarCalls": 138
   },
   {
@@ -3087,8 +3087,8 @@
    "gold": 14,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 45388,
-   "durationMs": 110,
+   "snapshotBytes": 45385,
+   "durationMs": 120,
    "astarCalls": 77
   },
   {
@@ -3103,8 +3103,8 @@
    "gold": 30,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 49059,
-   "durationMs": 146,
+   "snapshotBytes": 49056,
+   "durationMs": 173,
    "astarCalls": 116
   },
   {
@@ -3119,8 +3119,8 @@
    "gold": 28,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 36164,
-   "durationMs": 561,
+   "snapshotBytes": 36169,
+   "durationMs": 543,
    "astarCalls": 288
   },
   {
@@ -3135,8 +3135,8 @@
    "gold": 52,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 40075,
-   "durationMs": 170,
+   "snapshotBytes": 40072,
+   "durationMs": 158,
    "astarCalls": 135
   },
   {
@@ -3151,8 +3151,8 @@
    "gold": 56,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48257,
-   "durationMs": 316,
+   "snapshotBytes": 48270,
+   "durationMs": 308,
    "astarCalls": 184
   },
   {
@@ -3167,8 +3167,8 @@
    "gold": 34,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 48449,
-   "durationMs": 82,
+   "snapshotBytes": 48461,
+   "durationMs": 80,
    "astarCalls": 92
   },
   {
@@ -3183,7 +3183,7 @@
    "gold": 17,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 41632,
+   "snapshotBytes": 41626,
    "durationMs": 113,
    "astarCalls": 82
   },
@@ -3199,8 +3199,8 @@
    "gold": 5,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 40152,
-   "durationMs": 321,
+   "snapshotBytes": 40161,
+   "durationMs": 306,
    "astarCalls": 150
   },
   {
@@ -3215,8 +3215,8 @@
    "gold": 101,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 36577,
-   "durationMs": 273,
+   "snapshotBytes": 36579,
+   "durationMs": 237,
    "astarCalls": 178
   },
   {
@@ -3231,8 +3231,8 @@
    "gold": 0,
    "level": 2,
    "potions": 0,
-   "snapshotBytes": 49807,
-   "durationMs": 43,
+   "snapshotBytes": 49809,
+   "durationMs": 46,
    "astarCalls": 47
   },
   {
@@ -3247,8 +3247,8 @@
    "gold": 33,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48417,
-   "durationMs": 220,
+   "snapshotBytes": 48410,
+   "durationMs": 208,
    "astarCalls": 147
   },
   {
@@ -3263,8 +3263,8 @@
    "gold": 35,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47474,
-   "durationMs": 144,
+   "snapshotBytes": 47480,
+   "durationMs": 142,
    "astarCalls": 106
   },
   {
@@ -3279,8 +3279,8 @@
    "gold": 43,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47484,
-   "durationMs": 169,
+   "snapshotBytes": 47483,
+   "durationMs": 194,
    "astarCalls": 123
   },
   {
@@ -3295,8 +3295,8 @@
    "gold": 65,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 35866,
-   "durationMs": 130,
+   "snapshotBytes": 35871,
+   "durationMs": 117,
    "astarCalls": 88
   },
   {
@@ -3311,8 +3311,8 @@
    "gold": 35,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 37603,
-   "durationMs": 344,
+   "snapshotBytes": 37617,
+   "durationMs": 335,
    "astarCalls": 206
   },
   {
@@ -3322,14 +3322,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2508,
-   "kills": 15,
-   "gold": 0,
+   "turns": 2517,
+   "kills": 18,
+   "gold": 37,
    "level": 4,
-   "potions": 2,
-   "snapshotBytes": 44306,
+   "potions": 0,
+   "snapshotBytes": 49245,
    "durationMs": 118,
-   "astarCalls": 77
+   "astarCalls": 70
   },
   {
    "seed": 2717,
@@ -3344,7 +3344,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 36455,
-   "durationMs": 346,
+   "durationMs": 361,
    "astarCalls": 217
   },
   {
@@ -3359,8 +3359,8 @@
    "gold": 13,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46518,
-   "durationMs": 57,
+   "snapshotBytes": 46514,
+   "durationMs": 55,
    "astarCalls": 47
   },
   {
@@ -3375,8 +3375,8 @@
    "gold": 40,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48557,
-   "durationMs": 198,
+   "snapshotBytes": 48546,
+   "durationMs": 223,
    "astarCalls": 138
   },
   {
@@ -3386,14 +3386,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2519,
-   "kills": 23,
-   "gold": 74,
-   "level": 6,
-   "potions": 0,
-   "snapshotBytes": 43397,
-   "durationMs": 102,
-   "astarCalls": 129
+   "turns": 2508,
+   "kills": 21,
+   "gold": 89,
+   "level": 5,
+   "potions": 2,
+   "snapshotBytes": 43265,
+   "durationMs": 143,
+   "astarCalls": 130
   },
   {
    "seed": 2769,
@@ -3407,8 +3407,8 @@
    "gold": 83,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 45383,
-   "durationMs": 60,
+   "snapshotBytes": 45389,
+   "durationMs": 58,
    "astarCalls": 62
   },
   {
@@ -3423,8 +3423,8 @@
    "gold": 16,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46705,
-   "durationMs": 189,
+   "snapshotBytes": 46708,
+   "durationMs": 192,
    "astarCalls": 133
   },
   {
@@ -3439,8 +3439,8 @@
    "gold": 78,
    "level": 6,
    "potions": 0,
-   "snapshotBytes": 44361,
-   "durationMs": 86,
+   "snapshotBytes": 44363,
+   "durationMs": 98,
    "astarCalls": 104
   },
   {
@@ -3455,8 +3455,8 @@
    "gold": 52,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 46668,
-   "durationMs": 82,
+   "snapshotBytes": 46672,
+   "durationMs": 137,
    "astarCalls": 104
   },
   {
@@ -3472,7 +3472,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 44655,
-   "durationMs": 362,
+   "durationMs": 407,
    "astarCalls": 220
   },
   {
@@ -3487,8 +3487,8 @@
    "gold": 110,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 39852,
-   "durationMs": 212,
+   "snapshotBytes": 39866,
+   "durationMs": 258,
    "astarCalls": 199
   },
   {
@@ -3503,8 +3503,8 @@
    "gold": 94,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47017,
-   "durationMs": 118,
+   "snapshotBytes": 47024,
+   "durationMs": 137,
    "astarCalls": 108
   },
   {
@@ -3519,8 +3519,8 @@
    "gold": 37,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 44730,
-   "durationMs": 313,
+   "snapshotBytes": 44726,
+   "durationMs": 368,
    "astarCalls": 168
   },
   {
@@ -3535,8 +3535,8 @@
    "gold": 0,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 36709,
-   "durationMs": 221,
+   "snapshotBytes": 36707,
+   "durationMs": 248,
    "astarCalls": 177
   },
   {
@@ -3552,7 +3552,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 35358,
-   "durationMs": 183,
+   "durationMs": 189,
    "astarCalls": 189
   },
   {
@@ -3567,8 +3567,8 @@
    "gold": 14,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 36822,
-   "durationMs": 207,
+   "snapshotBytes": 36817,
+   "durationMs": 202,
    "astarCalls": 109
   },
   {
@@ -3583,8 +3583,8 @@
    "gold": 41,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47543,
-   "durationMs": 228,
+   "snapshotBytes": 47534,
+   "durationMs": 247,
    "astarCalls": 158
   },
   {
@@ -3599,8 +3599,8 @@
    "gold": 58,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 38053,
-   "durationMs": 145,
+   "snapshotBytes": 38046,
+   "durationMs": 139,
    "astarCalls": 142
   },
   {
@@ -3615,8 +3615,8 @@
    "gold": 36,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 35265,
-   "durationMs": 419,
+   "snapshotBytes": 35259,
+   "durationMs": 375,
    "astarCalls": 216
   },
   {
@@ -3631,8 +3631,8 @@
    "gold": 44,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 49545,
-   "durationMs": 57,
+   "snapshotBytes": 49555,
+   "durationMs": 46,
    "astarCalls": 35
   },
   {
@@ -3647,8 +3647,8 @@
    "gold": 28,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47904,
-   "durationMs": 235,
+   "snapshotBytes": 47906,
+   "durationMs": 221,
    "astarCalls": 137
   },
   {
@@ -3663,8 +3663,8 @@
    "gold": 86,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 38010,
-   "durationMs": 66,
+   "snapshotBytes": 38020,
+   "durationMs": 47,
    "astarCalls": 76
   },
   {
@@ -3679,8 +3679,8 @@
    "gold": 59,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 41534,
-   "durationMs": 150,
+   "snapshotBytes": 41550,
+   "durationMs": 99,
    "astarCalls": 98
   },
   {
@@ -3695,8 +3695,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47515,
-   "durationMs": 250,
+   "snapshotBytes": 47517,
+   "durationMs": 229,
    "astarCalls": 150
   },
   {
@@ -3711,8 +3711,8 @@
    "gold": 17,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48569,
-   "durationMs": 267,
+   "snapshotBytes": 48575,
+   "durationMs": 262,
    "astarCalls": 175
   },
   {
@@ -3727,8 +3727,8 @@
    "gold": 0,
    "level": 4,
    "potions": 4,
-   "snapshotBytes": 44623,
-   "durationMs": 289,
+   "snapshotBytes": 44625,
+   "durationMs": 273,
    "astarCalls": 175
   },
   {
@@ -3743,8 +3743,8 @@
    "gold": 21,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47468,
-   "durationMs": 345,
+   "snapshotBytes": 47475,
+   "durationMs": 336,
    "astarCalls": 190
   },
   {
@@ -3759,8 +3759,8 @@
    "gold": 25,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 38031,
-   "durationMs": 261,
+   "snapshotBytes": 38038,
+   "durationMs": 248,
    "astarCalls": 156
   },
   {
@@ -3775,8 +3775,8 @@
    "gold": 108,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 43305,
-   "durationMs": 101,
+   "snapshotBytes": 43297,
+   "durationMs": 91,
    "astarCalls": 76
   },
   {
@@ -3791,8 +3791,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 36849,
-   "durationMs": 163,
+   "snapshotBytes": 36842,
+   "durationMs": 197,
    "astarCalls": 134
   },
   {
@@ -3802,14 +3802,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2513,
+   "turns": 2518,
    "kills": 18,
-   "gold": 93,
+   "gold": 34,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48352,
-   "durationMs": 159,
-   "astarCalls": 120
+   "snapshotBytes": 47966,
+   "durationMs": 158,
+   "astarCalls": 127
   },
   {
    "seed": 3107,
@@ -3823,8 +3823,8 @@
    "gold": 0,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 37452,
-   "durationMs": 60,
+   "snapshotBytes": 37451,
+   "durationMs": 81,
    "astarCalls": 78
   },
   {
@@ -3839,8 +3839,8 @@
    "gold": 61,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 43807,
-   "durationMs": 180,
+   "snapshotBytes": 43816,
+   "durationMs": 210,
    "astarCalls": 166
   },
   {
@@ -3855,8 +3855,8 @@
    "gold": 58,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48193,
-   "durationMs": 196,
+   "snapshotBytes": 48198,
+   "durationMs": 239,
    "astarCalls": 215
   },
   {
@@ -3871,8 +3871,8 @@
    "gold": 63,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47555,
-   "durationMs": 206,
+   "snapshotBytes": 47556,
+   "durationMs": 186,
    "astarCalls": 149
   },
   {
@@ -3887,8 +3887,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48203,
-   "durationMs": 54,
+   "snapshotBytes": 48204,
+   "durationMs": 53,
    "astarCalls": 52
   },
   {
@@ -3904,7 +3904,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 47778,
-   "durationMs": 60,
+   "durationMs": 52,
    "astarCalls": 61
   },
   {
@@ -3919,8 +3919,8 @@
    "gold": 45,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47425,
-   "durationMs": 182,
+   "snapshotBytes": 47417,
+   "durationMs": 181,
    "astarCalls": 147
   },
   {
@@ -3936,7 +3936,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 46893,
-   "durationMs": 190,
+   "durationMs": 174,
    "astarCalls": 111
   },
   {
@@ -3952,7 +3952,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 48820,
-   "durationMs": 62,
+   "durationMs": 43,
    "astarCalls": 37
   },
   {
@@ -3967,8 +3967,8 @@
    "gold": 23,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47839,
-   "durationMs": 153,
+   "snapshotBytes": 47845,
+   "durationMs": 187,
    "astarCalls": 138
   },
   {
@@ -3983,8 +3983,8 @@
    "gold": 14,
    "level": 2,
    "potions": 0,
-   "snapshotBytes": 47315,
-   "durationMs": 78,
+   "snapshotBytes": 47325,
+   "durationMs": 75,
    "astarCalls": 62
   },
   {
@@ -3999,8 +3999,8 @@
    "gold": 12,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 42249,
-   "durationMs": 161,
+   "snapshotBytes": 42250,
+   "durationMs": 167,
    "astarCalls": 124
   },
   {
@@ -4015,8 +4015,8 @@
    "gold": 58,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 45996,
-   "durationMs": 57,
+   "snapshotBytes": 45992,
+   "durationMs": 52,
    "astarCalls": 99
   },
   {
@@ -4032,7 +4032,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 48334,
-   "durationMs": 300,
+   "durationMs": 307,
    "astarCalls": 160
   },
   {
@@ -4047,7 +4047,7 @@
    "gold": 54,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47477,
+   "snapshotBytes": 47483,
    "durationMs": 261,
    "astarCalls": 163
   },
@@ -4063,8 +4063,8 @@
    "gold": 45,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 42435,
-   "durationMs": 144,
+   "snapshotBytes": 42441,
+   "durationMs": 171,
    "astarCalls": 113
   },
   {
@@ -4074,14 +4074,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2518,
-   "kills": 17,
-   "gold": 6,
+   "turns": 2515,
+   "kills": 19,
+   "gold": 8,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46823,
-   "durationMs": 194,
-   "astarCalls": 134
+   "snapshotBytes": 45710,
+   "durationMs": 234,
+   "astarCalls": 141
   },
   {
    "seed": 3328,
@@ -4095,8 +4095,8 @@
    "gold": 24,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48370,
-   "durationMs": 155,
+   "snapshotBytes": 48376,
+   "durationMs": 172,
    "astarCalls": 118
   },
   {
@@ -4112,7 +4112,7 @@
    "level": 3,
    "potions": 0,
    "snapshotBytes": 36321,
-   "durationMs": 218,
+   "durationMs": 263,
    "astarCalls": 170
   },
   {
@@ -4127,8 +4127,8 @@
    "gold": 101,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48563,
-   "durationMs": 125,
+   "snapshotBytes": 48570,
+   "durationMs": 106,
    "astarCalls": 108
   },
   {
@@ -4144,7 +4144,7 @@
    "level": 5,
    "potions": 0,
    "snapshotBytes": 48379,
-   "durationMs": 82,
+   "durationMs": 85,
    "astarCalls": 86
   },
   {
@@ -4160,7 +4160,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 45025,
-   "durationMs": 102,
+   "durationMs": 92,
    "astarCalls": 156
   },
   {
@@ -4175,8 +4175,8 @@
    "gold": 30,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 35162,
-   "durationMs": 86,
+   "snapshotBytes": 35160,
+   "durationMs": 66,
    "astarCalls": 92
   },
   {
@@ -4191,8 +4191,8 @@
    "gold": 44,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 38312,
-   "durationMs": 82,
+   "snapshotBytes": 38314,
+   "durationMs": 75,
    "astarCalls": 110
   },
   {
@@ -4207,8 +4207,8 @@
    "gold": 16,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 37777,
-   "durationMs": 180,
+   "snapshotBytes": 37781,
+   "durationMs": 182,
    "astarCalls": 118
   },
   {
@@ -4223,8 +4223,8 @@
    "gold": 29,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 35490,
-   "durationMs": 222,
+   "snapshotBytes": 35488,
+   "durationMs": 232,
    "astarCalls": 187
   },
   {
@@ -4239,8 +4239,8 @@
    "gold": 15,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 45216,
-   "durationMs": 122,
+   "snapshotBytes": 45201,
+   "durationMs": 134,
    "astarCalls": 134
   },
   {
@@ -4255,8 +4255,8 @@
    "gold": 36,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 42830,
-   "durationMs": 139,
+   "snapshotBytes": 42825,
+   "durationMs": 177,
    "astarCalls": 131
   },
   {
@@ -4271,8 +4271,8 @@
    "gold": 32,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 38944,
-   "durationMs": 187,
+   "snapshotBytes": 38953,
+   "durationMs": 214,
    "astarCalls": 149
   },
   {
@@ -4288,7 +4288,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 47087,
-   "durationMs": 140,
+   "durationMs": 152,
    "astarCalls": 118
   },
   {
@@ -4303,8 +4303,8 @@
    "gold": 47,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48241,
-   "durationMs": 32,
+   "snapshotBytes": 48240,
+   "durationMs": 47,
    "astarCalls": 42
   },
   {
@@ -4319,8 +4319,8 @@
    "gold": 105,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 37532,
-   "durationMs": 212,
+   "snapshotBytes": 37524,
+   "durationMs": 260,
    "astarCalls": 155
   },
   {
@@ -4335,8 +4335,8 @@
    "gold": 93,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48807,
-   "durationMs": 73,
+   "snapshotBytes": 48809,
+   "durationMs": 78,
    "astarCalls": 73
   },
   {
@@ -4351,8 +4351,8 @@
    "gold": 61,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47396,
-   "durationMs": 421,
+   "snapshotBytes": 47398,
+   "durationMs": 491,
    "astarCalls": 248
   },
   {
@@ -4367,8 +4367,8 @@
    "gold": 24,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 40061,
-   "durationMs": 43,
+   "snapshotBytes": 40063,
+   "durationMs": 48,
    "astarCalls": 30
   },
   {
@@ -4378,14 +4378,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2519,
+   "turns": 2517,
    "kills": 16,
-   "gold": 30,
+   "gold": 55,
    "level": 4,
-   "potions": 0,
-   "snapshotBytes": 47637,
-   "durationMs": 129,
-   "astarCalls": 86
+   "potions": 2,
+   "snapshotBytes": 48037,
+   "durationMs": 130,
+   "astarCalls": 90
   },
   {
    "seed": 3575,
@@ -4399,8 +4399,8 @@
    "gold": 12,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 44679,
-   "durationMs": 152,
+   "snapshotBytes": 44682,
+   "durationMs": 195,
    "astarCalls": 85
   },
   {
@@ -4410,14 +4410,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2503,
-   "kills": 18,
-   "gold": 75,
-   "level": 4,
-   "potions": 2,
-   "snapshotBytes": 35351,
-   "durationMs": 330,
-   "astarCalls": 215
+   "turns": 2511,
+   "kills": 21,
+   "gold": 0,
+   "level": 5,
+   "potions": 0,
+   "snapshotBytes": 40921,
+   "durationMs": 238,
+   "astarCalls": 196
   },
   {
    "seed": 3601,
@@ -4431,8 +4431,8 @@
    "gold": 21,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 45661,
-   "durationMs": 279,
+   "snapshotBytes": 45664,
+   "durationMs": 269,
    "astarCalls": 176
   },
   {
@@ -4447,8 +4447,8 @@
    "gold": 30,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 44181,
-   "durationMs": 228,
+   "snapshotBytes": 44188,
+   "durationMs": 246,
    "astarCalls": 143
   },
   {
@@ -4463,8 +4463,8 @@
    "gold": 22,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 35923,
-   "durationMs": 345,
+   "snapshotBytes": 35931,
+   "durationMs": 377,
    "astarCalls": 222
   },
   {
@@ -4479,8 +4479,8 @@
    "gold": 64,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46962,
-   "durationMs": 196,
+   "snapshotBytes": 46975,
+   "durationMs": 213,
    "astarCalls": 145
   },
   {
@@ -4495,8 +4495,8 @@
    "gold": 5,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48074,
-   "durationMs": 222,
+   "snapshotBytes": 48063,
+   "durationMs": 208,
    "astarCalls": 145
   },
   {
@@ -4511,8 +4511,8 @@
    "gold": 45,
    "level": 6,
    "potions": 2,
-   "snapshotBytes": 43129,
-   "durationMs": 325,
+   "snapshotBytes": 43142,
+   "durationMs": 354,
    "astarCalls": 226
   },
   {
@@ -4527,8 +4527,8 @@
    "gold": 0,
    "level": 1,
    "potions": 0,
-   "snapshotBytes": 38770,
-   "durationMs": 96,
+   "snapshotBytes": 38780,
+   "durationMs": 128,
    "astarCalls": 12
   },
   {
@@ -4543,8 +4543,8 @@
    "gold": 118,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 45676,
-   "durationMs": 163,
+   "snapshotBytes": 45673,
+   "durationMs": 177,
    "astarCalls": 121
   },
   {
@@ -4560,7 +4560,7 @@
    "level": 3,
    "potions": 0,
    "snapshotBytes": 38866,
-   "durationMs": 328,
+   "durationMs": 389,
    "astarCalls": 150
   },
   {
@@ -4575,8 +4575,8 @@
    "gold": 19,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45893,
-   "durationMs": 273,
+   "snapshotBytes": 45903,
+   "durationMs": 301,
    "astarCalls": 169
   },
   {
@@ -4591,8 +4591,8 @@
    "gold": 60,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 38006,
-   "durationMs": 161,
+   "snapshotBytes": 38002,
+   "durationMs": 159,
    "astarCalls": 212
   },
   {
@@ -4607,8 +4607,8 @@
    "gold": 17,
    "level": 2,
    "potions": 0,
-   "snapshotBytes": 47806,
-   "durationMs": 182,
+   "snapshotBytes": 47804,
+   "durationMs": 183,
    "astarCalls": 101
   },
   {
@@ -4623,8 +4623,8 @@
    "gold": 62,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47364,
-   "durationMs": 149,
+   "snapshotBytes": 47374,
+   "durationMs": 180,
    "astarCalls": 127
   },
   {
@@ -4640,7 +4640,7 @@
    "level": 2,
    "potions": 0,
    "snapshotBytes": 48723,
-   "durationMs": 145,
+   "durationMs": 167,
    "astarCalls": 79
   },
   {
@@ -4655,8 +4655,8 @@
    "gold": 81,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 43477,
-   "durationMs": 89,
+   "snapshotBytes": 43491,
+   "durationMs": 113,
    "astarCalls": 133
   },
   {
@@ -4671,8 +4671,8 @@
    "gold": 66,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 36961,
-   "durationMs": 221,
+   "snapshotBytes": 36951,
+   "durationMs": 220,
    "astarCalls": 180
   },
   {
@@ -4687,8 +4687,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46328,
-   "durationMs": 256,
+   "snapshotBytes": 46333,
+   "durationMs": 255,
    "astarCalls": 163
   },
   {
@@ -4703,8 +4703,8 @@
    "gold": 33,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46907,
-   "durationMs": 142,
+   "snapshotBytes": 46911,
+   "durationMs": 158,
    "astarCalls": 125
   },
   {
@@ -4720,7 +4720,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 46653,
-   "durationMs": 164,
+   "durationMs": 170,
    "astarCalls": 115
   },
   {
@@ -4735,8 +4735,8 @@
    "gold": 37,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47689,
-   "durationMs": 155,
+   "snapshotBytes": 47688,
+   "durationMs": 139,
    "astarCalls": 123
   },
   {
@@ -4751,8 +4751,8 @@
    "gold": 41,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 47342,
-   "durationMs": 139,
+   "snapshotBytes": 47328,
+   "durationMs": 134,
    "astarCalls": 252
   },
   {
@@ -4768,7 +4768,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 41880,
-   "durationMs": 113,
+   "durationMs": 129,
    "astarCalls": 96
   },
   {
@@ -4783,8 +4783,8 @@
    "gold": 4,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 42098,
-   "durationMs": 297,
+   "snapshotBytes": 42093,
+   "durationMs": 286,
    "astarCalls": 145
   },
   {
@@ -4799,8 +4799,8 @@
    "gold": 53,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45680,
-   "durationMs": 178,
+   "snapshotBytes": 45677,
+   "durationMs": 181,
    "astarCalls": 130
   },
   {
@@ -4815,8 +4815,8 @@
    "gold": 137,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46385,
-   "durationMs": 207,
+   "snapshotBytes": 46398,
+   "durationMs": 186,
    "astarCalls": 133
   },
   {
@@ -4831,8 +4831,8 @@
    "gold": 15,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 38137,
-   "durationMs": 53,
+   "snapshotBytes": 38134,
+   "durationMs": 38,
    "astarCalls": 63
   },
   {
@@ -4847,8 +4847,8 @@
    "gold": 0,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48057,
-   "durationMs": 205,
+   "snapshotBytes": 48061,
+   "durationMs": 223,
    "astarCalls": 147
   },
   {
@@ -4863,8 +4863,8 @@
    "gold": 14,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 36886,
-   "durationMs": 208,
+   "snapshotBytes": 36883,
+   "durationMs": 319,
    "astarCalls": 129
   },
   {
@@ -4880,7 +4880,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 46566,
-   "durationMs": 179,
+   "durationMs": 239,
    "astarCalls": 153
   },
   {
@@ -4895,8 +4895,8 @@
    "gold": 10,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48310,
-   "durationMs": 198,
+   "snapshotBytes": 48318,
+   "durationMs": 281,
    "astarCalls": 201
   },
   {
@@ -4911,8 +4911,8 @@
    "gold": 9,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 42740,
-   "durationMs": 84,
+   "snapshotBytes": 42749,
+   "durationMs": 88,
    "astarCalls": 47
   },
   {
@@ -4927,8 +4927,8 @@
    "gold": 105,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45744,
-   "durationMs": 209,
+   "snapshotBytes": 45737,
+   "durationMs": 206,
    "astarCalls": 118
   },
   {
@@ -4943,8 +4943,8 @@
    "gold": 78,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 49114,
-   "durationMs": 41,
+   "snapshotBytes": 49128,
+   "durationMs": 47,
    "astarCalls": 83
   },
   {
@@ -4959,8 +4959,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46272,
-   "durationMs": 296,
+   "snapshotBytes": 46267,
+   "durationMs": 256,
    "astarCalls": 173
   },
   {
@@ -4976,7 +4976,7 @@
    "level": 5,
    "potions": 2,
    "snapshotBytes": 44348,
-   "durationMs": 186,
+   "durationMs": 157,
    "astarCalls": 126
   },
   {
@@ -4992,7 +4992,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 36104,
-   "durationMs": 208,
+   "durationMs": 146,
    "astarCalls": 135
   },
   {
@@ -5007,8 +5007,8 @@
    "gold": 15,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 36231,
-   "durationMs": 304,
+   "snapshotBytes": 36229,
+   "durationMs": 290,
    "astarCalls": 170
   },
   {
@@ -5023,8 +5023,8 @@
    "gold": 33,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45578,
-   "durationMs": 98,
+   "snapshotBytes": 45576,
+   "durationMs": 81,
    "astarCalls": 100
   },
   {
@@ -5039,8 +5039,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 40304,
-   "durationMs": 116,
+   "snapshotBytes": 40308,
+   "durationMs": 98,
    "astarCalls": 27
   },
   {
@@ -5055,8 +5055,8 @@
    "gold": 73,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 40323,
-   "durationMs": 137,
+   "snapshotBytes": 40317,
+   "durationMs": 138,
    "astarCalls": 87
   },
   {
@@ -5072,7 +5072,7 @@
    "level": 5,
    "potions": 0,
    "snapshotBytes": 48917,
-   "durationMs": 165,
+   "durationMs": 120,
    "astarCalls": 128
   },
   {
@@ -5087,8 +5087,8 @@
    "gold": 22,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 50526,
-   "durationMs": 191,
+   "snapshotBytes": 50528,
+   "durationMs": 211,
    "astarCalls": 128
   },
   {
@@ -5103,8 +5103,8 @@
    "gold": 102,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 47807,
-   "durationMs": 266,
+   "snapshotBytes": 47815,
+   "durationMs": 299,
    "astarCalls": 185
   },
   {
@@ -5119,8 +5119,8 @@
    "gold": 18,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 44483,
-   "durationMs": 652,
+   "snapshotBytes": 44480,
+   "durationMs": 547,
    "astarCalls": 19
   },
   {
@@ -5135,8 +5135,8 @@
    "gold": 117,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 34960,
-   "durationMs": 161,
+   "snapshotBytes": 34968,
+   "durationMs": 100,
    "astarCalls": 79
   },
   {
@@ -5151,8 +5151,8 @@
    "gold": 13,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45515,
-   "durationMs": 226,
+   "snapshotBytes": 45512,
+   "durationMs": 200,
    "astarCalls": 117
   },
   {
@@ -5168,7 +5168,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 35461,
-   "durationMs": 250,
+   "durationMs": 187,
    "astarCalls": 171
   },
   {
@@ -5183,8 +5183,8 @@
    "gold": 17,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48473,
-   "durationMs": 136,
+   "snapshotBytes": 48462,
+   "durationMs": 146,
    "astarCalls": 105
   },
   {
@@ -5199,8 +5199,8 @@
    "gold": 105,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46856,
-   "durationMs": 114,
+   "snapshotBytes": 46865,
+   "durationMs": 136,
    "astarCalls": 94
   },
   {
@@ -5215,25 +5215,25 @@
    "gold": 22,
    "level": 2,
    "potions": 2,
-   "snapshotBytes": 33957,
-   "durationMs": 18,
+   "snapshotBytes": 33960,
+   "durationMs": 17,
    "astarCalls": 28
   },
   {
    "seed": 4251,
    "classId": "mage",
-   "maxDepth": 2,
+   "maxDepth": 3,
    "reached30": false,
    "dead": false,
-   "cause": "回合冻结（bot 无动作可用，已断开）",
-   "turns": 2239,
-   "kills": 14,
-   "gold": 33,
-   "level": 4,
-   "potions": 2,
-   "snapshotBytes": 49423,
-   "durationMs": 251,
-   "astarCalls": 138
+   "cause": "回合上限（机器人卡死）",
+   "turns": 2502,
+   "kills": 16,
+   "gold": 54,
+   "level": 5,
+   "potions": 0,
+   "snapshotBytes": 37753,
+   "durationMs": 114,
+   "astarCalls": 68
   },
   {
    "seed": 4264,
@@ -5247,8 +5247,8 @@
    "gold": 42,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47505,
-   "durationMs": 134,
+   "snapshotBytes": 47495,
+   "durationMs": 147,
    "astarCalls": 96
   },
   {
@@ -5263,8 +5263,8 @@
    "gold": 39,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 41089,
-   "durationMs": 110,
+   "snapshotBytes": 41083,
+   "durationMs": 89,
    "astarCalls": 88
   },
   {
@@ -5279,8 +5279,8 @@
    "gold": 104,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 38858,
-   "durationMs": 185,
+   "snapshotBytes": 38849,
+   "durationMs": 154,
    "astarCalls": 129
   },
   {
@@ -5290,14 +5290,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2508,
-   "kills": 15,
-   "gold": 29,
+   "turns": 2503,
+   "kills": 18,
+   "gold": 36,
    "level": 4,
-   "potions": 2,
-   "snapshotBytes": 46687,
-   "durationMs": 55,
-   "astarCalls": 61
+   "potions": 0,
+   "snapshotBytes": 47605,
+   "durationMs": 64,
+   "astarCalls": 86
   },
   {
    "seed": 4316,
@@ -5311,8 +5311,8 @@
    "gold": 33,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 42911,
-   "durationMs": 174,
+   "snapshotBytes": 42901,
+   "durationMs": 153,
    "astarCalls": 145
   },
   {
@@ -5327,8 +5327,8 @@
    "gold": 57,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 34983,
-   "durationMs": 175,
+   "snapshotBytes": 34998,
+   "durationMs": 145,
    "astarCalls": 125
   },
   {
@@ -5344,7 +5344,7 @@
    "level": 6,
    "potions": 2,
    "snapshotBytes": 44160,
-   "durationMs": 133,
+   "durationMs": 95,
    "astarCalls": 127
   },
   {
@@ -5359,8 +5359,8 @@
    "gold": 14,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 42466,
-   "durationMs": 245,
+   "snapshotBytes": 42474,
+   "durationMs": 178,
    "astarCalls": 120
   },
   {
@@ -5375,8 +5375,8 @@
    "gold": 48,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 47235,
-   "durationMs": 196,
+   "snapshotBytes": 47245,
+   "durationMs": 188,
    "astarCalls": 141
   },
   {
@@ -5391,8 +5391,8 @@
    "gold": 12,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 41249,
-   "durationMs": 125,
+   "snapshotBytes": 41245,
+   "durationMs": 149,
    "astarCalls": 85
   },
   {
@@ -5407,8 +5407,8 @@
    "gold": 88,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 35882,
-   "durationMs": 185,
+   "snapshotBytes": 35887,
+   "durationMs": 207,
    "astarCalls": 163
   },
   {
@@ -5423,8 +5423,8 @@
    "gold": 128,
    "level": 4,
    "potions": 4,
-   "snapshotBytes": 48770,
-   "durationMs": 148,
+   "snapshotBytes": 48780,
+   "durationMs": 174,
    "astarCalls": 119
   },
   {
@@ -5439,8 +5439,8 @@
    "gold": 17,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 40962,
-   "durationMs": 218,
+   "snapshotBytes": 40971,
+   "durationMs": 222,
    "astarCalls": 157
   },
   {
@@ -5455,8 +5455,8 @@
    "gold": 81,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 35237,
-   "durationMs": 257,
+   "snapshotBytes": 35250,
+   "durationMs": 306,
    "astarCalls": 192
   },
   {
@@ -5471,8 +5471,8 @@
    "gold": 7,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 36265,
-   "durationMs": 181,
+   "snapshotBytes": 36262,
+   "durationMs": 205,
    "astarCalls": 128
   },
   {
@@ -5487,8 +5487,8 @@
    "gold": 12,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 47436,
-   "durationMs": 255,
+   "snapshotBytes": 47431,
+   "durationMs": 280,
    "astarCalls": 133
   },
   {
@@ -5503,8 +5503,8 @@
    "gold": 72,
    "level": 4,
    "potions": 4,
-   "snapshotBytes": 35854,
-   "durationMs": 351,
+   "snapshotBytes": 35869,
+   "durationMs": 353,
    "astarCalls": 216
   },
   {
@@ -5519,8 +5519,8 @@
    "gold": 82,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47043,
-   "durationMs": 191,
+   "snapshotBytes": 47054,
+   "durationMs": 178,
    "astarCalls": 149
   },
   {
@@ -5535,8 +5535,8 @@
    "gold": 50,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 36182,
-   "durationMs": 85,
+   "snapshotBytes": 36188,
+   "durationMs": 89,
    "astarCalls": 76
   },
   {
@@ -5551,8 +5551,8 @@
    "gold": 16,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 45647,
-   "durationMs": 182,
+   "snapshotBytes": 45651,
+   "durationMs": 180,
    "astarCalls": 160
   },
   {
@@ -5567,8 +5567,8 @@
    "gold": 20,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 44830,
-   "durationMs": 143,
+   "snapshotBytes": 44834,
+   "durationMs": 147,
    "astarCalls": 117
   },
   {
@@ -5576,16 +5576,16 @@
    "classId": "mage",
    "maxDepth": 4,
    "reached30": false,
-   "dead": false,
-   "cause": "回合上限（机器人卡死）",
-   "turns": 2503,
-   "kills": 23,
-   "gold": 60,
-   "level": 5,
+   "dead": true,
+   "cause": "深渊蛛",
+   "turns": 2125,
+   "kills": 16,
+   "gold": 14,
+   "level": 4,
    "potions": 2,
-   "snapshotBytes": 44464,
-   "durationMs": 267,
-   "astarCalls": 177
+   "snapshotBytes": 38872,
+   "durationMs": 239,
+   "astarCalls": 200
   },
   {
    "seed": 4550,
@@ -5599,8 +5599,8 @@
    "gold": 24,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 41244,
-   "durationMs": 84,
+   "snapshotBytes": 41248,
+   "durationMs": 93,
    "astarCalls": 77
   },
   {
@@ -5615,8 +5615,8 @@
    "gold": 52,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 44179,
-   "durationMs": 148,
+   "snapshotBytes": 44178,
+   "durationMs": 166,
    "astarCalls": 111
   },
   {
@@ -5631,8 +5631,8 @@
    "gold": 0,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 46432,
-   "durationMs": 230,
+   "snapshotBytes": 46439,
+   "durationMs": 228,
    "astarCalls": 133
   },
   {
@@ -5647,8 +5647,8 @@
    "gold": 0,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 38227,
-   "durationMs": 190,
+   "snapshotBytes": 38226,
+   "durationMs": 185,
    "astarCalls": 137
   },
   {
@@ -5663,8 +5663,8 @@
    "gold": 17,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 47541,
-   "durationMs": 150,
+   "snapshotBytes": 47549,
+   "durationMs": 148,
    "astarCalls": 131
   },
   {
@@ -5679,8 +5679,8 @@
    "gold": 12,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 41605,
-   "durationMs": 210,
+   "snapshotBytes": 41620,
+   "durationMs": 200,
    "astarCalls": 84
   },
   {
@@ -5695,8 +5695,8 @@
    "gold": 18,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45931,
-   "durationMs": 111,
+   "snapshotBytes": 45935,
+   "durationMs": 104,
    "astarCalls": 86
   },
   {
@@ -5711,8 +5711,8 @@
    "gold": 69,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48167,
-   "durationMs": 270,
+   "snapshotBytes": 48177,
+   "durationMs": 222,
    "astarCalls": 157
   },
   {
@@ -5722,14 +5722,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2501,
+   "turns": 2512,
    "kills": 20,
    "gold": 37,
    "level": 5,
-   "potions": 2,
-   "snapshotBytes": 36908,
-   "durationMs": 330,
-   "astarCalls": 184
+   "potions": 0,
+   "snapshotBytes": 36916,
+   "durationMs": 291,
+   "astarCalls": 183
   },
   {
    "seed": 4667,
@@ -5743,8 +5743,8 @@
    "gold": 50,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 36032,
-   "durationMs": 231,
+   "snapshotBytes": 36054,
+   "durationMs": 221,
    "astarCalls": 168
   },
   {
@@ -5759,8 +5759,8 @@
    "gold": 26,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47580,
-   "durationMs": 316,
+   "snapshotBytes": 47581,
+   "durationMs": 264,
    "astarCalls": 168
   },
   {
@@ -5775,8 +5775,8 @@
    "gold": 57,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 35936,
-   "durationMs": 210,
+   "snapshotBytes": 35932,
+   "durationMs": 171,
    "astarCalls": 139
   },
   {
@@ -5791,8 +5791,8 @@
    "gold": 73,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48804,
-   "durationMs": 171,
+   "snapshotBytes": 48802,
+   "durationMs": 168,
    "astarCalls": 144
   },
   {
@@ -5807,8 +5807,8 @@
    "gold": 44,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 45828,
-   "durationMs": 186,
+   "snapshotBytes": 45832,
+   "durationMs": 242,
    "astarCalls": 176
   },
   {
@@ -5823,8 +5823,8 @@
    "gold": 18,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 44462,
-   "durationMs": 127,
+   "snapshotBytes": 44456,
+   "durationMs": 173,
    "astarCalls": 95
   },
   {
@@ -5834,14 +5834,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2508,
-   "kills": 17,
+   "turns": 2506,
+   "kills": 16,
    "gold": 93,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 37637,
-   "durationMs": 253,
-   "astarCalls": 144
+   "snapshotBytes": 37554,
+   "durationMs": 260,
+   "astarCalls": 148
   },
   {
    "seed": 4758,
@@ -5855,7 +5855,7 @@
    "gold": 0,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 37468,
+   "snapshotBytes": 37472,
    "durationMs": 116,
    "astarCalls": 52
   },
@@ -5866,14 +5866,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2515,
-   "kills": 22,
+   "turns": 2511,
+   "kills": 23,
    "gold": 95,
    "level": 5,
-   "potions": 4,
-   "snapshotBytes": 37603,
-   "durationMs": 168,
-   "astarCalls": 155
+   "potions": 2,
+   "snapshotBytes": 36378,
+   "durationMs": 200,
+   "astarCalls": 154
   },
   {
    "seed": 4784,
@@ -5887,8 +5887,8 @@
    "gold": 52,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 49104,
-   "durationMs": 210,
+   "snapshotBytes": 49103,
+   "durationMs": 232,
    "astarCalls": 157
   },
   {
@@ -5904,7 +5904,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 36699,
-   "durationMs": 288,
+   "durationMs": 286,
    "astarCalls": 182
   },
   {
@@ -5919,8 +5919,8 @@
    "gold": 21,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 43855,
-   "durationMs": 152,
+   "snapshotBytes": 43868,
+   "durationMs": 145,
    "astarCalls": 120
   },
   {
@@ -5935,8 +5935,8 @@
    "gold": 14,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 41246,
-   "durationMs": 327,
+   "snapshotBytes": 41248,
+   "durationMs": 260,
    "astarCalls": 156
   },
   {
@@ -5951,8 +5951,8 @@
    "gold": 6,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 37951,
-   "durationMs": 61,
+   "snapshotBytes": 37962,
+   "durationMs": 55,
    "astarCalls": 51
   },
   {
@@ -5967,8 +5967,8 @@
    "gold": 2,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 40354,
-   "durationMs": 361,
+   "snapshotBytes": 40351,
+   "durationMs": 382,
    "astarCalls": 90
   },
   {
@@ -5983,8 +5983,8 @@
    "gold": 21,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 41050,
-   "durationMs": 164,
+   "snapshotBytes": 41055,
+   "durationMs": 163,
    "astarCalls": 81
   },
   {
@@ -5999,8 +5999,8 @@
    "gold": 0,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 38082,
-   "durationMs": 196,
+   "snapshotBytes": 38083,
+   "durationMs": 219,
    "astarCalls": 154
   },
   {
@@ -6015,8 +6015,8 @@
    "gold": 58,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47049,
-   "durationMs": 129,
+   "snapshotBytes": 47059,
+   "durationMs": 115,
    "astarCalls": 97
   },
   {
@@ -6031,8 +6031,8 @@
    "gold": 0,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 45465,
-   "durationMs": 50,
+   "snapshotBytes": 45476,
+   "durationMs": 43,
    "astarCalls": 54
   },
   {
@@ -6047,8 +6047,8 @@
    "gold": 17,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48535,
-   "durationMs": 84,
+   "snapshotBytes": 48533,
+   "durationMs": 62,
    "astarCalls": 74
   },
   {
@@ -6063,8 +6063,8 @@
    "gold": 53,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48150,
-   "durationMs": 196,
+   "snapshotBytes": 48163,
+   "durationMs": 223,
    "astarCalls": 138
   },
   {
@@ -6079,8 +6079,8 @@
    "gold": 4,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 36581,
-   "durationMs": 95,
+   "snapshotBytes": 36595,
+   "durationMs": 127,
    "astarCalls": 72
   },
   {
@@ -6090,14 +6090,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2515,
-   "kills": 20,
+   "turns": 2517,
+   "kills": 21,
    "gold": 100,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 39420,
-   "durationMs": 90,
-   "astarCalls": 81
+   "snapshotBytes": 38824,
+   "durationMs": 106,
+   "astarCalls": 97
   },
   {
    "seed": 4966,
@@ -6111,8 +6111,8 @@
    "gold": 20,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48674,
-   "durationMs": 94,
+   "snapshotBytes": 48695,
+   "durationMs": 109,
    "astarCalls": 82
   },
   {
@@ -6127,8 +6127,8 @@
    "gold": 84,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47246,
-   "durationMs": 163,
+   "snapshotBytes": 47254,
+   "durationMs": 131,
    "astarCalls": 134
   },
   {
@@ -6143,8 +6143,8 @@
    "gold": 45,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 37961,
-   "durationMs": 75,
+   "snapshotBytes": 37969,
+   "durationMs": 111,
    "astarCalls": 76
   },
   {
@@ -6159,8 +6159,8 @@
    "gold": 41,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46385,
-   "durationMs": 371,
+   "snapshotBytes": 46392,
+   "durationMs": 347,
    "astarCalls": 188
   },
   {
@@ -6175,8 +6175,8 @@
    "gold": 27,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 44811,
-   "durationMs": 147,
+   "snapshotBytes": 44820,
+   "durationMs": 159,
    "astarCalls": 111
   },
   {
@@ -6191,8 +6191,8 @@
    "gold": 52,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 45076,
-   "durationMs": 68,
+   "snapshotBytes": 45089,
+   "durationMs": 57,
    "astarCalls": 83
   },
   {
@@ -6207,8 +6207,8 @@
    "gold": 15,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 44594,
-   "durationMs": 54,
+   "snapshotBytes": 44595,
+   "durationMs": 58,
    "astarCalls": 65
   },
   {
@@ -6223,8 +6223,8 @@
    "gold": 47,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 44728,
-   "durationMs": 81,
+   "snapshotBytes": 44724,
+   "durationMs": 72,
    "astarCalls": 72
   },
   {
@@ -6239,8 +6239,8 @@
    "gold": 31,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 41718,
-   "durationMs": 259,
+   "snapshotBytes": 41719,
+   "durationMs": 243,
    "astarCalls": 174
   },
   {
@@ -6255,25 +6255,25 @@
    "gold": 14,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47749,
-   "durationMs": 81,
+   "snapshotBytes": 47744,
+   "durationMs": 73,
    "astarCalls": 85
   },
   {
    "seed": 5096,
    "classId": "mage",
-   "maxDepth": 2,
+   "maxDepth": 3,
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2514,
+   "turns": 2506,
    "kills": 15,
-   "gold": 19,
+   "gold": 96,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 40000,
-   "durationMs": 277,
-   "astarCalls": 163
+   "snapshotBytes": 40281,
+   "durationMs": 280,
+   "astarCalls": 164
   },
   {
    "seed": 5109,
@@ -6287,8 +6287,8 @@
    "gold": 18,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 40075,
-   "durationMs": 205,
+   "snapshotBytes": 40120,
+   "durationMs": 201,
    "astarCalls": 151
   },
   {
@@ -6303,8 +6303,8 @@
    "gold": 20,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47970,
-   "durationMs": 298,
+   "snapshotBytes": 47963,
+   "durationMs": 317,
    "astarCalls": 171
   },
   {
@@ -6319,8 +6319,8 @@
    "gold": 0,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 37489,
-   "durationMs": 381,
+   "snapshotBytes": 37492,
+   "durationMs": 380,
    "astarCalls": 79
   },
   {
@@ -6335,8 +6335,8 @@
    "gold": 68,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 37746,
-   "durationMs": 181,
+   "snapshotBytes": 37752,
+   "durationMs": 155,
    "astarCalls": 120
   },
   {
@@ -6351,8 +6351,8 @@
    "gold": 0,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48676,
-   "durationMs": 138,
+   "snapshotBytes": 48688,
+   "durationMs": 131,
    "astarCalls": 159
   },
   {
@@ -6367,8 +6367,8 @@
    "gold": 55,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47888,
-   "durationMs": 223,
+   "snapshotBytes": 47878,
+   "durationMs": 191,
    "astarCalls": 162
   },
   {
@@ -6383,8 +6383,8 @@
    "gold": 47,
    "level": 4,
    "potions": 4,
-   "snapshotBytes": 45976,
-   "durationMs": 230,
+   "snapshotBytes": 45973,
+   "durationMs": 249,
    "astarCalls": 140
   },
   {
@@ -6399,8 +6399,8 @@
    "gold": 14,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 36962,
-   "durationMs": 276,
+   "snapshotBytes": 36972,
+   "durationMs": 259,
    "astarCalls": 135
   },
   {
@@ -6415,8 +6415,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 35943,
-   "durationMs": 130,
+   "snapshotBytes": 35956,
+   "durationMs": 98,
    "astarCalls": 94
   },
   {
@@ -6431,8 +6431,8 @@
    "gold": 12,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 40024,
-   "durationMs": 57,
+   "snapshotBytes": 40037,
+   "durationMs": 37,
    "astarCalls": 41
   },
   {
@@ -6447,8 +6447,8 @@
    "gold": 11,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45913,
-   "durationMs": 193,
+   "snapshotBytes": 45920,
+   "durationMs": 111,
    "astarCalls": 91
   },
   {
@@ -6463,8 +6463,8 @@
    "gold": 41,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46745,
-   "durationMs": 205,
+   "snapshotBytes": 46752,
+   "durationMs": 153,
    "astarCalls": 141
   },
   {
@@ -6479,8 +6479,8 @@
    "gold": 12,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 44725,
-   "durationMs": 228,
+   "snapshotBytes": 44729,
+   "durationMs": 179,
    "astarCalls": 136
   },
   {
@@ -6495,8 +6495,8 @@
    "gold": 60,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 35410,
-   "durationMs": 374,
+   "snapshotBytes": 35401,
+   "durationMs": 347,
    "astarCalls": 191
   },
   {
@@ -6511,8 +6511,8 @@
    "gold": 43,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46904,
-   "durationMs": 203,
+   "snapshotBytes": 46912,
+   "durationMs": 167,
    "astarCalls": 119
   },
   {
@@ -6527,8 +6527,8 @@
    "gold": 28,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 35796,
-   "durationMs": 272,
+   "snapshotBytes": 35795,
+   "durationMs": 230,
    "astarCalls": 154
   },
   {
@@ -6543,8 +6543,8 @@
    "gold": 6,
    "level": 4,
    "potions": 4,
-   "snapshotBytes": 46979,
-   "durationMs": 251,
+   "snapshotBytes": 46973,
+   "durationMs": 213,
    "astarCalls": 147
   },
   {
@@ -6559,8 +6559,8 @@
    "gold": 77,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 44203,
-   "durationMs": 448,
+   "snapshotBytes": 44209,
+   "durationMs": 428,
    "astarCalls": 270
   },
   {
@@ -6575,8 +6575,8 @@
    "gold": 0,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 44360,
-   "durationMs": 234,
+   "snapshotBytes": 44352,
+   "durationMs": 229,
    "astarCalls": 139
   },
   {
@@ -6591,8 +6591,8 @@
    "gold": 77,
    "level": 6,
    "potions": 0,
-   "snapshotBytes": 48620,
-   "durationMs": 56,
+   "snapshotBytes": 48637,
+   "durationMs": 45,
    "astarCalls": 67
   },
   {
@@ -6607,8 +6607,8 @@
    "gold": 139,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 46577,
-   "durationMs": 192,
+   "snapshotBytes": 46574,
+   "durationMs": 177,
    "astarCalls": 127
   },
   {
@@ -6624,7 +6624,7 @@
    "level": 3,
    "potions": 0,
    "snapshotBytes": 45164,
-   "durationMs": 255,
+   "durationMs": 273,
    "astarCalls": 184
   },
   {
@@ -6639,8 +6639,8 @@
    "gold": 52,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 44528,
-   "durationMs": 292,
+   "snapshotBytes": 44527,
+   "durationMs": 277,
    "astarCalls": 174
   },
   {
@@ -6655,8 +6655,8 @@
    "gold": 10,
    "level": 2,
    "potions": 0,
-   "snapshotBytes": 35681,
-   "durationMs": 230,
+   "snapshotBytes": 35680,
+   "durationMs": 210,
    "astarCalls": 86
   },
   {
@@ -6671,8 +6671,8 @@
    "gold": 63,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 41999,
-   "durationMs": 210,
+   "snapshotBytes": 41993,
+   "durationMs": 184,
    "astarCalls": 187
   },
   {
@@ -6687,8 +6687,8 @@
    "gold": 32,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 37147,
-   "durationMs": 96,
+   "snapshotBytes": 37150,
+   "durationMs": 104,
    "astarCalls": 111
   },
   {
@@ -6703,8 +6703,8 @@
    "gold": 76,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 44695,
-   "durationMs": 127,
+   "snapshotBytes": 44691,
+   "durationMs": 129,
    "astarCalls": 128
   },
   {
@@ -6719,8 +6719,8 @@
    "gold": 22,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 35985,
-   "durationMs": 137,
+   "snapshotBytes": 35982,
+   "durationMs": 135,
    "astarCalls": 108
   },
   {
@@ -6735,8 +6735,8 @@
    "gold": 15,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 46170,
-   "durationMs": 353,
+   "snapshotBytes": 46213,
+   "durationMs": 379,
    "astarCalls": 222
   },
   {
@@ -6751,8 +6751,8 @@
    "gold": 57,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 41362,
-   "durationMs": 170,
+   "snapshotBytes": 41359,
+   "durationMs": 143,
    "astarCalls": 211
   },
   {
@@ -6767,8 +6767,8 @@
    "gold": 16,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 38867,
-   "durationMs": 350,
+   "snapshotBytes": 38857,
+   "durationMs": 352,
    "astarCalls": 117
   },
   {
@@ -6783,8 +6783,8 @@
    "gold": 12,
    "level": 2,
    "potions": 0,
-   "snapshotBytes": 47566,
-   "durationMs": 120,
+   "snapshotBytes": 47558,
+   "durationMs": 107,
    "astarCalls": 80
   },
   {
@@ -6799,8 +6799,8 @@
    "gold": 67,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 38860,
-   "durationMs": 132,
+   "snapshotBytes": 38872,
+   "durationMs": 87,
    "astarCalls": 116
   },
   {
@@ -6816,7 +6816,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 47232,
-   "durationMs": 210,
+   "durationMs": 197,
    "astarCalls": 116
   },
   {
@@ -6831,8 +6831,8 @@
    "gold": 104,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48058,
-   "durationMs": 135,
+   "snapshotBytes": 48056,
+   "durationMs": 142,
    "astarCalls": 114
   },
   {
@@ -6847,8 +6847,8 @@
    "gold": 102,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 42169,
-   "durationMs": 247,
+   "snapshotBytes": 42209,
+   "durationMs": 242,
    "astarCalls": 182
   },
   {
@@ -6863,8 +6863,8 @@
    "gold": 82,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 35965,
-   "durationMs": 176,
+   "snapshotBytes": 35969,
+   "durationMs": 169,
    "astarCalls": 143
   },
   {
@@ -6879,8 +6879,8 @@
    "gold": 46,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46647,
-   "durationMs": 230,
+   "snapshotBytes": 46650,
+   "durationMs": 257,
    "astarCalls": 151
   },
   {
@@ -6895,8 +6895,8 @@
    "gold": 126,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 37673,
-   "durationMs": 103,
+   "snapshotBytes": 37674,
+   "durationMs": 114,
    "astarCalls": 111
   },
   {
@@ -6911,8 +6911,8 @@
    "gold": 25,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 41907,
-   "durationMs": 141,
+   "snapshotBytes": 41908,
+   "durationMs": 166,
    "astarCalls": 115
   },
   {
@@ -6927,8 +6927,8 @@
    "gold": 50,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46489,
-   "durationMs": 186,
+   "snapshotBytes": 46496,
+   "durationMs": 168,
    "astarCalls": 119
   },
   {
@@ -6944,7 +6944,7 @@
    "level": 3,
    "potions": 0,
    "snapshotBytes": 38355,
-   "durationMs": 217,
+   "durationMs": 249,
    "astarCalls": 114
   },
   {
@@ -6960,7 +6960,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 35406,
-   "durationMs": 158,
+   "durationMs": 186,
    "astarCalls": 143
   },
   {
@@ -6975,8 +6975,8 @@
    "gold": 30,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46134,
-   "durationMs": 261,
+   "snapshotBytes": 46136,
+   "durationMs": 272,
    "astarCalls": 145
   },
   {
@@ -6991,8 +6991,8 @@
    "gold": 110,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48020,
-   "durationMs": 262,
+   "snapshotBytes": 48019,
+   "durationMs": 229,
    "astarCalls": 166
   },
   {
@@ -7007,8 +7007,8 @@
    "gold": 29,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 44756,
-   "durationMs": 83,
+   "snapshotBytes": 44766,
+   "durationMs": 76,
    "astarCalls": 90
   },
   {
@@ -7023,8 +7023,8 @@
    "gold": 62,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 42171,
-   "durationMs": 315,
+   "snapshotBytes": 42176,
+   "durationMs": 286,
    "astarCalls": 185
   },
   {
@@ -7039,8 +7039,8 @@
    "gold": 59,
    "level": 7,
    "potions": 0,
-   "snapshotBytes": 44820,
-   "durationMs": 63,
+   "snapshotBytes": 44812,
+   "durationMs": 37,
    "astarCalls": 78
   },
   {
@@ -7055,8 +7055,8 @@
    "gold": 46,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46321,
-   "durationMs": 271,
+   "snapshotBytes": 46326,
+   "durationMs": 236,
    "astarCalls": 215
   },
   {
@@ -7071,8 +7071,8 @@
    "gold": 16,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 35564,
-   "durationMs": 158,
+   "snapshotBytes": 35557,
+   "durationMs": 146,
    "astarCalls": 86
   },
   {
@@ -7087,8 +7087,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48929,
-   "durationMs": 111,
+   "snapshotBytes": 48930,
+   "durationMs": 137,
    "astarCalls": 133
   },
   {
@@ -7103,8 +7103,8 @@
    "gold": 46,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46199,
-   "durationMs": 187,
+   "snapshotBytes": 46196,
+   "durationMs": 185,
    "astarCalls": 146
   },
   {
@@ -7119,8 +7119,8 @@
    "gold": 13,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48842,
-   "durationMs": 123,
+   "snapshotBytes": 48843,
+   "durationMs": 120,
    "astarCalls": 88
   },
   {
@@ -7135,8 +7135,8 @@
    "gold": 84,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48006,
-   "durationMs": 78,
+   "snapshotBytes": 48015,
+   "durationMs": 91,
    "astarCalls": 96
   },
   {
@@ -7151,8 +7151,8 @@
    "gold": 23,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 48931,
-   "durationMs": 1834,
+   "snapshotBytes": 48922,
+   "durationMs": 1756,
    "astarCalls": 907
   },
   {
@@ -7162,14 +7162,14 @@
    "reached30": false,
    "dead": true,
    "cause": "食人魔",
-   "turns": 1937,
+   "turns": 1903,
    "kills": 14,
    "gold": 43,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 37708,
-   "durationMs": 302,
-   "astarCalls": 199
+   "snapshotBytes": 36846,
+   "durationMs": 277,
+   "astarCalls": 195
   },
   {
    "seed": 5837,
@@ -7178,14 +7178,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2504,
-   "kills": 18,
-   "gold": 18,
+   "turns": 2511,
+   "kills": 22,
+   "gold": 62,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 36415,
-   "durationMs": 160,
-   "astarCalls": 116
+   "snapshotBytes": 36641,
+   "durationMs": 210,
+   "astarCalls": 141
   },
   {
    "seed": 5850,
@@ -7200,7 +7200,7 @@
    "level": 3,
    "potions": 0,
    "snapshotBytes": 40856,
-   "durationMs": 258,
+   "durationMs": 250,
    "astarCalls": 36
   },
   {
@@ -7210,14 +7210,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2517,
-   "kills": 17,
-   "gold": 17,
+   "turns": 2505,
+   "kills": 16,
+   "gold": 22,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 40893,
-   "durationMs": 46,
-   "astarCalls": 74
+   "snapshotBytes": 43976,
+   "durationMs": 378,
+   "astarCalls": 196
   },
   {
    "seed": 5876,
@@ -7231,8 +7231,8 @@
    "gold": 25,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 36370,
-   "durationMs": 282,
+   "snapshotBytes": 36379,
+   "durationMs": 276,
    "astarCalls": 185
   },
   {
@@ -7247,8 +7247,8 @@
    "gold": 12,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 37528,
-   "durationMs": 358,
+   "snapshotBytes": 37524,
+   "durationMs": 397,
    "astarCalls": 122
   },
   {
@@ -7263,8 +7263,8 @@
    "gold": 111,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 46478,
-   "durationMs": 161,
+   "snapshotBytes": 46482,
+   "durationMs": 189,
    "astarCalls": 123
   },
   {
@@ -7279,8 +7279,8 @@
    "gold": 72,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 44790,
-   "durationMs": 230,
+   "snapshotBytes": 44787,
+   "durationMs": 263,
    "astarCalls": 158
   },
   {
@@ -7295,8 +7295,8 @@
    "gold": 49,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 43294,
-   "durationMs": 49,
+   "snapshotBytes": 43300,
+   "durationMs": 63,
    "astarCalls": 71
   },
   {
@@ -7311,7 +7311,7 @@
    "gold": 31,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 46497,
+   "snapshotBytes": 46506,
    "durationMs": 228,
    "astarCalls": 120
   },
@@ -7327,8 +7327,8 @@
    "gold": 39,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 40206,
-   "durationMs": 228,
+   "snapshotBytes": 40217,
+   "durationMs": 216,
    "astarCalls": 137
   },
   {
@@ -7343,8 +7343,8 @@
    "gold": 47,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47785,
-   "durationMs": 167,
+   "snapshotBytes": 47792,
+   "durationMs": 173,
    "astarCalls": 109
   },
   {
@@ -7359,8 +7359,8 @@
    "gold": 126,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 36072,
-   "durationMs": 305,
+   "snapshotBytes": 36064,
+   "durationMs": 325,
    "astarCalls": 218
   },
   {
@@ -7376,7 +7376,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 47225,
-   "durationMs": 184,
+   "durationMs": 219,
    "astarCalls": 138
   },
   {
@@ -7391,8 +7391,8 @@
    "gold": 16,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 44778,
-   "durationMs": 115,
+   "snapshotBytes": 44779,
+   "durationMs": 108,
    "astarCalls": 75
   },
   {
@@ -7407,8 +7407,8 @@
    "gold": 45,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 48076,
-   "durationMs": 199,
+   "snapshotBytes": 48070,
+   "durationMs": 162,
    "astarCalls": 114
   },
   {
@@ -7423,8 +7423,8 @@
    "gold": 139,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46618,
-   "durationMs": 63,
+   "snapshotBytes": 46630,
+   "durationMs": 57,
    "astarCalls": 61
   },
   {
@@ -7440,7 +7440,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 35606,
-   "durationMs": 162,
+   "durationMs": 184,
    "astarCalls": 128
   },
   {
@@ -7451,13 +7451,13 @@
    "dead": false,
    "cause": "回合上限（机器人卡死）",
    "turns": 2500,
-   "kills": 19,
-   "gold": 24,
+   "kills": 18,
+   "gold": 65,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 48226,
-   "durationMs": 404,
-   "astarCalls": 243
+   "snapshotBytes": 48184,
+   "durationMs": 413,
+   "astarCalls": 247
   },
   {
    "seed": 6071,
@@ -7471,8 +7471,8 @@
    "gold": 75,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48081,
-   "durationMs": 181,
+   "snapshotBytes": 48094,
+   "durationMs": 176,
    "astarCalls": 124
   },
   {
@@ -7482,14 +7482,14 @@
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2515,
-   "kills": 16,
-   "gold": 107,
-   "level": 3,
+   "turns": 2500,
+   "kills": 17,
+   "gold": 60,
+   "level": 4,
    "potions": 0,
-   "snapshotBytes": 47341,
-   "durationMs": 227,
-   "astarCalls": 118
+   "snapshotBytes": 45765,
+   "durationMs": 212,
+   "astarCalls": 121
   },
   {
    "seed": 6097,
@@ -7504,7 +7504,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 46146,
-   "durationMs": 251,
+   "durationMs": 211,
    "astarCalls": 150
   },
   {
@@ -7519,8 +7519,8 @@
    "gold": 86,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 39835,
-   "durationMs": 73,
+   "snapshotBytes": 39838,
+   "durationMs": 83,
    "astarCalls": 99
   },
   {
@@ -7535,8 +7535,8 @@
    "gold": 19,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 47213,
-   "durationMs": 270,
+   "snapshotBytes": 47233,
+   "durationMs": 325,
    "astarCalls": 212
   },
   {
@@ -7551,8 +7551,8 @@
    "gold": 46,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 38687,
-   "durationMs": 54,
+   "snapshotBytes": 38689,
+   "durationMs": 48,
    "astarCalls": 71
   },
   {
@@ -7567,8 +7567,8 @@
    "gold": 42,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 37117,
-   "durationMs": 172,
+   "snapshotBytes": 37118,
+   "durationMs": 185,
    "astarCalls": 145
   },
   {
@@ -7583,8 +7583,8 @@
    "gold": 20,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 47495,
-   "durationMs": 202,
+   "snapshotBytes": 47500,
+   "durationMs": 204,
    "astarCalls": 141
   },
   {
@@ -7599,8 +7599,8 @@
    "gold": 25,
    "level": 3,
    "potions": 2,
-   "snapshotBytes": 38045,
-   "durationMs": 168,
+   "snapshotBytes": 38054,
+   "durationMs": 175,
    "astarCalls": 116
   },
   {
@@ -7616,7 +7616,7 @@
    "level": 5,
    "potions": 2,
    "snapshotBytes": 35398,
-   "durationMs": 109,
+   "durationMs": 117,
    "astarCalls": 115
   },
   {
@@ -7632,7 +7632,7 @@
    "level": 4,
    "potions": 2,
    "snapshotBytes": 48981,
-   "durationMs": 208,
+   "durationMs": 244,
    "astarCalls": 173
   },
   {
@@ -7647,8 +7647,8 @@
    "gold": 30,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48309,
-   "durationMs": 266,
+   "snapshotBytes": 48306,
+   "durationMs": 249,
    "astarCalls": 161
   },
   {
@@ -7663,8 +7663,8 @@
    "gold": 199,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 39118,
-   "durationMs": 127,
+   "snapshotBytes": 39127,
+   "durationMs": 165,
    "astarCalls": 142
   },
   {
@@ -7679,8 +7679,8 @@
    "gold": 0,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46820,
-   "durationMs": 244,
+   "snapshotBytes": 46821,
+   "durationMs": 254,
    "astarCalls": 137
   },
   {
@@ -7695,8 +7695,8 @@
    "gold": 32,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 35585,
-   "durationMs": 349,
+   "snapshotBytes": 35583,
+   "durationMs": 366,
    "astarCalls": 226
   },
   {
@@ -7711,8 +7711,8 @@
    "gold": 56,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 41146,
-   "durationMs": 224,
+   "snapshotBytes": 41152,
+   "durationMs": 225,
    "astarCalls": 154
   },
   {
@@ -7743,8 +7743,8 @@
    "gold": 0,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 34574,
-   "durationMs": 241,
+   "snapshotBytes": 34571,
+   "durationMs": 254,
    "astarCalls": 125
   },
   {
@@ -7759,8 +7759,8 @@
    "gold": 58,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48510,
-   "durationMs": 109,
+   "snapshotBytes": 48504,
+   "durationMs": 131,
    "astarCalls": 103
   },
   {
@@ -7775,25 +7775,25 @@
    "gold": 21,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 45865,
-   "durationMs": 258,
+   "snapshotBytes": 45856,
+   "durationMs": 276,
    "astarCalls": 163
   },
   {
    "seed": 6331,
    "classId": "mage",
-   "maxDepth": 2,
+   "maxDepth": 3,
    "reached30": false,
    "dead": false,
    "cause": "回合上限（机器人卡死）",
-   "turns": 2506,
-   "kills": 16,
-   "gold": 0,
+   "turns": 2505,
+   "kills": 17,
+   "gold": 46,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 43916,
-   "durationMs": 36,
-   "astarCalls": 47
+   "snapshotBytes": 42548,
+   "durationMs": 94,
+   "astarCalls": 86
   },
   {
    "seed": 6344,
@@ -7807,8 +7807,8 @@
    "gold": 92,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 35329,
-   "durationMs": 304,
+   "snapshotBytes": 35326,
+   "durationMs": 283,
    "astarCalls": 195
   },
   {
@@ -7823,8 +7823,8 @@
    "gold": 63,
    "level": 5,
    "potions": 0,
-   "snapshotBytes": 40121,
-   "durationMs": 216,
+   "snapshotBytes": 40116,
+   "durationMs": 234,
    "astarCalls": 184
   },
   {
@@ -7839,8 +7839,8 @@
    "gold": 41,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 46779,
-   "durationMs": 233,
+   "snapshotBytes": 46773,
+   "durationMs": 249,
    "astarCalls": 141
   },
   {
@@ -7856,7 +7856,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 45787,
-   "durationMs": 80,
+   "durationMs": 85,
    "astarCalls": 74
   },
   {
@@ -7871,8 +7871,8 @@
    "gold": 34,
    "level": 4,
    "potions": 2,
-   "snapshotBytes": 49436,
-   "durationMs": 171,
+   "snapshotBytes": 49449,
+   "durationMs": 212,
    "astarCalls": 160
   },
   {
@@ -7887,8 +7887,8 @@
    "gold": 57,
    "level": 5,
    "potions": 2,
-   "snapshotBytes": 38471,
-   "durationMs": 133,
+   "snapshotBytes": 38486,
+   "durationMs": 135,
    "astarCalls": 135
   },
   {
@@ -7903,8 +7903,8 @@
    "gold": 19,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45273,
-   "durationMs": 216,
+   "snapshotBytes": 45272,
+   "durationMs": 211,
    "astarCalls": 149
   },
   {
@@ -7919,8 +7919,8 @@
    "gold": 102,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 45486,
-   "durationMs": 419,
+   "snapshotBytes": 45509,
+   "durationMs": 452,
    "astarCalls": 230
   },
   {
@@ -7935,8 +7935,8 @@
    "gold": 20,
    "level": 2,
    "potions": 0,
-   "snapshotBytes": 47741,
-   "durationMs": 104,
+   "snapshotBytes": 47738,
+   "durationMs": 123,
    "astarCalls": 82
   },
   {
@@ -7951,8 +7951,8 @@
    "gold": 65,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 48126,
-   "durationMs": 134,
+   "snapshotBytes": 48128,
+   "durationMs": 200,
    "astarCalls": 141
   },
   {
@@ -7967,8 +7967,8 @@
    "gold": 13,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 36290,
-   "durationMs": 269,
+   "snapshotBytes": 36284,
+   "durationMs": 232,
    "astarCalls": 155
   },
   {
@@ -7984,7 +7984,7 @@
    "level": 4,
    "potions": 0,
    "snapshotBytes": 46067,
-   "durationMs": 179,
+   "durationMs": 163,
    "astarCalls": 122
   },
   {
@@ -7999,8 +7999,8 @@
    "gold": 21,
    "level": 4,
    "potions": 0,
-   "snapshotBytes": 43859,
-   "durationMs": 47,
+   "snapshotBytes": 43855,
+   "durationMs": 49,
    "astarCalls": 54
   }
  ]

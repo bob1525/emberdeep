@@ -10,14 +10,16 @@ const UNLOCK_DEPTH: Record<string, number> = {
   skeleton: 2,
   orc: 3,
   ogre: 4,
+  abyss_spider: 4,
   ember_wraith: 5,
+  magma_crab: 5,
 };
 
 describe('怪物图鉴完整性', () => {
   const entries = Object.entries(MONSTERS);
 
   it('物种数量与内容清单一致，species 无重复且与键名一致', () => {
-    expect(entries).toHaveLength(6);
+    expect(entries).toHaveLength(8);
     const ids = entries.map(([id]) => id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const [id, tpl] of entries) {
@@ -33,6 +35,8 @@ describe('怪物图鉴完整性', () => {
     expect(MONSTERS['orc']?.name).toBe('兽人');
     expect(MONSTERS['ogre']?.name).toBe('食人魔');
     expect(MONSTERS['ember_wraith']?.name).toBe('余烬幽魂');
+    expect(MONSTERS['abyss_spider']?.name).toBe('深渊蛛');
+    expect(MONSTERS['magma_crab']?.name).toBe('熔壳蟹');
   });
 
   it('模板字段合法：名称/字符/颜色非空，数值为正', () => {
@@ -81,6 +85,24 @@ describe('怪物图鉴完整性', () => {
       expect(bat.xpValue).toBeGreaterThan(rat.xpValue);
     }
   });
+
+  it('同层新物种不同时全面弱于旧物种（深渊蛛玻璃炮 / 熔壳蟹坦位错位）', () => {
+    const ogre = MONSTERS['ogre'];
+    const spider = MONSTERS['abyss_spider'];
+    const wraith = MONSTERS['ember_wraith'];
+    const crab = MONSTERS['magma_crab'];
+    expect(ogre && spider && wraith && crab).toBeTruthy();
+    if (ogre && spider && wraith && crab) {
+      // 第 4 层：深渊蛛攻击不弱于食人魔、感知更远、但血量明显更少（玻璃炮）
+      expect(spider.attack).toBeGreaterThanOrEqual(ogre.attack);
+      expect(spider.senseRadius).toBeGreaterThan(ogre.senseRadius);
+      expect(spider.maxHp).toBeLessThan(ogre.maxHp);
+      // 第 5 层：熔壳蟹防御高于余烬幽魂、血与攻击低于幽魂（坦位错位）
+      expect(crab.defense).toBeGreaterThan(wraith.defense);
+      expect(crab.maxHp).toBeLessThan(wraith.maxHp);
+      expect(crab.attack).toBeLessThan(wraith.attack);
+    }
+  });
 });
 
 describe('monsterTable', () => {
@@ -89,11 +111,13 @@ describe('monsterTable', () => {
     expect(monsterTable(2)).toContain('skeleton');
     expect(monsterTable(3)).toContain('orc');
     expect(monsterTable(4)).toContain('ogre');
+    expect(monsterTable(4)).toContain('abyss_spider');
     expect(monsterTable(5)).toContain('ember_wraith');
+    expect(monsterTable(5)).toContain('magma_crab');
     expect(monsterTable(2)).toHaveLength(3);
     expect(monsterTable(3)).toHaveLength(4);
-    expect(monsterTable(4)).toHaveLength(5);
-    expect(monsterTable(5)).toHaveLength(6);
+    expect(monsterTable(4)).toHaveLength(6);
+    expect(monsterTable(5)).toHaveLength(8);
   });
 
   it('深度递增时物种只增不减', () => {
@@ -149,7 +173,9 @@ describe('rollMonster', () => {
     expect(seen.has('skeleton')).toBe(false);
     expect(seen.has('orc')).toBe(false);
     expect(seen.has('ogre')).toBe(false);
+    expect(seen.has('abyss_spider')).toBe(false);
     expect(seen.has('ember_wraith')).toBe(false);
+    expect(seen.has('magma_crab')).toBe(false);
     expect(seen.has('rat')).toBe(true);
     expect(seen.has('bat')).toBe(true);
   });

@@ -13,8 +13,8 @@ describe('物品目录完整性', () => {
   const entries = Object.entries(ITEMS);
 
   it('目录规模与内容清单一致，catalogId 无重复且与键名一致', () => {
-    // 内容清单：3 药水 + 2 卷轴 + 3 武器 + 3 护甲
-    expect(entries).toHaveLength(11);
+    // 内容清单：4 药水 + 2 卷轴 + 3 武器 + 3 护甲
+    expect(entries).toHaveLength(12);
     const ids = entries.map(([id]) => id);
     expect(new Set(ids).size).toBe(ids.length);
     for (const [id, def] of entries) {
@@ -50,7 +50,7 @@ describe('物品目录完整性', () => {
 
   it('potion 必有 heal 或 effect；治疗量区间合法；might 携带 bonus 与 duration', () => {
     const potions = entries.map(([, d]) => d).filter((d) => d.category === 'potion');
-    expect(potions).toHaveLength(3);
+    expect(potions).toHaveLength(4);
     for (const def of potions) {
       expect(def.heal !== undefined || def.effect !== undefined).toBe(true);
       if (def.heal) {
@@ -66,6 +66,11 @@ describe('物品目录完整性', () => {
     }
     expect(ITEMS['minor_healing']?.heal).toEqual([6, 10]);
     expect(ITEMS['healing']?.heal).toEqual([12, 20]);
+    expect(ITEMS['greater_healing']?.heal).toEqual([18, 30]);
+    // 治疗线逐档抬升：小型 < 标准 < 高级（区间上下限均单调）
+    expect(ITEMS['healing']?.heal?.[0]).toBeGreaterThan(ITEMS['minor_healing']?.heal?.[0] ?? 0);
+    expect(ITEMS['greater_healing']?.heal?.[0]).toBeGreaterThan(ITEMS['healing']?.heal?.[0] ?? 0);
+    expect(ITEMS['greater_healing']?.heal?.[1]).toBeGreaterThan(ITEMS['healing']?.heal?.[1] ?? 0);
     expect(ITEMS['might']?.duration).toBe(20);
   });
 

@@ -82,6 +82,8 @@ describe('词缀目录完整性', () => {
     expect(byId('vital')).toMatchObject({ maxHp: 2 });
     expect(byId('boiling')).toMatchObject({ maxHp: 3 });
     expect(byId('agile')).toMatchObject({ attack: 1, maxHp: 1 });
+    expect(byId('spiked')).toMatchObject({ attack: 1, defense: 1 });
+    expect(byId('warlord')).toMatchObject({ attack: 2, maxHp: 2 });
   });
 });
 

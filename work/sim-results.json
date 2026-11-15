@@ -1,6 +1,6 @@
 {
  "summary": {
-  "generatedAt": "2026-11-15T13:59:35.348Z",
+  "generatedAt": "2026-11-15T14:20:07.186Z",
   "seedsPerClass": 2,
   "classes": {
    "warrior": {
@@ -16,9 +16,9 @@
     "avgGold": 6,
     "avgLevel": 3,
     "avgPotions": 0,
-    "avgSnapshotBytes": 47222,
+    "avgSnapshotBytes": 47225,
     "avgAstarCallsPerRun": 56,
-    "avgDurationMs": 38,
+    "avgDurationMs": 35,
     "topDeathCauses": "（无死亡）"
    },
    "ranger": {
@@ -34,9 +34,9 @@
     "avgGold": 12,
     "avgLevel": 2,
     "avgPotions": 1,
-    "avgSnapshotBytes": 41214,
+    "avgSnapshotBytes": 41206,
     "avgAstarCallsPerRun": 42,
-    "avgDurationMs": 44,
+    "avgDurationMs": 46,
     "topDeathCauses": "（无死亡）"
    },
    "mage": {
@@ -52,9 +52,9 @@
     "avgGold": 12,
     "avgLevel": 2,
     "avgPotions": 1,
-    "avgSnapshotBytes": 41096,
+    "avgSnapshotBytes": 41088,
     "avgAstarCallsPerRun": 42,
-    "avgDurationMs": 44,
+    "avgDurationMs": 47,
     "topDeathCauses": "（无死亡）"
    }
   }
@@ -72,8 +72,8 @@
    "gold": 11,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 46018,
-   "durationMs": 35,
+   "snapshotBytes": 46027,
+   "durationMs": 34,
    "astarCalls": 47
   },
   {
@@ -88,8 +88,8 @@
    "gold": 0,
    "level": 3,
    "potions": 0,
-   "snapshotBytes": 48426,
-   "durationMs": 41,
+   "snapshotBytes": 48422,
+   "durationMs": 36,
    "astarCalls": 64
   },
   {
@@ -104,8 +104,8 @@
    "gold": 0,
    "level": 2,
    "potions": 2,
-   "snapshotBytes": 34698,
-   "durationMs": 73,
+   "snapshotBytes": 34685,
+   "durationMs": 77,
    "astarCalls": 63
   },
   {
@@ -120,8 +120,8 @@
    "gold": 24,
    "level": 2,
    "potions": 0,
-   "snapshotBytes": 47730,
-   "durationMs": 15,
+   "snapshotBytes": 47726,
+   "durationMs": 14,
    "astarCalls": 20
   },
   {
@@ -136,8 +136,8 @@
    "gold": 0,
    "level": 2,
    "potions": 2,
-   "snapshotBytes": 34582,
-   "durationMs": 70,
+   "snapshotBytes": 34569,
+   "durationMs": 81,
    "astarCalls": 63
   },
   {
@@ -152,8 +152,8 @@
    "gold": 24,
    "level": 2,
    "potions": 0,
-   "snapshotBytes": 47610,
-   "durationMs": 17,
+   "snapshotBytes": 47606,
+   "durationMs": 13,
    "astarCalls": 20
   }
  ]

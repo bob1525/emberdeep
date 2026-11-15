@@ -45,7 +45,11 @@ export interface AffixDef {
 
 /**
  * 词缀目录：数值区间 +1~+3，attack/defense/maxHp 各 3 档梯度；
- * "轻盈的"为攻击+生命的混合词缀，让稀有/史诗的组合更有花样。
+ * 混合词缀让稀有/史诗的组合更有花样：
+ * - "轻盈的"（攻+1 血+1）：攻击侧入门混合档；
+ * - "尖刺的"（攻+1 防+1）：防御侧入门混合档——反伤甲风味，护甲也能掷出攻击面；
+ * - "狂战的"（攻+2 血+2）：混合词缀高阶档，合计 +4 追平两条单系二档，
+ *   稀有/史诗里与燃烧/沸血组出强攻血方案，也可与精铸组出全能装。
  */
 export const AFFIXES: readonly AffixDef[] = [
   { id: 'sharp', name: '锋利的', attack: 1 },
@@ -58,6 +62,8 @@ export const AFFIXES: readonly AffixDef[] = [
   { id: 'vital', name: '生命的', maxHp: 2 },
   { id: 'boiling', name: '沸血的', maxHp: 3 },
   { id: 'agile', name: '轻盈的', attack: 1, maxHp: 1 },
+  { id: 'spiked', name: '尖刺的', attack: 1, defense: 1 },
+  { id: 'warlord', name: '狂战的', attack: 2, maxHp: 2 },
 ];
 
 // 数据定义冻结为只读，防止运行期意外篡改（与 catalog.ts 同风格）
