@@ -10,6 +10,12 @@ import { TRAPS } from '../world/traps';
 import { SHRINES } from '../world/shrines';
 import type { DeathStats, Glyph, Scene } from './renderer';
 
+/** 火势层字形与配色（火苗与打击感特效的火焰色一致；烟字半透明表达） */
+const FIRE_GLYPH = '▲';
+const FIRE_COLOR = '#f5803a';
+const SMOKE_GLYPH = '~';
+const SMOKE_COLOR = 'rgba(150, 156, 168, 0.55)';
+
 /** 统一取物品展示信息：远程武器走 RANGED 目录，其余走通用目录 */
 export function itemInfo(item: ItemInstance): {
   name: string;
@@ -31,6 +37,10 @@ export interface SceneInput {
   stairsDown: { x: number; y: number };
   traps: { x: number; y: number; kind: string }[];
   shrines: { x: number; y: number; kind: string }[];
+  /** 燃烧中的格子（火势集成：火苗字形层） */
+  fireCells: { x: number; y: number }[];
+  /** 烟雾格子（本轮仅作视觉：半透明烟字，不动 FOV） */
+  smokeCells: { x: number; y: number }[];
   /** 玩家（actors[0]） */
   player: Glyph & { hp: number; maxHp: number };
   monsters: (Glyph & { hp: number; maxHp: number })[];
@@ -89,6 +99,20 @@ export function buildScene(input: SceneInput): Scene {
     return { x: s.x, y: s.y, glyph: def.glyph, color: def.color };
   });
 
+  // 火势/烟雾层：明火优先于烟（同格只画火苗），烟雾仅作半透明视觉
+  const burning = new Set(input.fireCells.map((p) => `${p.x},${p.y}`));
+  const hazards: Glyph[] = input.fireCells.map((p) => ({
+    x: p.x,
+    y: p.y,
+    glyph: FIRE_GLYPH,
+    color: FIRE_COLOR,
+    pulse: true,
+  }));
+  for (const p of input.smokeCells) {
+    if (burning.has(`${p.x},${p.y}`)) continue;
+    hazards.push({ x: p.x, y: p.y, glyph: SMOKE_GLYPH, color: SMOKE_COLOR });
+  }
+
   return {
     map: input.map,
     depth: input.depth,
@@ -104,6 +128,7 @@ export function buildScene(input: SceneInput): Scene {
       ...trapGlyphs,
       ...shrineGlyphs,
     ],
+    hazards,
     items,
     actors,
     dead: input.dead,

@@ -43,6 +43,8 @@ function itemInfo(item: ItemInstance) {
 import { GameMap } from './world/map';
 import { TRAPS, triggerTrap } from './world/traps';
 import type { PlacedTrap } from './world/traps';
+import { DEFAULT_KEY_STRIDE, ignite, newFireState } from './world/fire';
+import type { FireState } from './world/fire';
 import { SHRINES, resolveAltar, resolveWell } from './world/shrines';
 import type { ShrineKind } from './world/shrines';
 import { FloorService } from './world/floorService';
@@ -132,6 +134,10 @@ export class Game {
   private memories = new Map<number, MonsterMemory>();
   private groundItems: GroundItem[] = [];
   private traps: PlacedTrap[] = [];
+  /** 当前层火势状态（每层独立，buildFloor 重置；key = y*80+x，见 world/fire.ts） */
+  private fireState: FireState = newFireState();
+  /** 本层已烧毁的格子（永久失去燃料，防止复燃；每层独立，buildFloor 重置） */
+  private burnedGround = new Set<number>();
   private shrines: { x: number; y: number; kind: ShrineKind }[] = [];
   private goldPiles: GoldPile[] = [];
   private merchant: MerchantState | null = null;
@@ -217,6 +223,12 @@ export class Game {
       kills: this.kills,
       deathCause: this.deathCause,
       traps: this.traps,
+      fire: {
+        // entries 按 key 升序落盘：canonical 哈希与读档后的插入次序稳定
+        fire: [...this.fireState.fire.entries()].sort((a, b) => a[0] - b[0]),
+        smoke: [...this.fireState.smoke.entries()].sort((a, b) => a[0] - b[0]),
+        burned: [...this.burnedGround].sort((a, b) => a - b),
+      },
       shrines: this.shrines,
       goldPiles: this.goldPiles,
       merchant: this.merchant,
@@ -314,6 +326,11 @@ export class Game {
     }));
     this.groundItems = save.groundItems;
     this.traps = save.traps ?? [];
+    // 火势状态恢复（旧档缺字段时 migrateV1Defaults 已补空态）
+    this.fireState = newFireState();
+    for (const [key, left] of save.fire?.fire ?? []) this.fireState.fire.set(key, left);
+    for (const [key, left] of save.fire?.smoke ?? []) this.fireState.smoke.set(key, left);
+    this.burnedGround = new Set(save.fire?.burned ?? []);
     this.goldPiles = save.goldPiles ?? [];
     this.merchant = save.merchant ?? null;
     this.affixData = new Map(save.affixData ?? []);
@@ -698,6 +715,7 @@ export class Game {
       talentGoldBonus: () => this.talentMods().goldBonus,
       visibleTargets: () => this.visibleTargets(),
       killMonster: (target) => this.killMonster(target),
+      igniteCell: (x, y) => this.igniteCell(x, y),
       log: (text, tone) => { this.log.push({ text, tone }); },
     });
   }
@@ -727,6 +745,10 @@ export class Game {
       getShrines: () => this.shrines,
       setShrines: (shrines) => { this.shrines = shrines; },
       setTraps: (traps) => { this.traps = traps; },
+      getFire: () => this.fireState,
+      setFire: (state) => { this.fireState = state; },
+      getBurnedGround: () => this.burnedGround,
+      setBurnedGround: (burned) => { this.burnedGround = burned; },
       setExplored: (explored) => { this.explored = explored; },
       setBoss: (boss) => { this.boss = boss; },
       setBossDef: (def) => { this.bossDef = def; },
@@ -766,6 +788,9 @@ export class Game {
       getMerchantPos: () => (this.merchant ? { x: this.merchant.x, y: this.merchant.y } : null),
       isPlayMode: () => this.mode === 'play',
       // 门面回调（击杀结算含 RNG 消耗，留在门面）
+      getFire: () => this.fireState,
+      fuelClassAt: (x, y) => this.fuelClassAt(x, y),
+      markBurnedGround: (key) => this.markBurnedGround(key),
       isWalkable: (x, y) => this.map.isWalkable(x, y),
       talentMods: () => this.talentMods(),
       effectiveDefense: () => this.effectiveDefense(),
@@ -1182,6 +1207,21 @@ export class Game {
     return true;
   }
 
+  /** @internal 测试用：当前层火势状态（活动引用；元素次序不保证） */
+  debugFireState(): FireState {
+    return this.fireState;
+  }
+
+  /** @internal 测试用：点燃指定格（走游戏燃料语义；不可燃格无效返回 false） */
+  debugIgniteAt(x: number, y: number): boolean {
+    return this.igniteCell(x, y);
+  }
+
+  /** @internal 测试用：存活怪物列表快照（元素引用与内部一致） */
+  debugMonsters(): Actor[] {
+    return [...this.monsters];
+  }
+
   /** @internal 测试与模拟器用：导出当前存档快照（不落 localStorage） */
   exportSaveData(): SaveData {
     return this.buildSaveData();
@@ -1490,6 +1530,10 @@ export class Game {
     playSfx('kill');
     this.effects.push({ kind: 'burst', x: target.x, y: target.y, color: '#d96a5a', dur: 420 });
     this.log.push({ text: `${target.name}倒下了！`, tone: 'good' });
+    // 火势集成：余烬幽魂陨落时脚下格点燃（不可燃地形自动无效）
+    if (target.species === 'ember_wraith') {
+      this.igniteCell(target.x, target.y);
+    }
     // 生命周期清理（P1-14）：死亡怪物的 AI 记忆与召唤物标记移除
     this.memories.delete(target.id);
     const wasSummoned = this.summonedIds.delete(target.id);
@@ -1629,6 +1673,33 @@ export class Game {
   /** 楼层构建（M4 委托 FloorService）：地图生成 + 怪物/物品/商人/奇遇建筑/陷阱/Boss 布置 */
   private buildFloor(): void {
     this.floorService().buildFloor();
+  }
+
+  // ---------- 火势（world/fire.ts 的集成层） ----------
+
+  /**
+   * 火势燃料语义：本作地形只有 wall/floor —— 可通行地板统一按 fire 模块的
+   * 「油渍」级燃料接入（燃烧 6 回合、蔓延概率 0.30），墙与越界不可燃；
+   * 已烧毁的格子按不可燃处理（fire 模块的 burnOut 契约由集成层落地：烧过的
+   * 地面不再复燃，火势在一场清扫后自然熄灭）。未来引入 door / oil 地形时在此扩展。
+   */
+  private fuelClassAt(x: number, y: number): string {
+    if (!this.map.inBounds(x, y)) return 'wall';
+    if (this.burnedGround.has(y * DEFAULT_KEY_STRIDE + x)) return 'wall';
+    return this.map.tileAt(x, y) === 'wall' ? 'wall' : 'oil';
+  }
+
+  /** 烧毁标记（TurnEngine 的 burnOut 事件回调）：该格此后不可再被点燃 */
+  private markBurnedGround(key: number): void {
+    this.burnedGround.add(key);
+  }
+
+  /** 点燃指定格（燃料不足自动无效）；返回是否产生新的燃烧格（key = y*80+x） */
+  private igniteCell(x: number, y: number): boolean {
+    const key = y * DEFAULT_KEY_STRIDE + x;
+    const wasBurning = this.fireState.fire.has(key);
+    ignite(this.fireState, key, this.fuelClassAt(x, y));
+    return !wasBurning && this.fireState.fire.has(key);
   }
 
   /** 玩家踏入陷阱格：一次性触发后拆除（简化设计） */
@@ -1881,6 +1952,8 @@ export class Game {
 
   /** 场景组装委托到 SceneBuilder（M4 纯转换） */
   private buildScene(): Scene {
+    const toPoints = (keys: Iterable<number>): { x: number; y: number }[] =>
+      [...keys].map((key) => ({ x: key % DEFAULT_KEY_STRIDE, y: Math.floor(key / DEFAULT_KEY_STRIDE) }));
     return sbBuildScene({
       map: this.map,
       depth: this.depth,
@@ -1889,6 +1962,8 @@ export class Game {
       stairsDown: this.stairsDown,
       traps: this.traps,
       shrines: this.shrines,
+      fireCells: toPoints(this.fireState.fire.keys()),
+      smokeCells: toPoints(this.fireState.smoke.keys()),
       player: this.player,
       monsters: this.monsters,
       groundItems: this.groundItems,

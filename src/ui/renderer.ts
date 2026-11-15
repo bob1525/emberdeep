@@ -8,6 +8,8 @@ export interface Glyph {
   color: string;
   hp?: number;
   maxHp?: number;
+  /** 火势层用：呼吸闪烁（火苗），烟雾等静态字形不启用 */
+  pulse?: boolean;
 }
 
 export interface DeathStats {
@@ -28,6 +30,8 @@ export interface Scene {
   explored: Set<string>;
   /** 地形标记（楼梯/陷阱），已探索即可见 */
   markers: Glyph[];
+  /** 火势/烟雾层（火苗/烟字），仅当前可见时绘制，位于物品与角色之下 */
+  hazards: Glyph[];
   /** 地面物品，仅当前可见时绘制 */
   items: Glyph[];
   /** 角色（玩家 + 怪物），仅当前可见时绘制；玩家必须排第一 */
@@ -227,6 +231,15 @@ export class Renderer {
         color = shade(m.color, theme.bg, lit ? pulse : 0.45 * pulse);
       }
       this.drawGlyph(m.x, m.y, cellW, m.glyph, color);
+    }
+
+    // 火势/烟雾层（火势集成）：仅当前可见；火苗按格相位呼吸闪烁，烟字保持半透明
+    for (const hz of scene.hazards) {
+      if (!visible.has(`${hz.x},${hz.y}`)) continue;
+      const color = hz.pulse
+        ? shade(hz.color, theme.bg, 0.78 + 0.22 * Math.sin(now / 170 + tileHash(hz.x, hz.y)))
+        : hz.color;
+      this.drawGlyph(hz.x, hz.y, cellW, hz.glyph, color);
     }
 
     for (const it of scene.items) {

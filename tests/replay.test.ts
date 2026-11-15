@@ -118,6 +118,6 @@ describe('回放协议 v2', () => {
 
   it('协议常量与内容版本已定义', () => {
     expect(REPLAY_PROTOCOL_VERSION).toBe(2);
-    expect(CONTENT_VERSION).toBe('0.1.0');
+    expect(CONTENT_VERSION).toBe('0.2.0');
   });
 });

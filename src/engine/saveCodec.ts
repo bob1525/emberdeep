@@ -34,6 +34,8 @@ export interface SaveData {
   kills: number;
   deathCause: string;
   traps?: PlacedTrap[];
+  /** 火势状态（key = y*80+x → 剩余回合 + 烧毁格 key 列表；旧档缺失走 migrate 空态） */
+  fire?: { fire: [number, number][]; smoke: [number, number][]; burned?: number[] };
   gold?: number;
   goldPiles?: GoldPile[];
   merchant?: MerchantState | null;
@@ -71,6 +73,7 @@ export interface SaveInput {
   kills: number;
   deathCause: string;
   traps: unknown[];
+  fire: { fire: [number, number][]; smoke: [number, number][]; burned: number[] };
   shrines: unknown[];
   mode: string;
   talentChoices: string[];
@@ -109,6 +112,7 @@ export function encodeSaveData(input: SaveInput): SaveData {
     kills: input.kills,
     deathCause: input.deathCause,
     traps: input.traps,
+    fire: { fire: [...input.fire.fire], smoke: [...input.fire.smoke], burned: [...input.fire.burned] },
     shrines: input.shrines,
     goldPiles: input.goldPiles,
     merchant: input.merchant,
@@ -128,6 +132,7 @@ export function encodeSaveData(input: SaveInput): SaveData {
 /** 旧档缺字段补默认值（迁移：v1 新增可选字段的兜底） */
 export function migrateV1Defaults(data: Record<string, unknown>): void {
   data.traps ??= [];
+  data.fire ??= { fire: [], smoke: [], burned: [] };
   data.gold ??= 0;
   data.goldPiles ??= [];
   data.merchant ??= null;

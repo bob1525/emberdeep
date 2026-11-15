@@ -81,6 +81,8 @@ export interface InventoryEconomyCtx {
   visibleTargets(): Actor[];
   /** 击杀怪物结算（经验/金币掉落/演出仍由门面负责） */
   killMonster(target: Actor): void;
+  /** 火势：点燃指定格（走门面燃料语义；返回是否产生新的燃烧格） */
+  igniteCell(x: number, y: number): boolean;
   /** 消息日志 */
   log(text: string, tone: LogTone): void;
 }
@@ -372,6 +374,18 @@ export class InventoryEconomyService {
       );
       this.ctx.log(`火焰吞噬了${t.name}（${damage} 伤害）。`, 'combat');
       if (t.hp <= 0) this.ctx.killMonster(t);
+    }
+    // 火势集成：爆炸范围内地面格点燃（命中目标周边 1 格；墙等不可燃格自动无效）
+    let ignitedAny = false;
+    for (const t of targets) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (this.ctx.igniteCell(t.x + dx, t.y + dy)) ignitedAny = true;
+        }
+      }
+    }
+    if (ignitedAny) {
+      this.ctx.log('火焰引燃了地面，火势开始肆虐！', 'combat');
     }
     return true;
   }

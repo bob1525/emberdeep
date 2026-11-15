@@ -129,6 +129,26 @@ export function parseSaveData(raw: unknown): ParseOk | ParseFail {
   if (!Array.isArray(d.shrines ?? [])) return fail('shrines 非法');
   if (!Array.isArray(d.ownedTalents ?? [])) return fail('ownedTalents 非法');
 
+  // 火势状态（可选字段：旧档缺失走 migrateV1Defaults 补空态）
+  if (d.fire !== undefined && d.fire !== null) {
+    if (typeof d.fire !== 'object' || Array.isArray(d.fire)) return fail('fire 字段非法');
+    const f = d.fire as Record<string, unknown>;
+    const validPairs = (v: unknown): boolean =>
+      Array.isArray(v) &&
+      v.every(
+        (p) =>
+          Array.isArray(p) && p.length === 2 && isFiniteNumber(p[0]) && isFiniteNumber(p[1]),
+      );
+    if (!validPairs(f.fire)) return fail('fire.fire 非法（应为 [key, 剩余回合] 对的数组）');
+    if (!validPairs(f.smoke)) return fail('fire.smoke 非法（应为 [key, 剩余回合] 对的数组）');
+    if (
+      f.burned !== undefined &&
+      (!Array.isArray(f.burned) || !f.burned.every((k) => isFiniteNumber(k)))
+    ) {
+      return fail('fire.burned 非法（应为烧毁格 key 的数字数组）');
+    }
+  }
+
   if (d.classId !== undefined && !VALID_CLASSES.includes(d.classId as (typeof VALID_CLASSES)[number])) {
     return fail(`未知职业：${String(d.classId)}`);
   }

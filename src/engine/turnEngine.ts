@@ -38,6 +38,8 @@ import { tickCooldown } from '../entities/classes';
 import type { SkillCooldown } from '../entities/classes';
 import { rollMonster } from '../entities/monsters';
 import type { TalentMods } from '../entities/talents';
+import { DEFAULT_KEY_STRIDE, FIRE_TICK_DAMAGE, isBurning, tickFire } from '../world/fire';
+import type { FireState } from '../world/fire';
 import type { Effect } from '../ui/renderer';
 
 /** 日志语气（与 game.ts 的 Tone / InventoryEconomyService 的 LogTone 同形） */
@@ -45,6 +47,21 @@ export type TurnLogTone = 'info' | 'good' | 'bad' | 'combat';
 
 /** Boss 每场战斗的召唤物上限（P0-8） */
 const BOSS_SUMMON_CAP = 4;
+
+/**
+ * 避火移动的八邻尝试次序（dy 优先、dx 升序），与 fire 模块的蔓延邻格次序一致：
+ * 固定顺序 + 不掷随机数，保证同一动作流下避火结果可复现。
+ */
+const FLEE_OFFSETS: ReadonlyArray<readonly [number, number]> = [
+  [-1, -1],
+  [0, -1],
+  [1, -1],
+  [-1, 0],
+  [1, 0],
+  [-1, 1],
+  [0, 1],
+  [1, 1],
+];
 
 /**
  * 回合引擎的最小上下文。
@@ -92,6 +109,12 @@ export interface TurnEngineCtx {
   /** 界面是否处于 play 模式（升级三选一会打断怪物能量循环） */
   isPlayMode(): boolean;
   // ---- 门面回调 ----
+  /** 当前层火势状态（门面持有、换层重置；经访问器读取以防重赋值后引用失效） */
+  getFire(): FireState;
+  /** 火势燃料语义：格子坐标 → 燃料分类（'wall' 不可燃，由门面按地形定义） */
+  fuelClassAt(x: number, y: number): string;
+  /** 烧毁标记：burnOut 的格子永久失去燃料（防止火势在烧过的地面上无限复燃） */
+  markBurnedGround(key: number): void;
   /** 地图通行性（视线阻挡回调统一给 AI/移动/召唤落位使用） */
   isWalkable(x: number, y: number): boolean;
   /** 已拥有天赋的合计加成（回合回复用） */
@@ -136,6 +159,8 @@ export class TurnEngine {
       if (slowed && !ctx.getDead()) this.monsterTurns();
     }
     this.tickMight();
+    // 火势结算（怪物阶段之后、persist 之前）：伤害 → 蔓延/烧尽推演
+    if (!ctx.getDead()) this.tickFireWorld();
     if (ctx.getDead()) {
       ctx.clearSave();
     } else {
@@ -194,6 +219,121 @@ export class TurnEngine {
     }
   }
 
+  // ---------- 火势结算 ----------
+
+  /**
+   * 火势每回合结算（火势集成，位于 endPlayerTurn 尾部：怪物阶段之后、persist 之前）：
+   * 1. 站在燃烧格上的玩家与怪物受到 FIRE_TICK_DAMAGE —— 玩家走与陷阱一致的
+   *    伤害路径（音效/特效/日志/死亡演出）；怪物致死走 killMonster；
+   * 2. 蔓延/烧尽/烟雾推演（tickFire）：蔓延掷骰消费门面 rng —— 每玩家回合恰在
+   *    此处消费一次，key 升序 + 八邻固定次序，同动作流必然同结果；
+   * 3. 燃尽自然熄灭：burnOut 格经门面 markBurnedGround 永久失去燃料（防止复燃），
+   *    全场火熄时播报一条日志。
+   * 本层无火无烟时提前返回（不消耗 rng，不影响既有回放的 rng 流）。
+   */
+  private tickFireWorld(): void {
+    const ctx = this.ctx;
+    const fire = ctx.getFire();
+    if (fire.fire.size === 0 && fire.smoke.size === 0) return;
+    const keyOf = (x: number, y: number): number => y * DEFAULT_KEY_STRIDE + x;
+
+    // ① 玩家火伤（与陷阱一致的伤害路径）
+    if (isBurning(fire, keyOf(ctx.player.x, ctx.player.y))) {
+      ctx.player.hp -= FIRE_TICK_DAMAGE;
+      playSfx('hurt');
+      ctx.effects.push(
+        { kind: 'flash', x: ctx.player.x, y: ctx.player.y, color: '#f5803a' },
+        { kind: 'float', x: ctx.player.x, y: ctx.player.y, text: `-${FIRE_TICK_DAMAGE}`, color: '#f5803a' },
+      );
+      ctx.log(`烈火灼烧着你（${FIRE_TICK_DAMAGE} 伤害）。`, 'bad');
+      if (ctx.player.hp <= 0) {
+        ctx.setDead(true);
+        ctx.setDeathCause('烈火');
+        playSfx('die');
+        ctx.effects.push(
+          { kind: 'quake', dur: 500 },
+          { kind: 'flashScreen', color: '#5c1010', dur: 600 },
+        );
+        ctx.log('你死于烈火……按 R 重新开始。', 'bad');
+        return;
+      }
+    }
+
+    // ② 怪物火伤（遍历副本防击杀时数组变动；致死走 killMonster 结算）
+    for (const m of [...ctx.getMonsters()]) {
+      if (!isBurning(fire, keyOf(m.x, m.y))) continue;
+      m.hp -= FIRE_TICK_DAMAGE;
+      ctx.effects.push({
+        kind: 'float',
+        x: m.x,
+        y: m.y,
+        text: `-${FIRE_TICK_DAMAGE}`,
+        color: '#f5803a',
+      });
+      ctx.log(`${m.name}被烈火灼烧（${FIRE_TICK_DAMAGE} 伤害）。`, 'combat');
+      if (m.hp <= 0) ctx.killMonster(m);
+    }
+    if (ctx.getDead()) return;
+
+    // ③ 蔓延/烧尽/烟雾推演：rng 消耗位置固定（每玩家回合恰一次）
+    const hadFire = fire.fire.size > 0;
+    const report = tickFire(
+      fire,
+      (key) => {
+        const y = Math.floor(key / DEFAULT_KEY_STRIDE);
+        const x = key - y * DEFAULT_KEY_STRIDE;
+        return ctx.fuelClassAt(x, y);
+      },
+      ctx.rng,
+    );
+    // 烧毁标记（fire 模块契约）：烧尽的格子永久失去燃料，
+    // 否则已烧完的地面会被蔓延掷骰反复复燃，火永远烧不尽
+    for (const ev of report.events) {
+      if (ev.kind === 'burnOut') ctx.markBurnedGround(ev.key);
+    }
+    if (hadFire && fire.fire.size === 0) {
+      ctx.log('火势渐渐熄灭了。', 'info');
+    }
+  }
+
+  /**
+   * 怪物避火：站在燃烧格上时优先移向相邻非燃烧格（在 AI 决策前调用）。
+   * 语义与普通移动一致：占用本次行动（能量已在循环中扣除）、做占用/通行性校验、
+   * 播 step 特效。候选方向按 FLEE_OFFSETS 固定次序取首个可行格，不掷随机数。
+   * 无可行格（被火包围/被堵）时返回 false，落入正常 AI 决策。
+   */
+  private fleeFire(m: Actor): boolean {
+    const ctx = this.ctx;
+    const fire = ctx.getFire();
+    if (!isBurning(fire, m.y * DEFAULT_KEY_STRIDE + m.x)) return false;
+    for (const [dx, dy] of FLEE_OFFSETS) {
+      const nx = m.x + dx;
+      const ny = m.y + dy;
+      if (!ctx.isWalkable(nx, ny)) continue;
+      if (isBurning(fire, ny * DEFAULT_KEY_STRIDE + nx)) continue;
+      const merchant = ctx.getMerchantPos();
+      const occupied =
+        ctx.monsterAt(nx, ny) !== undefined ||
+        (ctx.player.x === nx && ctx.player.y === ny) ||
+        (merchant !== null && merchant.x === nx && merchant.y === ny);
+      if (occupied) continue;
+      ctx.effects.push({
+        kind: 'step',
+        fromX: m.x,
+        fromY: m.y,
+        toX: nx,
+        toY: ny,
+        glyph: m.glyph,
+        color: m.color,
+        dur: 140,
+      });
+      m.x = nx;
+      m.y = ny;
+      return true;
+    }
+    return false;
+  }
+
   // ---------- 怪物回合 ----------
 
   private monsterTurns(): void {
@@ -240,6 +380,8 @@ export class TurnEngine {
         m.energy -= 1;
         actionsThisTurn += 1;
         if (actionsThisTurn > 3) break; // 硬上限：Boss/加速怪每玩家回合最多 3 次行动（P0-8）
+        // ⓪ 火势规避：站在燃烧格上时优先移向相邻非燃烧格（占用本次行动）
+        if (this.fleeFire(m)) continue;
         const act = this.decideMonster(m);
         if (act.type === 'attack') {
           this.monsterAttack(m);

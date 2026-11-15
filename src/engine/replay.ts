@@ -12,7 +12,7 @@ import { canonicalJson } from './canonical';
 
 export const REPLAY_PROTOCOL_VERSION = 2;
 /** 内容版本：存档/内容结构变化时必须提升，旧回放将被明确拒绝 */
-export const CONTENT_VERSION = '0.1.0';
+export const CONTENT_VERSION = '0.2.0';
 
 export interface ReplayActionRecord {
   action: Action;

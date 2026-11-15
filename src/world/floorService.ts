@@ -31,6 +31,8 @@ import type { GameMap } from '../world/map';
 import { generateFloor } from './generators/floor';
 import { rollTraps } from './traps';
 import type { PlacedTrap } from './traps';
+import { newFireState } from './fire';
+import type { FireState } from './fire';
 import type { ShrineKind } from './shrines';
 
 /** 楼层上的一座奇遇建筑（祭坛/许愿井） */
@@ -75,6 +77,12 @@ export interface FloorServiceCtx {
   getShrines(): FloorShrine[];
   setShrines(shrines: FloorShrine[]): void;
   setTraps(traps: PlacedTrap[]): void;
+  /** 当前层火势状态（buildFloor 整体重置为新空态：火不跨层） */
+  getFire(): FireState;
+  setFire(fire: FireState): void;
+  /** 本层已烧毁的格子集合（buildFloor 整体重置为新空 Set） */
+  getBurnedGround(): Set<number>;
+  setBurnedGround(burned: Set<number>): void;
   /** 已探索集合（buildFloor 整体替换为新 Set） */
   setExplored(explored: Set<string>): void;
   /** 存活 Boss 及其定义（Boss 战系统按引用读取，只写回） */
@@ -133,6 +141,9 @@ export class FloorService {
       }),
     );
     ctx.memories.clear();
+    // 火势状态按层独立：换层即重置（本层未烧尽的火与烧毁痕迹不会带到下一层）
+    ctx.setFire(newFireState());
+    ctx.setBurnedGround(new Set<number>());
     ctx.setGoldPiles([]);
     ctx.setGroundItems([]);
     for (const p of floor.itemSpots) {
