@@ -88,6 +88,8 @@ export interface BrainContext {
   allies: BrainAlly[];
   isBlocked: (x: number, y: number) => boolean;
   isOnFire: (x: number, y: number) => boolean;
+  /** 指定坐标是否被角色占用（怪/玩家/商人，与回合引擎移动校验同语义）；寻步占位预检用 */
+  isOccupied: (x: number, y: number) => boolean;
   rng: Rng;
   memory: MonsterMemory;
 }
@@ -110,8 +112,43 @@ function cheb(ax: number, ay: number, bx: number, by: number): number {
   return Math.max(Math.abs(ax - bx), Math.abs(ay - by));
 }
 
-/** 沿 A* 路径取走向目标的下一步（目标格豁免阻挡，供攻击收尾） */
-function stepToward(self: Actor, target: Pt, isBlocked: (x: number, y: number) => boolean): AiAction | null {
+/**
+ * 沿 A* 路径取走向目标的下一步（目标格豁免阻挡，供攻击收尾）。
+ * A* 前置 O(8) 占位预检（纯剪枝，不掷随机数、不改 RNG 流）：
+ * 目标方向全部 downhill 邻格（朝目标切比雪夫距离严格递减的邻格）都
+ * 「不可被 A* 落步」——地形阻挡、角色占用，或斜向格被禁穿角规则挡住——
+ * 时，A* 若能走，其进步首步必落在被占/被挡格上、会被回合引擎的占位
+ * 校验拦下（原地不动）——此时不发 A*，直接原地等待。
+ * 预检通过（存在可落步的 downhill 邻格）时照常 A*，路径与旧实现逐位一致；
+ * 仅剩的行为差异是极少数平局旁跳首步（围城基准实测 ~1.2% 调用）。
+ */
+function stepToward(
+  self: Actor,
+  target: Pt,
+  isBlocked: (x: number, y: number) => boolean,
+  isOccupied: (x: number, y: number) => boolean,
+): AiAction | null {
+  const dist = cheb(self.x, self.y, target.x, target.y);
+  if (dist >= 1) {
+    let downhillSteppable = false;
+    for (const [mx, my] of ALL_DIRS) {
+      const nx = self.x + mx;
+      const ny = self.y + my;
+      // 非 downhill（不缩短到目标的切比雪夫距离）的邻格不参与预检
+      if (cheb(nx, ny, target.x, target.y) >= dist) continue;
+      // A* 落步条件：可走地形且未被占用；斜向另需两个正交邻格可走（禁穿角，与 A* 同规则）
+      const terrainFree = !isBlocked(nx, ny) && !isOccupied(nx, ny);
+      const cornerOpen =
+        mx === 0 ||
+        my === 0 ||
+        (!isBlocked(self.x + mx, self.y) && !isBlocked(self.x, self.y + my));
+      if (terrainFree && cornerOpen) {
+        downhillSteppable = true;
+        break;
+      }
+    }
+    if (!downhillSteppable) return { type: 'wait' };
+  }
   // M7：AI 寻路节点预算（ chase 每次最多展开 600 节点，24 怪场景下回合成本可控）
   const path = findPathWithFn({ x: self.x, y: self.y }, target, (x, y) => !isBlocked(x, y), 600);
   const first = path?.[0];
@@ -197,7 +234,7 @@ const support: LeafFn = (ctx) => {
     ctx.memory.rallyAge = 0;
     return { status: 'failure' };
   }
-  const action = stepToward(ctx.self, rp, ctx.isBlocked);
+  const action = stepToward(ctx.self, rp, ctx.isBlocked, ctx.isOccupied);
   if (!action) {
     ctx.memory.rallyPoint = null;
     return { status: 'failure' };
@@ -215,7 +252,7 @@ const investigate: LeafFn = (ctx) => {
     if (ctx.self.ai) ctx.self.ai.mode = 'wander';
     return { status: 'failure' };
   }
-  const action = stepToward(ctx.self, lsp, ctx.isBlocked);
+  const action = stepToward(ctx.self, lsp, ctx.isBlocked, ctx.isOccupied);
   if (!action) {
     ctx.memory.lastSeenPlayer = null;
     return { status: 'failure' };
@@ -244,14 +281,19 @@ const chaseOrWander: LeafFn = (ctx, events) => {
   if (ai.mode === 'chase') {
     if (canSee) {
       if (dist <= 1) return { status: 'success', action: { type: 'attack' } };
-      const action = stepToward(ctx.self, { x: ctx.player.x, y: ctx.player.y }, ctx.isBlocked);
+      const action = stepToward(
+        ctx.self,
+        { x: ctx.player.x, y: ctx.player.y },
+        ctx.isBlocked,
+        ctx.isOccupied,
+      );
       if (action) return { status: 'success', action };
       return { status: 'failure' };
     }
     // 丢失视线：走向最后目击点（记忆！而不是作弊式直奔真实位置）
     const lsp = ctx.memory.lastSeenPlayer;
     if (lsp) {
-      const action = stepToward(ctx.self, lsp, ctx.isBlocked);
+      const action = stepToward(ctx.self, lsp, ctx.isBlocked, ctx.isOccupied);
       if (action) return { status: 'success', action };
       ctx.memory.lastSeenPlayer = null;
       ai.mode = 'wander';

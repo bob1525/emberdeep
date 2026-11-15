@@ -26,6 +26,7 @@ function makeCtx(opts: {
   allies?: { actor: Actor; memory: MonsterMemory }[];
   isBlocked?: (x: number, y: number) => boolean;
   isOnFire?: (x: number, y: number) => boolean;
+  isOccupied?: (x: number, y: number) => boolean;
   seed?: number;
 }): BrainContext {
   return {
@@ -34,6 +35,7 @@ function makeCtx(opts: {
     allies: opts.allies ?? [],
     isBlocked: opts.isBlocked ?? OPEN,
     isOnFire: opts.isOnFire ?? (() => false),
+    isOccupied: opts.isOccupied ?? (() => false),
     rng: new Rng(opts.seed ?? 1),
     memory: opts.memory ?? newMemory(),
   };

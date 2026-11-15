@@ -446,6 +446,15 @@ export class TurnEngine {
       isBlocked: (x, y) => !ctx.isWalkable(x, y),
       // 真实火焰判定（P0-4）：身上有燃烧状态即视为身处火场
       isOnFire: (x, y) => x === m.x && y === m.y && hasStatus(m, 'burn'),
+      // 占位预检用：与 monsterTurns 移动校验完全一致的占用判定（怪/玩家/商人）
+      isOccupied: (x, y) => {
+        const merchant = ctx.getMerchantPos();
+        return (
+          ctx.monsterAt(x, y) !== undefined ||
+          (ctx.player.x === x && ctx.player.y === y) ||
+          (merchant !== null && merchant.x === x && merchant.y === y)
+        );
+      },
       rng: ctx.rng,
       memory,
     });
